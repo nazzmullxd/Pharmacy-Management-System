@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Database.Repositories
 {
-    public class PurchasesRepository
+    public class ProductRepository
     {
     }
 }

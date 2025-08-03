@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Database.Model
 {
-    public class ProductBatches
+    public class Purchase
     {
     }
 }

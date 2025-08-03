@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Database.Model
+namespace Database.Repositories
 {
-    public class Suppliers
+    public class PurchaseRepository
     {
     }
 }

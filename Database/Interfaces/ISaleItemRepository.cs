@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Database.Interfaces
 {
-    public interface ISalesRepository
+    public interface ISaleItemRepository
     {
     }
 }

@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Database.Repositories
+namespace Database.Interfaces
 {
-    public class ProductBatchesRepository
+    public interface IPurchaseItemRepository
     {
     }
 }

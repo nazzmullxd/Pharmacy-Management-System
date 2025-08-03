@@ -1,0 +1,34 @@
+﻿using Database.Model;
+using Microsoft.EntityFrameworkCore;
+
+namespace Database.Context
+{
+    public class PharmacyManagementContext : DbContext
+    {
+        public PharmacyManagementContext(DbContextOptions<PharmacyManagementContext> options) : base(options)
+        {
+        }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            if (!optionsBuilder.IsConfigured)
+            {
+                optionsBuilder.UseSqlServer(@"Server=NASIM\MSSQLSERVER01;Database=BudgetManagementSystem;Trusted_Connection=True;TrustServerCertificate=True;");
+            }
+        }
+
+        public DbSet<User> Users { get; set; }
+        public DbSet<Supplier> Suppliers { get; set; }
+        public DbSet<Product>Products { get; set; }
+        public DbSet<ProductBatch> ProductBatches { get; set; }
+        public DbSet<SalesItem> SalesItems { get; set; }
+        public DbSet<Sale> Sales { get; set; }
+        public DbSet<PurchaseItem> PurchaseItems { get; set; }
+        public DbSet<Purchase> Purchases { get; set; }
+        public DbSet<AuditTrail> AuditTrails { get; set; }
+        public DbSet<AntibioticLog> AntibioticLogs { get; set; }
+
+
+
+    }
+}

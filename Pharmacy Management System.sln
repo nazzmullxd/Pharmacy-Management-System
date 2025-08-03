@@ -13,6 +13,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Web", "Web\Web.csproj", "{7
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Desktop", "Desktop\Desktop.csproj", "{4D943373-ABA5-4813-8288-FB371EBA6153}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{86B949F0-B5F0-4B49-8030-88ABA4D8BF91}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DBTest", "DBTest\DBTest.csproj", "{A3FF1847-F743-48B5-9EF3-EEE74DF20907}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,6 +39,10 @@ Global
 		{4D943373-ABA5-4813-8288-FB371EBA6153}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4D943373-ABA5-4813-8288-FB371EBA6153}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4D943373-ABA5-4813-8288-FB371EBA6153}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A3FF1847-F743-48B5-9EF3-EEE74DF20907}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A3FF1847-F743-48B5-9EF3-EEE74DF20907}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A3FF1847-F743-48B5-9EF3-EEE74DF20907}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A3FF1847-F743-48B5-9EF3-EEE74DF20907}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -42,6 +50,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{792C6DCC-97A9-4AA2-A8C1-3D4B31DBC98A} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{4D943373-ABA5-4813-8288-FB371EBA6153} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{A3FF1847-F743-48B5-9EF3-EEE74DF20907} = {86B949F0-B5F0-4B49-8030-88ABA4D8BF91}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9B3D64D0-4185-4478-98C5-920479F50A10}
