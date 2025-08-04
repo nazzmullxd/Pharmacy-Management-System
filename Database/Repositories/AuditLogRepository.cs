@@ -1,6 +1,6 @@
 ﻿namespace Database.Repositories
 {
-    public class AntibioticLogRepository
+    public class AuditLogRepository
     {
     }
 }

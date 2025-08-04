@@ -1,6 +1,6 @@
 ﻿namespace Database.Model
 {
-    public class AntibioticLog
+    public class Customer
     {
     }
 }

@@ -1,9 +1,8 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace Database.Model
 {
-    public class SalesItem
+    public class SaleItem
     {
         [Key]
         public string SalesItemID { get; set; } = Guid.NewGuid().ToString();
@@ -17,7 +16,7 @@ namespace Database.Model
         public decimal UnitPrice { get; set; } = 0.0m;
         [Required]
         public string ProductID { get; set; } = string.Empty;
-        public string ? BatchID { get; set; } = null;
+        public string? BatchID { get; set; } = null;
         [Required]
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 
