@@ -13,19 +13,19 @@ namespace Database.Model
         // Foreign Keys
         [Required]
         [ForeignKey(nameof(Sale))]
-        public string SaleID { get; set; } = string.Empty;
+        public Guid SaleID { get; set; } = Guid.Empty;
 
         [Required]
         [ForeignKey(nameof(ProductBatch))]
-        public string ProductBatchID { get; set; } = string.Empty;
+        public Guid ProductBatchID { get; set; } = Guid.Empty;
 
         [Required]
         [ForeignKey(nameof(Product))]
-        public string ProductID { get; set; } = string.Empty;
+        public Guid ProductID { get; set; } = Guid.Empty;
 
         [Required]
         [ForeignKey(nameof(Customer))]
-        public string CustomerID { get; set; } = string.Empty;
+        public Guid CustomerID { get; set; } = Guid.Empty;
 
         // Navigation Properties
         public Sale? Sale { get; set; }

@@ -10,11 +10,11 @@ namespace Database.Model
         public Guid SaleID { get; set; } = Guid.NewGuid();
         [Required]
         [ForeignKey(nameof(Customer))]
-        public string CustomerID { get; set; } = string.Empty;
+        public Guid CustomerID { get; set; } = Guid.Empty;
         public Customer? Customer { get; set; }
         [Required]
         [ForeignKey(nameof(User))]
-        public string userID { get; set; } = string.Empty;
+        public Guid userID { get; set; } = Guid.Empty;
         public User? User { get; set; }
         [Required]
         public DateTime SaleDate { get; set; } = DateTime.UtcNow;

@@ -13,11 +13,11 @@ namespace Database.Model
         // Foreign Keys
         [Required]
         [ForeignKey(nameof(Product))]
-        public string ProductID { get; set; } = string.Empty;
+        public Guid ProductID { get; set; } = Guid.Empty;
 
         [Required]
         [ForeignKey(nameof(Supplier))]
-        public string SupplierID { get; set; } = string.Empty;
+        public Guid SupplierID { get; set; } = Guid .Empty;
 
         // Navigation Properties
         public Product? Product { get; set; }

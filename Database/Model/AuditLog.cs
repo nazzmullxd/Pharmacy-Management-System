@@ -13,7 +13,7 @@ namespace Database.Model
         // Foreign Key
         [Required]
         [ForeignKey(nameof(User))]
-        public string UserId { get; set; } = string.Empty;
+        public Guid UserId { get; set; } = Guid.Empty;
 
         // Navigation Property
         public User? User { get; set; }

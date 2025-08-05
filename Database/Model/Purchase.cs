@@ -8,19 +8,19 @@ namespace Database.Model
     {
         // Primary Key
         [Key]
-        public string PurchaseID { get; set; } = Guid.NewGuid().ToString();
+        public Guid PurchaseID { get; set; } = Guid.NewGuid();
 
         // Foreign Keys
         [Required]
         [ForeignKey(nameof(Supplier))]
-        public string SupplierID { get; set; } = string.Empty;
+        public Guid SupplierID { get; set; } = Guid.Empty;
 
         [Required]
         [ForeignKey(nameof(User))]
-        public string UserID { get; set; } = string.Empty;
+        public Guid UserID { get; set; } = Guid.Empty;
 
         [ForeignKey(nameof(ProductBatch))]
-        public string ProductBatchID { get; set; } = string.Empty;
+        public Guid ProductBatchID { get; set; } = Guid.Empty;
 
         // Navigation Properties
         public Supplier? Supplier { get; set; }

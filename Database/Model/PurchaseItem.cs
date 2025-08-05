@@ -13,15 +13,15 @@ namespace Database.Model
         // Foreign Keys
         [Required]
         [ForeignKey(nameof(Purchase))]
-        public string PurchaseID { get; set; } = string.Empty;
+        public Guid PurchaseID { get; set; } = Guid.Empty;
 
         [Required]
         [ForeignKey(nameof(ProductBatch))]
-        public string ProductBatchID { get; set; } = string.Empty;
+        public Guid ProductBatchID { get; set; } = Guid.Empty;
 
         [Required]
         [ForeignKey(nameof(Product))]
-        public string ProductID { get; set; } = string.Empty;
+        public Guid ProductID { get; set; } = Guid.Empty;
 
         // Navigation Properties
         public Purchase? Purchase { get; set; }

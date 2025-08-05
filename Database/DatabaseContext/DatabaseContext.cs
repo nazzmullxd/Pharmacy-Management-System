@@ -13,7 +13,7 @@ namespace Database.Context
         {
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseSqlServer(@"Server=NASIM\MSSQLSERVER01;Database=BudgetManagementSystem;Trusted_Connection=True;TrustServerCertificate=True;");
+                optionsBuilder.UseSqlServer(@"Server=.;Database=Pharmacy Management System;Trusted_Connection=True;TrustServerCertificate=True;");
             }
         }
 
