@@ -6,14 +6,24 @@ namespace Database.Model
 {
     public class ProductBatch
     {
+        // Primary Key
         [Key]
-        public string ProductBatchID { get; set; } = Guid.NewGuid().ToString();
+        public Guid ProductBatchID { get; set; } = Guid.NewGuid();
 
+        // Foreign Keys
         [Required]
         [ForeignKey(nameof(Product))]
         public string ProductID { get; set; } = string.Empty;
-        public Product? Product { get; set; }
 
+        [Required]
+        [ForeignKey(nameof(Supplier))]
+        public string SupplierID { get; set; } = string.Empty;
+
+        // Navigation Properties
+        public Product? Product { get; set; }
+        public Supplier? Supplier { get; set; }
+
+        // Value Properties
         [Required]
         public string BatchNumber { get; set; } = string.Empty;
 
@@ -23,11 +33,7 @@ namespace Database.Model
         [Required]
         public int QuantityInStock { get; set; } = 0;
 
-        [Required]
-        [ForeignKey(nameof(Supplier))]
-        public string SupplierID { get; set; } = string.Empty;
-        public Supplier? Supplier { get; set; }
-
+        // Metadata
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
     }
 }

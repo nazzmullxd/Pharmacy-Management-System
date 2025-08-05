@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace Database.Model
 {
@@ -10,27 +11,31 @@ namespace Database.Model
 
     public class Supplier
     {
+        // Primary Key
         [Key]
-        public string SupplierID { get; set; } = Guid.NewGuid().ToString();
+        public Guid SupplierID { get; set; } = Guid.NewGuid();
+
+        // Value Properties
+        [Required]
+        public string SupplierName { get; set; } = string.Empty; // Supplier Company Name
 
         [Required]
-        public string CompanyName { get; set; } = string.Empty;
-
         public string ContactPerson { get; set; } = string.Empty;
 
-        public string Phone { get; set; } = string.Empty;
+        [Required]
+        public string PhoneNumber { get; set; } = string.Empty;
 
         [EmailAddress]
         public string Email { get; set; } = string.Empty;
 
         public string Address { get; set; } = string.Empty;
 
+        // Metadata
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
-
         public DateTime UpdatedDate { get; set; } = DateTime.UtcNow;
-
         public CreatedBy CreatedBy { get; set; } = CreatedBy.Admin;
 
+        // Status
         public bool IsActive { get; set; } = true;
     }
 }

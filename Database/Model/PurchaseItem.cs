@@ -6,30 +6,36 @@ namespace Database.Model
 {
     public class PurchaseItem
     {
+        // Primary Key
         [Key]
-        public string PurchaseItemID { get; set; } = Guid.NewGuid().ToString();
+        public Guid PurchaseItemID { get; set; } = Guid.NewGuid();
 
+        // Foreign Keys
         [Required]
         [ForeignKey(nameof(Purchase))]
         public string PurchaseID { get; set; } = string.Empty;
-        public Purchase? Purchase { get; set; }
 
         [Required]
         [ForeignKey(nameof(ProductBatch))]
         public string ProductBatchID { get; set; } = string.Empty;
-        public ProductBatch? ProductBatch { get; set; }
 
         [Required]
         [ForeignKey(nameof(Product))]
         public string ProductID { get; set; } = string.Empty;
+
+        // Navigation Properties
+        public Purchase? Purchase { get; set; }
+        public ProductBatch? ProductBatch { get; set; }
         public Product? Product { get; set; }
 
+        // Value Properties
         [Required]
         public int Quantity { get; set; } = 0;
 
         [Required]
         public decimal UnitPrice { get; set; } = 0.0m;
 
+        // Metadata
         [Required]
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
     }

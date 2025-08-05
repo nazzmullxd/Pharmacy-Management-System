@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace Database.Model
 {
@@ -7,11 +8,14 @@ namespace Database.Model
         Admin,
         Employee
     }
+
     public class User
     {
+        // Primary Key
         [Key]
-        public string UserId { get; set; } = Guid.NewGuid().ToString();
+        public Guid UserId { get; set; } = Guid.NewGuid();
 
+        // Value Properties
         [Required]
         [MaxLength(50)]
         public string FirstName { get; set; } = string.Empty;
@@ -29,6 +33,11 @@ namespace Database.Model
         [MaxLength(255)]
         public string PasswordHash { get; set; } = string.Empty;
 
+        // Metadata
+        [Required]
+        public DateTime LastLoginDate { get; set; } = DateTime.UtcNow;
+
+        // Role
         [Required]
         [MaxLength(20)]
         public UserRole Role { get; set; } = UserRole.Employee;

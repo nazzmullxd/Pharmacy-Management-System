@@ -7,7 +7,7 @@ namespace Database.Model
     public class Product
     {
         [Key]
-        public string ProductID { get; set; } = Guid.NewGuid().ToString();
+        public Guid ProductID { get; set; } = Guid.NewGuid();
 
         [Required]
         public string ProductName { get; set; } = string.Empty;
