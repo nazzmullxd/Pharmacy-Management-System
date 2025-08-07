@@ -21,7 +21,7 @@ namespace Database.Tests
             // Arrange: create a new user
             var user = new User
             {
-                UserId = Guid.NewGuid(),
+                UserID = Guid.NewGuid(),
                 FirstName = "testuser",
                 LastName = "test",
                 Email = "testuser@example.com",

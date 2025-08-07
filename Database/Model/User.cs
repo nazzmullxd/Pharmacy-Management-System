@@ -14,7 +14,7 @@ namespace Database.Model
     {
         // Primary Key
         [Key]
-        public Guid UserId { get; set; } = Guid.NewGuid();
+        public Guid UserID { get; set; } = Guid.NewGuid();
 
         // Value Properties
         [Required]
