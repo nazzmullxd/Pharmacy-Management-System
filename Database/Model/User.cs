@@ -3,12 +3,13 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Database.Model
 {
+    /*
     public enum UserRole
     {
         Admin,
         Employee
     }
-
+    */
     public class User
     {
         // Primary Key
@@ -40,6 +41,6 @@ namespace Database.Model
         // Role
         [Required]
         [MaxLength(20)]
-        public UserRole Role { get; set; } = UserRole.Employee;
+        public string Role  { get; set; } = string.Empty;
     }
 }

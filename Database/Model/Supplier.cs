@@ -3,11 +3,13 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Database.Model
 {
+    /*
     public enum CreatedBy
     {
         Admin,
         Employee
     }
+    */
 
     public class Supplier
     {
@@ -33,7 +35,7 @@ namespace Database.Model
         // Metadata
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedDate { get; set; } = DateTime.UtcNow;
-        public CreatedBy CreatedBy { get; set; } = CreatedBy.Admin;
+        public string CreatedBy { get; set; } = string.Empty;
 
         // Status
         public bool IsActive { get; set; } = true;
