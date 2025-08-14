@@ -11,6 +11,5 @@ namespace Database.Interfaces
         Task<IEnumerable<User>> GetByUsernameAsync(string username);
         Task<IEnumerable<User>> GetByEmailAsync(string email);
         Task<IEnumerable<User>> GetByRoleAsync(string role);
-        Task<IEnumerable<User>> GetByStatusAsync(string status);
     }
 }
