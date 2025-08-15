@@ -38,7 +38,8 @@ PharmacyERP Suite is a structured pharmacy management solution developed as part
 
 | Folder / File           | Purpose                                 |
 |-------------------------|-----------------------------------------|
-| /Models                 | Entity classes (Product, Sale, etc.)    |
+| /Database               |    |
+|//Model                  |Entity classes (Product, Sale, etc.) 
 | /DatabaseContext        |EF Core DbContext configuration          |
 | /Migrations             | Entity Framework migration files        |
 | /Test                   | Test data and demo values               |
