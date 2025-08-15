@@ -10,7 +10,5 @@ namespace Database.Interfaces
         Task DeleteAsync(Guid saleId);
         Task<IEnumerable<Sale>> GetByCustomerIdAsync(Guid customerId);
         Task<IEnumerable<Sale>> GetByUserIdAsync(Guid userId);
-        Task<IEnumerable<Sale>> GetByProductBatchIdAsync(Guid productBatchId);
-        Task<IEnumerable<Sale>> GetBySaleItemIdAsync(Guid saleItemId);
     }
 }

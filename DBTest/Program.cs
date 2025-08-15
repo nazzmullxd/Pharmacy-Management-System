@@ -65,7 +65,7 @@ namespace Database.Tests
             context.SaveChanges();
 
             // Act: retrieve the user, supplier, and product
-            var retrievedUser = context.Users.FirstOrDefault(u => u.UserId == user.UserId);
+            var retrievedUser = context.Users.FirstOrDefault(u => u.UserID == user.UserID);
             var retrievedSupplier = context.Suppliers.FirstOrDefault(s => s.SupplierID == supplier.SupplierID);
             var retrievedProduct = context.Products.FirstOrDefault(p => p.ProductID == product.ProductID);
 

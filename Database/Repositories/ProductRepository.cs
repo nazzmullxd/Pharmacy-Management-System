@@ -11,7 +11,7 @@ namespace Database.Repositories
 
         public ProductRepository(PharmacyManagementContext context)
         {
-            _context = context;
+            _context = context ?? throw new ArgumentNullException(nameof(context), "Context cannot be null");
         }
 
         public async Task<IEnumerable<Product>> GetAllAsync()
@@ -26,24 +26,42 @@ namespace Database.Repositories
 
         public async Task AddAsync(Product product)
         {
+            if (product == null)
+            {
+                throw new ArgumentNullException(nameof(product), "Product cannot be null");
+            }
+
             await _context.Products.AddAsync(product);
             await _context.SaveChangesAsync();
         }
 
         public async Task UpdateAsync(Product product)
         {
-            _context.Products.Update(product);
+            if (product == null)
+            {
+                throw new ArgumentNullException(nameof(product), "Product cannot be null");
+            }
+
+            var existingProduct = await _context.Products.FirstOrDefaultAsync(p => p.ProductID == product.ProductID);
+            if (existingProduct == null)
+            {
+                throw new InvalidOperationException("Product not found");
+            }
+
+            _context.Entry(existingProduct).CurrentValues.SetValues(product);
             await _context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(Guid productId)
         {
             var product = await _context.Products.FirstOrDefaultAsync(p => p.ProductID == productId);
-            if (product != null)
+            if (product == null)
             {
-                _context.Products.Remove(product);
-                await _context.SaveChangesAsync();
+                throw new InvalidOperationException("Product not found");
             }
+
+            _context.Products.Remove(product);
+            await _context.SaveChangesAsync();
         }
     }
 }

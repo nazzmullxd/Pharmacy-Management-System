@@ -8,7 +8,5 @@ namespace Database.Interfaces
         Task AddAsync(Customer customer);
         Task UpdateAsync(Customer customer);
         Task DeleteAsync(Guid customerId);
-        Task<IEnumerable<Customer>> GetByUserIdAsync(Guid userId);
-        Task<IEnumerable<Customer>> GetBySupplierIdAsync(Guid supplierId);
     }
 }

@@ -11,7 +11,7 @@ namespace Database.Repositories
 
         public UserRepository(PharmacyManagementContext context)
         {
-            _context = context;
+            _context = context ?? throw new ArgumentNullException(nameof(context), "Context cannot be null");
         }
 
         public async Task<IEnumerable<User>> GetAllAsync()
@@ -26,47 +26,78 @@ namespace Database.Repositories
 
         public async Task AddAsync(User user)
         {
-            _context.Users.Add(user);
+            if (user == null)
+            {
+                throw new ArgumentNullException(nameof(user), "User cannot be null");
+            }
+
+            await _context.Users.AddAsync(user);
             await _context.SaveChangesAsync();
         }
 
         public async Task UpdateAsync(User user)
         {
-            _context.Users.Update(user);
+            if (user == null)
+            {
+                throw new ArgumentNullException(nameof(user), "User cannot be null");
+            }
+
+            var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.UserID == user.UserID);
+            if (existingUser == null)
+            {
+                throw new InvalidOperationException("User not found");
+            }
+
+            _context.Entry(existingUser).CurrentValues.SetValues(user);
             await _context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(Guid userId)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.UserID == userId);
-            if (user != null)
+            if (user == null)
             {
-                _context.Users.Remove(user);
-                await _context.SaveChangesAsync();
+                throw new InvalidOperationException("User not found");
             }
+
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
         }
 
         public async Task<IEnumerable<User>> GetByUsernameAsync(string username)
         {
+            if (string.IsNullOrWhiteSpace(username))
+            {
+                throw new ArgumentException("Username cannot be null or empty", nameof(username));
+            }
+
             return await _context.Users
-                .Where(u => u.FirstName.Contains(username) || u.LastName.Contains(username))
+                .Where(u => EF.Functions.Like(u.FirstName, $"%{username}%") || EF.Functions.Like(u.LastName, $"%{username}%"))
                 .ToListAsync();
         }
 
         public async Task<IEnumerable<User>> GetByEmailAsync(string email)
         {
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                throw new ArgumentException("Email cannot be null or empty", nameof(email));
+            }
+
             return await _context.Users
-                .Where(u => u.Email.Contains(email))
+                .Where(u => EF.Functions.Like(u.Email, $"%{email}%"))
                 .ToListAsync();
         }
 
         public async Task<IEnumerable<User>> GetByRoleAsync(string role)
         {
+            if (string.IsNullOrWhiteSpace(role))
+            {
+                throw new ArgumentException("Role cannot be null or empty", nameof(role));
+            }
+
             return await _context.Users
                 .Where(u => u.Role == role)
                 .ToListAsync();
         }
-
-
     }
 }

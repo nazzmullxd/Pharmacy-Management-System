@@ -9,7 +9,5 @@ namespace Database.Interfaces
         Task UpdateAsync(Supplier supplier);
         Task DeleteAsync(Guid supplierId);
         Task<IEnumerable<Supplier>> GetByNameAsync(string name);
-        Task<IEnumerable<Supplier>> GetByContactInfoAsync(string contactInfo);
-        Task<IEnumerable<Supplier>> GetByLocationAsync(string location);
     }
 }

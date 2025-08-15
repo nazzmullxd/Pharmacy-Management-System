@@ -10,6 +10,5 @@ namespace Database.Interfaces
         Task DeleteAsync(Guid auditLogId);
         Task<IEnumerable<AuditLog>> GetByUserIdAsync(Guid userId);
         Task<IEnumerable<AuditLog>> GetByActionTypeAsync(string actionType);
-        Task<IEnumerable<AuditLog>> GetByEntityTypeAsync(string entityType);
     }
 }
