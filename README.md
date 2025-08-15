@@ -34,16 +34,44 @@ PharmacyERP Suite is a structured pharmacy management solution developed as part
 
 ---
 
-## 🗂️ Project Structure
+# 🏥 Pharmacy Management System – Project Structure
 
-| Folder / File           | Purpose                                 |
-|-------------------------|-----------------------------------------|
-| /Database               |    |
-|//Model                  |Entity classes (Product, Sale, etc.) 
-| /DatabaseContext        |EF Core DbContext configuration          |
-| /Migrations             | Entity Framework migration files        |
-| /Test                   | Test data and demo values               |
-| README.md               | Project overview                        |
+## 📂 Solution Layout
+
+| Folder / File                          | Purpose                                                                 |
+|----------------------------------------|-------------------------------------------------------------------------|
+| **/Presentation**                      | UI layer – responsible for user interaction and presentation logic     |
+| ├── **/Desktop**                       | Desktop application interface components                               |
+| ├── **/Web**                           | ASP.NET Core web application                                            |
+| │   ├── **/Connected Services**        | External service references (API, Azure, etc.)                         |
+| │   ├── **/Dependencies**              | NuGet packages and library references                                  |
+| │   ├── **/Properties**                | Project-specific properties and configuration                          |
+| │   ├── **/wwwroot**                   | Static files (CSS, JS, images)                                          |
+| │   ├── **/Pages**                     | Razor Pages for web UI                                                  |
+| │   ├── **appsettings.json**           | Application configuration file                                         |
+| │   ├── **Program.cs**                 | Application startup and dependency injection setup                     |
+|                                                                              |
+| **/Test**                              | Unit/integration tests and demo values                                  |
+|                                                                              |
+| **/Business**                          | Business logic layer (service implementations, rules, validation)      |
+| ├── **/Services**                      | Service classes for handling application logic                         |
+|                                                                              |
+| **/Database**                          | Data access layer (Entity Framework Core)                               |
+| ├── **/DatabaseContext**               | EF Core DbContext configuration and setup                              |
+| ├── **/Interfaces**                    | Repository and service interfaces                                      |
+| ├── **/Model**                         | Entity classes (e.g., Product, Sale, Customer)                         |
+| ├── **/Repositories**                  | Repository implementations for data persistence                       |
+|                                                                              |
+| **/Migrations**                        | Entity Framework migration files                                        |
+|                                                                              |
+| **README.md**                          | Project overview and setup instructions                                |
+
+---
+💡 **Layered Architecture:**
+- **Presentation Layer** → Handles UI (Desktop + Web)
+- **Business Layer** → Contains the application's core logic
+- **Database Layer** → Manages data persistence using EF Core
+
 
 ---
 
