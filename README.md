@@ -111,7 +111,7 @@ The project includes the following core entities:
 - Lead Developer: Nazmul Huda
 - Database Manager: Zahidul Islam
 - UI/UX Design : Iftekhar Ahmed
-- Guide : MD Omar Faruk Monem
+- MD Imtiaz Dinar
 - Academic Supervisor: Engr. ASM Shakil Ahemd 
 - Pharmacy Advisor: Rabiul Pharmacy  
 
