@@ -4,7 +4,7 @@ using Database.Interfaces;
 using Microsoft.EntityFrameworkCore;
 namespace Database.Repositories
 {
-    public class AuditLogRepository
+    public class AuditLogRepository: IAuditLogRepository
     {
         private readonly PharmacyManagementContext _context;
         public AuditLogRepository(PharmacyManagementContext context)

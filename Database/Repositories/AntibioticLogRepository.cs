@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Database.Repositories
 {
-    public class AntibioticLogRepository
+    public class AntibioticLogRepository: IAntibioticLogRepository
     {
         private readonly PharmacyManagementContext _context;
         public AntibioticLogRepository(PharmacyManagementContext context)

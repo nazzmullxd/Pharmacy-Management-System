@@ -10,6 +10,5 @@ namespace Database.Interfaces
         Task DeleteAsync(Guid antibioticLogId);
         Task<IEnumerable<AntibioticLog>> GetByProductBatchIdAsync(Guid productBatchId);
         Task<IEnumerable<AntibioticLog>> GetByCustomerIdAsync(Guid customerId);
-        Task<IEnumerable<AntibioticLog>> GetByUserIdAsync(Guid userId);
     }
 }

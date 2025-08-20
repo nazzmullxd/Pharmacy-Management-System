@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Database.Repositories
 {
-    public class SaleItemRepository
+    public class SaleItemRepository: ISaleItemRepository
     {
         private readonly PharmacyManagementContext _context;
         public SaleItemRepository(PharmacyManagementContext context)

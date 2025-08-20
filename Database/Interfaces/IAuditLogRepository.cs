@@ -8,7 +8,5 @@ namespace Database.Interfaces
         Task AddAsync(AuditLog auditLog);
         Task UpdateAsync(AuditLog auditLog);
         Task DeleteAsync(Guid auditLogId);
-        Task<IEnumerable<AuditLog>> GetByUserIdAsync(Guid userId);
-        Task<IEnumerable<AuditLog>> GetByActionTypeAsync(string actionType);
     }
 }
