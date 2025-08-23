@@ -17,6 +17,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{86B949F0-B
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DBTest", "DBTest\DBTest.csproj", "{A3FF1847-F743-48B5-9EF3-EEE74DF20907}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Database- Backup", "Database- Backup", "{906E07CE-F3B2-4CA9-A974-37680949B276}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\..\Desktop\MSSQL16.MSSQLSERVER\MSSQL\Backup\Pharmacy Management System.bak = ..\..\..\Desktop\MSSQL16.MSSQLSERVER\MSSQL\Backup\Pharmacy Management System.bak
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
