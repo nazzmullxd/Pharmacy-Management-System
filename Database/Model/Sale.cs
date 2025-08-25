@@ -16,10 +16,10 @@ namespace Database.Model
         public Customer? Customer { get; set; }
 
         [Required]
-        [ForeignKey(nameof(User))]
+        [ForeignKey(nameof(UserInfo))]
         public Guid UserID { get; set; } = Guid.Empty;
 
-        public User? User { get; set; }
+        public UserInfo? User { get; set; }
 
         [Required]
         public DateTime SaleDate { get; set; } = DateTime.UtcNow;

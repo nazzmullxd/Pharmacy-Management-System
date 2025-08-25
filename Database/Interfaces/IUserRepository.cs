@@ -3,13 +3,13 @@ namespace Database.Interfaces
 {
     public interface IUserRepository
     {
-        Task<IEnumerable<User>> GetAllAsync();
-        Task<User?> GetByIdAsync(Guid userId);
-        Task AddAsync(User user);
-        Task UpdateAsync(User user);
+        Task<IEnumerable<UserInfo>> GetAllAsync();
+        Task<UserInfo?> GetByIdAsync(Guid userId);
+        Task AddAsync(UserInfo user);
+        Task UpdateAsync(UserInfo user);
         Task DeleteAsync(Guid userId);
-        Task<IEnumerable<User>> GetByUsernameAsync(string username);
-        Task<IEnumerable<User>> GetByEmailAsync(string email);
-        Task<IEnumerable<User>> GetByRoleAsync(string role);
+        Task<IEnumerable<UserInfo>> GetByUsernameAsync(string username);
+        Task<IEnumerable<UserInfo>> GetByEmailAsync(string email);
+        Task<IEnumerable<UserInfo>> GetByRoleAsync(string role);
     }
 }

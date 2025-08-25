@@ -3,6 +3,7 @@ using Database.Repositories;
 using Microsoft.AspNetCore.Builder;
 using Database.Context;
 using Microsoft.EntityFrameworkCore;
+using Business.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,6 +26,7 @@ builder.Services.AddScoped<ISaleRepository, SaleRepository>();
 builder.Services.AddScoped<ISaleItemRepository, SaleItemRepository>();
 builder.Services.AddScoped<IAntibioticLogRepository, AntibioticLogRepository>();
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+builder.Services.AddScoped<UserService>();
 
 var app = builder.Build();
 

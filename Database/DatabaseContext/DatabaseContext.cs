@@ -17,7 +17,7 @@ namespace Database.Context
             }
         }
 
-        public DbSet<User> Users { get; set; }
+        public DbSet<UserInfo> UsersInfo { get; set; }
         public DbSet<Supplier> Suppliers { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<ProductBatch> ProductBatches { get; set; }

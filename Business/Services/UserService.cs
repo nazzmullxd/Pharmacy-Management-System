@@ -12,17 +12,17 @@ namespace Business.Services
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         }
 
-        public async Task<IEnumerable<User>> GetAllUsersAsync()
+        public async Task<IEnumerable<UserInfo>> GetAllUsersAsync()
         {
             return await _userRepository.GetAllAsync();
         }
 
-        public async Task<User?> GetUserByIdAsync(Guid userId)
+        public async Task<UserInfo?> GetUserByIdAsync(Guid userId)
         {
             return await _userRepository.GetByIdAsync(userId);
         }
 
-        public async Task AddUserAsync(User user)
+        public async Task AddUserAsync(UserInfo user)
         {
             if (user == null)
             {
@@ -32,7 +32,7 @@ namespace Business.Services
             await _userRepository.AddAsync(user);
         }
 
-        public async Task UpdateUserAsync(User user)
+        public async Task UpdateUserAsync(UserInfo user)
         {
             if (user == null)
             {
@@ -47,7 +47,7 @@ namespace Business.Services
             await _userRepository.DeleteAsync(userId);
         }
 
-        public async Task<IEnumerable<User>> SearchUsersByUsernameAsync(string username)
+        public async Task<IEnumerable<UserInfo>> SearchUsersByUsernameAsync(string username)
         {
             if (string.IsNullOrWhiteSpace(username))
             {
@@ -57,7 +57,7 @@ namespace Business.Services
             return await _userRepository.GetByUsernameAsync(username);
         }
 
-        public async Task<IEnumerable<User>> SearchUsersByEmailAsync(string email)
+        public async Task<IEnumerable<UserInfo>> SearchUsersByEmailAsync(string email)
         {
             if (string.IsNullOrWhiteSpace(email))
             {
@@ -67,7 +67,7 @@ namespace Business.Services
             return await _userRepository.GetByEmailAsync(email);
         }
 
-        public async Task<IEnumerable<User>> GetUsersByRoleAsync(string role)
+        public async Task<IEnumerable<UserInfo>> GetUsersByRoleAsync(string role)
         {
             if (string.IsNullOrWhiteSpace(role))
             {

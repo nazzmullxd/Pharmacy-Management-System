@@ -10,7 +10,7 @@ namespace Database.Model
         Employee
     }
     */
-    public class User
+    public class UserInfo
     {
         // Primary Key
         [Key]

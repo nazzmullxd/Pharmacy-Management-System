@@ -6,7 +6,7 @@ class Program
 {
     static async Task Main()
     {
-        string connectionString = "Server=.;Database= Pharmacy Management System;Trusted_Connection=True;TrustServerCertificate=True;";
+        string connectionString = "Server=.;Database=PharmacyManagementSystem;Trusted_Connection=True;TrustServerCertificate=True;";
         try
         {
             using (SqlConnection connection = new SqlConnection(connectionString))
@@ -17,7 +17,7 @@ class Program
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Connection failed: {ex}");
+            Console.WriteLine($"Connection failed: {ex.Message}");
         }
     }
 }

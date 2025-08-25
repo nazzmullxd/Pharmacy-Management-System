@@ -19,7 +19,7 @@ namespace Database.Tests
             using var context = new PharmacyManagementContext(options);
 
             // Arrange: create a new user
-            var user = new User
+            var user = new UserInfo
             {
                 UserID = Guid.NewGuid(),
                 FirstName = "testuser",
@@ -27,9 +27,9 @@ namespace Database.Tests
                 Email = "testuser@example.com",
                 PasswordHash = "hashedpassword",
                 Role = "Admin",
-                LastLoginDate= DateTime.UtcNow
+                LastLoginDate = DateTime.UtcNow
             };
-            context.Users.Add(user);
+            context.UsersInfo.Add(user);
 
             // Arrange: create a new supplier
             var supplier = new Supplier
@@ -65,7 +65,7 @@ namespace Database.Tests
             context.SaveChanges();
 
             // Act: retrieve the user, supplier, and product
-            var retrievedUser = context.Users.FirstOrDefault(u => u.UserID == user.UserID);
+            var retrievedUser = context.UsersInfo.FirstOrDefault(u => u.UserID == user.UserID);
             var retrievedSupplier = context.Suppliers.FirstOrDefault(s => s.SupplierID == supplier.SupplierID);
             var retrievedProduct = context.Products.FirstOrDefault(p => p.ProductID == product.ProductID);
 
