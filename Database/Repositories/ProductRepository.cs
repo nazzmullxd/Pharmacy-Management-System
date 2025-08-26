@@ -63,5 +63,36 @@ namespace Database.Repositories
             _context.Products.Remove(product);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<IEnumerable<Product>> GetByNameAsync(string productName)
+        {
+            if (string.IsNullOrWhiteSpace(productName))
+            {
+                throw new ArgumentException("Product name cannot be null or empty", nameof(productName));
+            }
+
+            return await _context.Products
+                .Where(p => EF.Functions.Like(p.ProductName, $"%{productName}%"))
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Product>> GetActiveProductsAsync()
+        {
+            return await _context.Products
+                .Where(p => p.IsActive)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Product>> GetByCategoryAsync(string category)
+        {
+            if (string.IsNullOrWhiteSpace(category))
+            {
+                throw new ArgumentException("Category cannot be null or empty", nameof(category));
+            }
+
+            return await _context.Products
+                .Where(p => p.Category.Equals(category, StringComparison.OrdinalIgnoreCase))
+                .ToListAsync();
+        }
     }
 }

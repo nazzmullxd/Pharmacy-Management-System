@@ -22,7 +22,8 @@ namespace Web.Pages
         {
         }
 
-        public async Task<IActionResult> OnPostAsync()
+        public async Task<IActionResult>
+    OnPostAsync()
         {
             if (!ModelState.IsValid)
             {

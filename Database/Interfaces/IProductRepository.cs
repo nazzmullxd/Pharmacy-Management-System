@@ -9,5 +9,8 @@ namespace Database.Interfaces
         Task AddAsync(Product product);
         Task UpdateAsync(Product product);
         Task DeleteAsync(Guid productId);
+        Task<IEnumerable<Product>> GetByNameAsync(string productName);
+        Task<IEnumerable<Product>> GetActiveProductsAsync();
+        Task<IEnumerable<Product>> GetByCategoryAsync(string category);
     }
 }

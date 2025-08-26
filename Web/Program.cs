@@ -1,9 +1,8 @@
+using Business.Services;
+using Database.Context;
 using Database.Interfaces;
 using Database.Repositories;
-using Microsoft.AspNetCore.Builder;
-using Database.Context;
 using Microsoft.EntityFrameworkCore;
-using Business.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +26,8 @@ builder.Services.AddScoped<ISaleItemRepository, SaleItemRepository>();
 builder.Services.AddScoped<IAntibioticLogRepository, AntibioticLogRepository>();
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<ProductService>();
+
 
 var app = builder.Build();
 
