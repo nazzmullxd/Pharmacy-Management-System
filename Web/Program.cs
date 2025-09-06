@@ -1,4 +1,4 @@
-using Business.Services;
+using Business;
 using Database.Context;
 using Database.Interfaces;
 using Database.Repositories;
@@ -25,8 +25,9 @@ builder.Services.AddScoped<ISaleRepository, SaleRepository>();
 builder.Services.AddScoped<ISaleItemRepository, SaleItemRepository>();
 builder.Services.AddScoped<IAntibioticLogRepository, AntibioticLogRepository>();
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
-builder.Services.AddScoped<UserService>();
-builder.Services.AddScoped<ProductService>();
+
+// Register all business services
+builder.Services.AddBusinessServices();
 
 
 var app = builder.Build();

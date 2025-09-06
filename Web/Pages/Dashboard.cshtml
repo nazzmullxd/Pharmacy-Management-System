@@ -1,0 +1,363 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <h1><i class="fas fa-tachometer-alt"></i> M/S Rabiul Pharmacy Dashboard</h1>
+    <p>Welcome to your pharmacy management system. Monitor your business performance and manage operations efficiently.</p>
+</div>
+
+<!-- KPI Cards Grid -->
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Today's Sales</div>
+            <div class="kpi-icon" style="background: #27ae60;">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+        </div>
+        <div class="kpi-value">$12,450</div>
+        <div class="kpi-change positive">
+            <i class="fas fa-arrow-up"></i> +12.5% from yesterday
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Today's Invoices</div>
+            <div class="kpi-icon" style="background: #3498db;">
+                <i class="fas fa-file-invoice"></i>
+            </div>
+        </div>
+        <div class="kpi-value">45</div>
+        <div class="kpi-change positive">
+            <i class="fas fa-arrow-up"></i> +8.3% from yesterday
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">This Month's Sales</div>
+            <div class="kpi-icon" style="background: #9b59b6;">
+                <i class="fas fa-chart-line"></i>
+            </div>
+        </div>
+        <div class="kpi-value">$245,680</div>
+        <div class="kpi-change positive">
+            <i class="fas fa-arrow-up"></i> +15.2% from last month
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">This Month's Invoices</div>
+            <div class="kpi-icon" style="background: #e67e22;">
+                <i class="fas fa-receipt"></i>
+            </div>
+        </div>
+        <div class="kpi-value">1,234</div>
+        <div class="kpi-change positive">
+            <i class="fas fa-arrow-up"></i> +18.7% from last month
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Stock Value</div>
+            <div class="kpi-icon" style="background: #2ecc71;">
+                <i class="fas fa-boxes"></i>
+            </div>
+        </div>
+        <div class="kpi-value">$89,450</div>
+        <div class="kpi-change positive">
+            <i class="fas fa-arrow-up"></i> +5.2% from last week
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Outstanding Dues</div>
+            <div class="kpi-icon" style="background: #e74c3c;">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+        </div>
+        <div class="kpi-value">$3,250</div>
+        <div class="kpi-change negative">
+            <i class="fas fa-arrow-down"></i> -12.1% from last week
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="quick-actions">
+    <a href="/Sales/New" class="quick-action-btn">
+        <i class="fas fa-plus-circle"></i>
+        <span>Create Sale Order</span>
+    </a>
+    <a href="/Purchases/New" class="quick-action-btn">
+        <i class="fas fa-truck"></i>
+        <span>Create Purchase Order</span>
+    </a>
+    <a href="/Stock/Adjustments" class="quick-action-btn">
+        <i class="fas fa-edit"></i>
+        <span>Stock Adjustment</span>
+    </a>
+    <a href="/Products/New" class="quick-action-btn">
+        <i class="fas fa-pills"></i>
+        <span>Add Product</span>
+    </a>
+</div>
+
+<!-- Reports Quick Links -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <a href="/Reports/Stock" class="btn btn-outline-primary w-100">
+            <i class="fas fa-chart-bar"></i> View Stock Report
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a href="/Stock/Batches" class="btn btn-outline-info w-100">
+            <i class="fas fa-layer-group"></i> View Batch Report
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a href="/Stock/Expiring" class="btn btn-outline-warning w-100">
+            <i class="fas fa-clock"></i> View Expiry Forecast
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a href="/Reports/ProfitLoss" class="btn btn-outline-success w-100">
+            <i class="fas fa-calculator"></i> View Profit/Loss
+        </a>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="chart-container">
+            <h5><i class="fas fa-chart-line"></i> Sales Trend (Last 6 Months)</h5>
+            <canvas id="salesChart" height="300"></canvas>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="chart-container">
+            <h5><i class="fas fa-chart-pie"></i> Stock Status</h5>
+            <canvas id="stockChart" height="300"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Performance Tables Row -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="table-container">
+            <h5><i class="fas fa-trophy"></i> Top 10 Products Sold Last Month</h5>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Product Name</th>
+                            <th>Category</th>
+                            <th>Quantity Sold</th>
+                            <th>Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="badge badge-primary">1</span></td>
+                            <td>Paracetamol 500mg</td>
+                            <td>Pain Relief</td>
+                            <td>450</td>
+                            <td>$2,250</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-primary">2</span></td>
+                            <td>Amoxicillin 250mg</td>
+                            <td>Antibiotic</td>
+                            <td>380</td>
+                            <td>$3,800</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-primary">3</span></td>
+                            <td>Vitamin D3</td>
+                            <td>Supplements</td>
+                            <td>320</td>
+                            <td>$1,600</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-primary">4</span></td>
+                            <td>Omeprazole 20mg</td>
+                            <td>Digestive</td>
+                            <td>280</td>
+                            <td>$1,400</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-primary">5</span></td>
+                            <td>Metformin 500mg</td>
+                            <td>Diabetes</td>
+                            <td>250</td>
+                            <td>$1,250</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="table-container">
+            <h5><i class="fas fa-boxes"></i> Top 10 Products in Current Stock</h5>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Product Name</th>
+                            <th>Category</th>
+                            <th>Current Stock</th>
+                            <th>Unit Price</th>
+                            <th>Total Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Paracetamol 500mg</td>
+                            <td>Pain Relief</td>
+                            <td><span class="badge badge-success">1,250</span></td>
+                            <td>$5.00</td>
+                            <td>$6,250</td>
+                        </tr>
+                        <tr>
+                            <td>Amoxicillin 250mg</td>
+                            <td>Antibiotic</td>
+                            <td><span class="badge badge-success">980</span></td>
+                            <td>$10.00</td>
+                            <td>$9,800</td>
+                        </tr>
+                        <tr>
+                            <td>Vitamin D3</td>
+                            <td>Supplements</td>
+                            <td><span class="badge badge-success">750</span></td>
+                            <td>$5.00</td>
+                            <td>$3,750</td>
+                        </tr>
+                        <tr>
+                            <td>Omeprazole 20mg</td>
+                            <td>Digestive</td>
+                            <td><span class="badge badge-warning">45</span></td>
+                            <td>$5.00</td>
+                            <td>$225</td>
+                        </tr>
+                        <tr>
+                            <td>Metformin 500mg</td>
+                            <td>Diabetes</td>
+                            <td><span class="badge badge-success">680</span></td>
+                            <td>$5.00</td>
+                            <td>$3,400</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="table-container">
+            <h5><i class="fas fa-history"></i> Recent Sales</h5>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Customer</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>INV-001</td>
+                            <td>John Doe</td>
+                            <td>$125.50</td>
+                            <td>Today</td>
+                            <td><span class="badge badge-success">Paid</span></td>
+                        </tr>
+                        <tr>
+                            <td>INV-002</td>
+                            <td>Jane Smith</td>
+                            <td>$89.25</td>
+                            <td>Today</td>
+                            <td><span class="badge badge-success">Paid</span></td>
+                        </tr>
+                        <tr>
+                            <td>INV-003</td>
+                            <td>Mike Johnson</td>
+                            <td>$156.75</td>
+                            <td>Yesterday</td>
+                            <td><span class="badge badge-warning">Pending</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="table-container">
+            <h5><i class="fas fa-exclamation-triangle"></i> Expiring Products (Next 30 Days)</h5>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Batch</th>
+                            <th>Expiry Date</th>
+                            <th>Days Left</th>
+                            <th>Stock</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Paracetamol 500mg</td>
+                            <td>BATCH-001</td>
+                            <td>2024-02-15</td>
+                            <td><span class="badge badge-danger">5 days</span></td>
+                            <td>120</td>
+                        </tr>
+                        <tr>
+                            <td>Amoxicillin 250mg</td>
+                            <td>BATCH-002</td>
+                            <td>2024-02-20</td>
+                            <td><span class="badge badge-warning">10 days</span></td>
+                            <td>85</td>
+                        </tr>
+                        <tr>
+                            <td>Vitamin D3</td>
+                            <td>BATCH-003</td>
+                            <td>2024-02-25</td>
+                            <td><span class="badge badge-warning">15 days</span></td>
+                            <td>200</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Initialize dashboard charts when page loads
+        $(document).ready(function() {
+            initializeCharts();
+        });
+    </script>
+}

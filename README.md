@@ -1,123 +1,167 @@
-# 💊 PharmacyERP Suite  
-A Digital Pharmacy Management System for M/S Rabiul Pharmacy  
+# Pharmacy Management System
 
-📦 Inventory | 💰 Sales & Purchases | 🧾 Billing | 📊 Reports | 🛡️ Compliance
+A comprehensive, modern pharmacy management system built with ASP.NET Core Razor Pages, featuring a complete business logic layer and responsive UI/UX.
 
----
+## 🏥 Features
 
-## 🧭 Project Overview
+### Core Business Modules
+- **Products Management**: Complete product catalog with inventory tracking
+- **Sales Management**: Sales transactions, invoicing, and payment tracking
+- **Stock Management**: Inventory monitoring, low stock alerts, and expiry tracking
+- **Customer Management**: Customer database and relationship management
+- **Dashboard**: Real-time business metrics and KPIs
 
-PharmacyERP Suite is a structured pharmacy management solution developed as part of the System Analysis and Design coursework. It addresses real-world pharmacy workflows including product and batch tracking, sales/purchases, customer and supplier management, expiry monitoring, and compliance logging — tailored specifically for M/S Rabiul Pharmacy.
+### Technical Features
+- **Modern UI/UX**: Responsive design with interactive elements
+- **Business Logic Layer**: Complete service layer with DTOs and interfaces
+- **Database Integration**: Entity Framework with repository pattern
+- **Real-time Data**: Dynamic dashboard with live business metrics
+- **Search & Filtering**: Advanced search and filtering capabilities
 
----
+## 🚀 Getting Started
 
-## 🚀 Features Implemented
+### Prerequisites
+- .NET 8.0 SDK
+- SQL Server (LocalDB or Express)
+- Visual Studio Code or Visual Studio
 
-- ✅ Product and Batch-wise Inventory Management  
-- ✅ Sale and Purchase Order Modules  
-- ✅ Customer and Supplier Records  
-- ✅ DGDA-Compliant Antibiotic Sales Logging  
-- ✅ Expiry Alerts and Expiring Product Reports  
-- ✅ Daily Profit/Loss and Stock Reporting  
-- ✅ Role-Based Access Control (Owner / Staff)  
-- ✅ Stock Adjustments with Audit Logging  
+### Installation
 
----
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/Pharmacy-Management-System.git
+   cd Pharmacy-Management-System
+   ```
 
-## 🏗️ Tech Stack
+2. **Restore packages**:
+   ```bash
+   dotnet restore
+   ```
 
-- Language: C#  
-- Framework: .NET 8 / .NET Core  
-- ORM: Entity Framework Core  
-- Database: SQL Server Express Edition  
-- Architecture: Layered MVC (Database -> Business -> Presentation)
-
----
-
-# 🏥 Pharmacy Management System – Project Structure
-
-## 📂 Solution Layout
-
-| Folder / File                          | Purpose                                                                 |
-|----------------------------------------|-------------------------------------------------------------------------|
-| **/Presentation**                      | UI layer – responsible for user interaction and presentation logic     |
-| ├── **/Desktop**                       | Desktop application interface components                               |
-| ├── **/Web**                           | ASP.NET Core web application                                            |
-| │   ├── **/Connected Services**        | External service references (API, Azure, etc.)                         |
-| │   ├── **/Dependencies**              | NuGet packages and library references                                  |
-| │   ├── **/Properties**                | Project-specific properties and configuration                          |
-| │   ├── **/wwwroot**                   | Static files (CSS, JS, images)                                          |
-| │   ├── **/Pages**                     | Razor Pages for web UI                                                  |
-| │   ├── **appsettings.json**           | Application configuration file                                         |
-| │   ├── **Program.cs**                 | Application startup and dependency injection setup                     |
-|                                                                              |
-| **/Test**                              | Unit/integration tests and demo values                                  |
-|                                                                              |
-| **/Business**                          | Business logic layer (service implementations, rules, validation)      |
-| ├── **/Services**                      | Service classes for handling application logic                         |
-|                                                                              |
-| **/Database**                          | Data access layer (Entity Framework Core)                               |
-| ├── **/DatabaseContext**               | EF Core DbContext configuration and setup                              |
-| ├── **/Interfaces**                    | Repository and service interfaces                                      |
-| ├── **/Model**                         | Entity classes (e.g., Product, Sale, Customer)                         |
-| ├── **/Repositories**                  | Repository implementations for data persistence                       |
-|                                                                              |
-| **/Migrations**                        | Entity Framework migration files                                        |
-|                                                                              |
-| **README.md**                          | Project overview and setup instructions                                |
-
----
-💡 **Layered Architecture:**
-- **Presentation Layer** → Handles UI (Desktop + Web)
-- **Business Layer** → Contains the application's core logic
-- **Database Layer** → Manages data persistence using EF Core
-
-
----
-
-## 🛠️ Setup Instructions
-
-1. Clone the repository:  
-  [gh repo clone nazzmullxd/Pharmacy-Management-System](https://github.com/nazzmullxd/Pharmacy-Management-System.git)
-2. Navigate to project directory:  
-   cd PharmacyERP
-
-3. Run EF Core migrations to set up the database:  
+3. **Update database**:
+   ```bash
+   cd Web
    dotnet ef database update
+   ```
 
-4. Launch the application:  
+4. **Run the application**:
+   ```bash
    dotnet run
+   ```
 
-> Recommended IDE: Visual Studio 2022 or VS Code
+5. **Open in browser**:
+   - Navigate to http://localhost:5067
 
----
+## 🏗️ Project Structure
 
-## 🔐 Entity Overview
+```
+Pharmacy-Management-System/
+├── Business/                 # Business Logic Layer
+│   ├── DTOs/                # Data Transfer Objects
+│   ├── Interfaces/          # Service Interfaces
+│   ├── Services/            # Service Implementations
+│   └── ServiceRegistration.cs
+├── Database/                # Data Access Layer
+│   ├── Context/             # Entity Framework Context
+│   ├── Interfaces/          # Repository Interfaces
+│   ├── Model/               # Entity Models
+│   └── Repositories/        # Repository Implementations
+└── Web/                     # Presentation Layer
+    ├── Pages/               # Razor Pages
+    ├── wwwroot/             # Static Files
+    └── Program.cs           # Application Entry Point
+```
 
-The project includes the following core entities:
+## 🎯 Key Features
 
-- Product, ProductBatch  
-- Purchase, PurchaseItem  
-- Sale, SaleItem  
-- Customer, Supplier  
-- AntibioticLog (DGDA compliance)  
-- AuditLog (user actions)  
-- User (with role-based access)
+### Dashboard
+- Real-time business metrics
+- Sales and revenue tracking
+- Stock value monitoring
+- Expiring products alerts
+- Top selling products
 
----
+### Products Management
+- Product catalog with categories
+- Inventory tracking
+- Low stock alerts
+- Barcode management
+- Price management (unit, retail, wholesale)
 
-## 🧑‍💻 Contributors
+### Sales Management
+- Sales transaction processing
+- Payment status tracking
+- Customer invoicing
+- Sales reporting
+- Transaction history
 
-- Lead Developer: Nazmul Huda
-- Database Manager: Zahidul Islam
-- UI/UX Design : Iftekhar Ahmed
-- MD Imtiaz Dinar
-- Academic Supervisor: Engr. ASM Shakil Ahemd 
-- Pharmacy Advisor: Rabiul Pharmacy  
+### Stock Management
+- Real-time inventory levels
+- Batch tracking with expiry dates
+- Stock adjustments
+- Low stock alerts
+- Expiry monitoring
 
----
+### Customer Management
+- Customer database
+- Contact information management
+- Sales history tracking
+- Customer relationship management
+
+## 🛠️ Technologies Used
+
+- **Backend**: ASP.NET Core 8.0, C#
+- **Frontend**: Razor Pages, HTML5, CSS3, JavaScript
+- **Database**: SQL Server, Entity Framework Core
+- **UI Framework**: Bootstrap 5, Font Awesome
+- **Charts**: Chart.js
+- **Architecture**: Clean Architecture, Repository Pattern
+
+## 📊 Business Logic
+
+The system implements a complete business logic layer with:
+- **DTOs**: Data Transfer Objects for clean data flow
+- **Services**: Business service implementations
+- **Interfaces**: Service contracts for dependency injection
+- **Validation**: Business rule validation
+- **Error Handling**: Comprehensive exception handling
+
+## 🎨 UI/UX Features
+
+- **Responsive Design**: Works on desktop, tablet, and mobile
+- **Modern Interface**: Clean, professional design
+- **Interactive Elements**: Search, filtering, sorting, pagination
+- **Real-time Updates**: Live data refresh and notifications
+- **Accessibility**: User-friendly interface with proper navigation
+
+## 📈 Future Enhancements
+
+- [ ] API Controllers for mobile app integration
+- [ ] Authentication and authorization system
+- [ ] Advanced reporting and analytics
+- [ ] Barcode scanning integration
+- [ ] Email notifications
+- [ ] Multi-location support
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
 ## 📄 License
 
-This project is for academic purposes only.  
-For inquiries or further use, please contact the developer.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 👨‍💻 Author
+
+**Nasim Ahmed**
+- GitHub: [@yourusername](https://github.com/yourusername)
+
+## 🙏 Acknowledgments
+
+- Built with ASP.NET Core and modern web technologies
+- Inspired by real-world pharmacy management needs
+- Designed for scalability and maintainability

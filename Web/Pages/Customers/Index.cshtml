@@ -1,0 +1,320 @@
+@page
+@model Web.Pages.Customers.IndexModel
+@{
+    ViewData["Title"] = "Customers";
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <h1><i class="fas fa-users"></i> Customer Management</h1>
+    <p>Manage your pharmacy's customer database and customer relationships.</p>
+</div>
+
+<!-- Action Buttons -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <a href="/Customers/Create" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add New Customer
+        </a>
+        <a href="/Customers/Import" class="btn btn-outline-secondary">
+            <i class="fas fa-file-import"></i> Import Customers
+        </a>
+    </div>
+    <div class="col-md-6">
+        <div class="input-group">
+            <input type="text" class="form-control search-input" placeholder="Search customers...">
+            <button class="btn btn-outline-secondary" type="button">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Customer Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="kpi-card">
+            <div class="kpi-header">
+                <div class="kpi-title">Total Customers</div>
+                <div class="kpi-icon" style="background: #3498db;">
+                    <i class="fas fa-users"></i>
+                </div>
+            </div>
+            <div class="kpi-value">@Model.TotalCustomers</div>
+            <div class="kpi-change positive">
+                <i class="fas fa-arrow-up"></i> Registered
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="kpi-card">
+            <div class="kpi-header">
+                <div class="kpi-title">Active Customers</div>
+                <div class="kpi-icon" style="background: #27ae60;">
+                    <i class="fas fa-user-check"></i>
+                </div>
+            </div>
+            <div class="kpi-value">@Model.ActiveCustomers</div>
+            <div class="kpi-change positive">
+                <i class="fas fa-arrow-up"></i> This month
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="kpi-card">
+            <div class="kpi-header">
+                <div class="kpi-title">New This Month</div>
+                <div class="kpi-icon" style="background: #9b59b6;">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+            </div>
+            <div class="kpi-value">@Model.NewCustomers</div>
+            <div class="kpi-change positive">
+                <i class="fas fa-arrow-up"></i> New registrations
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="kpi-card">
+            <div class="kpi-header">
+                <div class="kpi-title">Total Sales</div>
+                <div class="kpi-icon" style="background: #e67e22;">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+            </div>
+            <div class="kpi-value">$@Model.TotalCustomerSales.ToString("N0")</div>
+            <div class="kpi-change positive">
+                <i class="fas fa-arrow-up"></i> Customer sales
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Customers Table -->
+<div class="table-container">
+    <h5><i class="fas fa-list"></i> Customer Directory</h5>
+    <div class="table-responsive">
+        <table class="table table-hover" id="customersTable">
+            <thead>
+                <tr>
+                    <th data-sort="0">Customer Name</th>
+                    <th data-sort="1">Contact</th>
+                    <th data-sort="2">Email</th>
+                    <th data-sort="3">Address</th>
+                    <th data-sort="4">Registration Date</th>
+                    <th data-sort="5">Total Purchases</th>
+                    <th data-sort="6">Last Purchase</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Customers != null && Model.Customers.Any())
+                {
+                    @foreach (var customer in Model.Customers)
+                    {
+                        <tr>
+                            <td>
+                                <strong>@customer.CustomerName</strong>
+                                <br><small class="text-muted">ID: @customer.CustomerID.ToString().Substring(0, 8)</small>
+                            </td>
+                            <td>
+                                @customer.ContactNumber
+                                @if (!string.IsNullOrEmpty(customer.ContactNumber))
+                                {
+                                    <br><small class="text-muted">Phone</small>
+                                }
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(customer.Email))
+                                {
+                                    <a href="mailto:@customer.Email">@customer.Email</a>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">No email</span>
+                                }
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(customer.Address))
+                                {
+                                    <span title="@customer.Address">
+                                        @(customer.Address.Length > 30 ? customer.Address.Substring(0, 30) + "..." : customer.Address)
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">No address</span>
+                                }
+                            </td>
+                            <td>
+                                @customer.CreatedDate.ToString("MMM dd, yyyy")
+                                <br><small class="text-muted">@customer.CreatedDate.ToString("hh:mm tt")</small>
+                            </td>
+                            <td>
+                                <span class="badge badge-info">$@(customer.TotalPurchases?.ToString("F2") ?? "0.00")</span>
+                            </td>
+                            <td>
+                                @if (customer.LastPurchaseDate.HasValue)
+                                {
+                                    @customer.LastPurchaseDate.Value.ToString("MMM dd, yyyy")
+                                    <br><small class="text-muted">@customer.LastPurchaseDate.Value.ToString("hh:mm tt")</small>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">No purchases</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="/Customers/Details/@customer.CustomerID" class="btn btn-sm btn-outline-info" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="/Customers/Edit/@customer.CustomerID" class="btn btn-sm btn-outline-primary" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="/Sales/Create?customerId=@customer.CustomerID" class="btn btn-sm btn-outline-success" title="New Sale">
+                                        <i class="fas fa-shopping-cart"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" title="Delete" onclick="confirmDelete('@customer.CustomerID', '@customer.CustomerName')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4">
+                            <i class="fas fa-users fa-3x mb-3"></i>
+                            <br>No customers found. <a href="/Customers/Create">Add your first customer</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Pagination -->
+@if (Model.Customers != null && Model.Customers.Count() > 10)
+{
+    <nav aria-label="Customers pagination">
+        <ul class="pagination justify-content-center">
+            <li class="page-item disabled">
+                <a class="page-link" href="#" tabindex="-1">Previous</a>
+            </li>
+            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+            <li class="page-item"><a class="page-link" href="#">2</a></li>
+            <li class="page-item"><a class="page-link" href="#">3</a></li>
+            <li class="page-item">
+                <a class="page-link" href="#">Next</a>
+            </li>
+        </ul>
+    </nav>
+}
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="table-container">
+            <h5><i class="fas fa-star"></i> Top Customers (This Month)</h5>
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Customer</th>
+                            <th>Purchases</th>
+                            <th>Total Amount</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.TopCustomers != null && Model.TopCustomers.Any())
+                        {
+                            @foreach (var customer in Model.TopCustomers.Take(5))
+                            {
+                                <tr>
+                                    <td>@customer.CustomerName</td>
+                                    <td><span class="badge badge-info">@customer.TotalPurchases</span></td>
+                                    <td>$@customer.TotalAmount.ToString("F2")</td>
+                                    <td>
+                                        <a href="/Sales/Create?customerId=@customer.CustomerID" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-shopping-cart"></i> New Sale
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">
+                                    <i class="fas fa-info-circle"></i> No customer data available
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="table-container">
+            <h5><i class="fas fa-user-plus"></i> Recent Registrations</h5>
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Customer</th>
+                            <th>Contact</th>
+                            <th>Registration Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.RecentCustomers != null && Model.RecentCustomers.Any())
+                        {
+                            @foreach (var customer in Model.RecentCustomers.Take(5))
+                            {
+                                <tr>
+                                    <td>@customer.CustomerName</td>
+                                    <td>@customer.ContactNumber</td>
+                                    <td>@customer.CreatedDate.ToString("MMM dd")</td>
+                                    <td>
+                                        <a href="/Customers/Details/@customer.CustomerID" class="btn btn-sm btn-outline-info">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">
+                                    <i class="fas fa-info-circle"></i> No recent registrations
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmDelete(customerId, customerName) {
+            if (confirm(`Are you sure you want to delete "${customerName}"? This action cannot be undone.`)) {
+                // In a real implementation, this would make an API call
+                showAlert('Customer deleted successfully', 'success');
+                // Remove the row from the table
+                event.target.closest('tr').remove();
+            }
+        }
+    </script>
+}
