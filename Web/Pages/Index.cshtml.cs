@@ -98,7 +98,7 @@ namespace Web.Pages
                 // Load top selling products (last month)
                 var monthStart = DateTime.UtcNow.AddMonths(-1);
                 var monthEnd = DateTime.UtcNow;
-                TopSellingProducts = await _salesService.GetTopSellingProductsAsync(monthStart, monthEnd, 10);
+                TopSellingProducts = await _salesService.GetTopSellingProductsAsync(10, monthStart, monthEnd);
 
                 // Load top stock products
                 var products = await _productService.GetAllProductsAsync();
@@ -109,7 +109,7 @@ namespace Web.Pages
                 RecentSales = RecentSales.OrderByDescending(s => s.SaleDate).Take(5);
 
                 // Load expiring products (next 30 days)
-                ExpiringProducts = await _stockService.GetExpiryAlertsAsync(30);
+                ExpiringProducts = await _stockService.GetExpiryAlertsAsync();
             }
             catch (Exception ex)
             {

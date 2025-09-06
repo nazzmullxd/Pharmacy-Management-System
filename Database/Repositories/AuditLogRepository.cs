@@ -50,7 +50,13 @@ namespace Database.Repositories
             _context.AuditLogs.Remove(auditLog);
             await _context.SaveChangesAsync();
         }
-       
 
+        public async Task<IEnumerable<AuditLog>> GetByDateRangeAsync(DateTime startDate, DateTime endDate)
+        {
+            return await _context.AuditLogs
+                .Where(al => al.ActionDate >= startDate && al.ActionDate <= endDate)
+                .AsNoTracking()
+                .ToListAsync();
+        }
     }
 }

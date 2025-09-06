@@ -11,5 +11,6 @@ namespace Database.Interfaces
         Task DeleteAsync(Guid purchaseId);
         Task<IEnumerable<Purchase>> GetBySupplierIdAsync(Guid supplierId);
         Task<IEnumerable<Purchase>> GetByUserIdAsync(Guid userId);
+        Task<IEnumerable<Purchase>> GetByDateRangeAsync(DateTime startDate, DateTime endDate);
     }
 }

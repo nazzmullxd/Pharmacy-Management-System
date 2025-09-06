@@ -13,7 +13,7 @@ namespace Database.Model
         // Foreign Key
         [Required]
         [ForeignKey(nameof(UserInfo))]
-        public Guid UserId { get; set; } = Guid.Empty;
+        public Guid UserID { get; set; } = Guid.Empty;
 
         // Navigation Property
         public UserInfo? User { get; set; }
@@ -22,10 +22,22 @@ namespace Database.Model
         [Required]
         public string Action { get; set; } = string.Empty;
 
+        public string EntityType { get; set; } = string.Empty;
+
+        public string EntityID { get; set; } = string.Empty;
+
+        public string OldValues { get; set; } = string.Empty;
+
+        public string NewValues { get; set; } = string.Empty;
+
         public string Details { get; set; } = string.Empty;
+
+        public string IPAddress { get; set; } = string.Empty;
 
         // Metadata
         [Required]
         public DateTime ActionDate { get; set; } = DateTime.UtcNow;
+
+        public DateTime Timestamp { get; set; } = DateTime.UtcNow;
     }
 }

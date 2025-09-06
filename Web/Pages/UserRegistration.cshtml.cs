@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Business.DTO;
 using Business.Services;
 using Database.Model;
 using Microsoft.AspNetCore.Mvc;
@@ -29,17 +30,17 @@ namespace Web.Pages
                 return Page();
             }
 
-            var user = new UserInfo
+            var userDto = new UserDTO
             {
+                UserID = Guid.NewGuid(),
                 FirstName = Input.FirstName,
                 LastName = Input.LastName,
                 Email = Input.Email,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(Input.Password), // Hash the password
                 Role = "Employee", // Default role
                 LastLoginDate = DateTime.UtcNow
             };
 
-            await _userService.AddUserAsync(user);
+            await _userService.CreateUserAsync(userDto, Input.Password);
 
             return RedirectToPage("UserLogin");
         }

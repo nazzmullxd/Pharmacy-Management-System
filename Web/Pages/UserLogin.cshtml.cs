@@ -30,18 +30,15 @@ namespace Web.Pages
                 return Page();
             }
 
-            var users = await _userService.SearchUsersByEmailAsync(Input.Email);
-            var user = users.FirstOrDefault();
+            var isAuthenticated = await _userService.AuthenticateUserAsync(Input.Email, Input.Password);
 
-            if (user == null || !BCrypt.Net.BCrypt.Verify(Input.Password, user.PasswordHash))
+            if (!isAuthenticated)
             {
                 ModelState.AddModelError(string.Empty, "Invalid login attempt.");
                 return Page();
             }
 
-            // Update last login date
-            user.LastLoginDate = DateTime.UtcNow;
-            await _userService.UpdateUserAsync(user);
+            // User is authenticated, redirect to dashboard
 
             return RedirectToPage("Index");
         }

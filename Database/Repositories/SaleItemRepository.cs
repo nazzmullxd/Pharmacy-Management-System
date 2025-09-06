@@ -17,7 +17,7 @@ namespace Database.Repositories
         { return await _context.SalesItems.ToListAsync(); }
         public async Task<SaleItem?> GetByIdAsync(Guid saleItemId)
         {
-            return await _context.SalesItems.FirstOrDefaultAsync(si => si.SalesItemID == saleItemId);
+            return await _context.SalesItems.FirstOrDefaultAsync(si => si.SaleItemID == saleItemId);
         }
         public async Task AddAsync(SaleItem saleItem)
         {

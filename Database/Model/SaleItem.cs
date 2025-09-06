@@ -8,7 +8,7 @@ namespace Database.Model
     {
         // Primary Key
         [Key]
-        public Guid SalesItemID { get; set; } = Guid.NewGuid();
+        public Guid SaleItemID { get; set; } = Guid.NewGuid();
 
         // Foreign Keys
         [Required]
@@ -38,6 +38,12 @@ namespace Database.Model
         public decimal UnitPrice { get; set; } = 0.0m;
 
         public decimal Discount { get; set; } = 0.0m;
+
+        // Computed Properties
+        public decimal TotalPrice => (UnitPrice * Quantity) - Discount;
+
+        // Additional Properties
+        public string BatchNumber { get; set; } = string.Empty;
 
         // Metadata
         [Required]

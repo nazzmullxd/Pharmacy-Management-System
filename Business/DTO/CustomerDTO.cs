@@ -10,5 +10,8 @@ namespace Business.DTO
         public string Email { get; set; } = string.Empty;
         public string Address { get; set; } = string.Empty;
         public DateTime CreatedDate { get; set; }
+        public DateTime? LastPurchaseDate { get; set; }
+        public decimal? TotalPurchases { get; set; }
+        public decimal? TotalAmount { get; set; }
     }
 }

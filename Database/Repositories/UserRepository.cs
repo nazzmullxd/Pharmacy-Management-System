@@ -76,7 +76,7 @@ namespace Database.Repositories
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<UserInfo>> GetByEmailAsync(string email)
+        public async Task<UserInfo?> GetByEmailAsync(string email)
         {
             if (string.IsNullOrWhiteSpace(email))
             {
@@ -84,8 +84,7 @@ namespace Database.Repositories
             }
 
             return await _context.UsersInfo // Updated from Users to UsersInfo
-                .Where(u => EF.Functions.Like(u.Email, $"%{email}%"))
-                .ToListAsync();
+                .FirstOrDefaultAsync(u => u.Email == email);
         }
 
         public async Task<IEnumerable<UserInfo>> GetByRoleAsync(string role)

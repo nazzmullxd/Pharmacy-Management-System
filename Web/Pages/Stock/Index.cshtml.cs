@@ -39,7 +39,7 @@ namespace Web.Pages.Stock
                 LowStockAlerts = await _productService.GetLowStockProductsAsync();
                 
                 // Load expiring products
-                ExpiringAlerts = await _stockService.GetExpiryAlertsAsync(30); // Next 30 days
+                ExpiringAlerts = await _stockService.GetExpiryAlertsAsync(); // Next 30 days
                 
                 // Calculate summary statistics
                 CalculateSummaryStatistics();

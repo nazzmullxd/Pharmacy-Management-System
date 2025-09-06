@@ -8,5 +8,6 @@ namespace Database.Interfaces
         Task AddAsync(AuditLog auditLog);
         Task UpdateAsync(AuditLog auditLog);
         Task DeleteAsync(Guid auditLogId);
+        Task<IEnumerable<AuditLog>> GetByDateRangeAsync(DateTime startDate, DateTime endDate);
     }
 }

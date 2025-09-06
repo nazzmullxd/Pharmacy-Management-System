@@ -105,5 +105,15 @@ namespace Database.Repositories
                 .Include(p => p.ProductBatch)
                 .ToListAsync();
         }
+
+        public async Task<IEnumerable<Purchase>> GetByDateRangeAsync(DateTime startDate, DateTime endDate)
+        {
+            return await _context.Purchases
+                .Where(p => p.PurchaseDate >= startDate && p.PurchaseDate <= endDate)
+                .Include(p => p.Supplier)
+                .Include(p => p.User)
+                .Include(p => p.ProductBatch)
+                .ToListAsync();
+        }
     }
 }

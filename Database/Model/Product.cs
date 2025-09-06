@@ -38,6 +38,10 @@ namespace Database.Model
 
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 
+        // Stock properties
+        public int TotalStock { get; set; } = 0;
+        public int LowStockThreshold { get; set; } = 10;
+
         // Navigation property for related ProductBatches
         public ICollection<ProductBatch>? ProductBatches { get; set; }
     }

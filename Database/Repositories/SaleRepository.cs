@@ -85,5 +85,14 @@ namespace Database.Repositories
                 .Include(s => s.User)
                 .ToListAsync();
         }
+
+        public async Task<IEnumerable<Sale>> GetByDateRangeAsync(DateTime startDate, DateTime endDate)
+        {
+            return await _context.Sales
+                .Where(s => s.SaleDate >= startDate && s.SaleDate <= endDate)
+                .Include(s => s.Customer)
+                .Include(s => s.User)
+                .ToListAsync();
+        }
     }
 }

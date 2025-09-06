@@ -36,6 +36,11 @@ namespace Database.Model
 
         // Metadata
         [Required]
+        public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
+
+        public DateTime? UpdatedDate { get; set; }
+
+        [Required]
         public DateTime LastLoginDate { get; set; } = DateTime.UtcNow;
 
         // Role

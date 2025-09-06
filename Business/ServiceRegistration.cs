@@ -17,6 +17,7 @@ namespace Business
             services.AddScoped<ISupplierService, SupplierService>();
             services.AddScoped<IReportService, ReportService>();
             services.AddScoped<INotificationService, NotificationService>();
+            services.AddScoped<ICustomerService, CustomerService>();
             
             // Register additional feature services
             services.AddScoped<IStockAdjustmentService, StockAdjustmentService>();

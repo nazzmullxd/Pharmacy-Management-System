@@ -344,7 +344,6 @@ namespace Business.Services
                 ProductID = itemDto.ProductID,
                 Quantity = itemDto.Quantity,
                 UnitPrice = itemDto.UnitPrice,
-                TotalPrice = itemDto.TotalPrice,
                 BatchNumber = itemDto.BatchNumber
             };
         }

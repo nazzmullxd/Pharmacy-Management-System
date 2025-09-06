@@ -31,6 +31,9 @@ namespace Database.Model
         [Required]
         public decimal TotalAmount { get; set; } = 0.0m;
 
+        [Required]
+        public string PaymentStatus { get; set; } = "Pending";
+
         // Metadata
         [Required]
         public DateTime PurchaseDate { get; set; } = DateTime.UtcNow;
