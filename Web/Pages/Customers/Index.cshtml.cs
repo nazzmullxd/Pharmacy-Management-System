@@ -56,7 +56,7 @@ namespace Web.Pages.Customers
             }
         }
 
-        private async Task CalculateSummaryStatistics()
+        private Task CalculateSummaryStatistics()
         {
             try
             {
@@ -80,9 +80,10 @@ namespace Web.Pages.Customers
                 NewCustomers = 0;
                 TotalCustomerSales = 0;
             }
+            return Task.CompletedTask;
         }
 
-        private async Task LoadTopCustomers()
+        private Task LoadTopCustomers()
         {
             try
             {
@@ -101,6 +102,7 @@ namespace Web.Pages.Customers
                 _logger.LogError(ex, "Error loading top customers");
                 TopCustomers = new List<CustomerDTO>();
             }
+            return Task.CompletedTask;
         }
 
         public async Task<IActionResult> OnPostDeleteAsync(Guid customerId)
