@@ -1,0 +1,44 @@
+@page
+@model Web.Pages.SupportModel
+@{
+    ViewData["Title"] = "Support";
+}
+
+<div class="page-header">
+    <h1><i class="fas fa-life-ring"></i> Support</h1>
+</div>
+
+<div class="table-container">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Ticket #</th>
+                <th>Subject</th>
+                <th>Status</th>
+                <th>Priority</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Tickets != null && Model.Tickets.Any())
+            {
+                foreach (var t in Model.Tickets)
+                {
+                    <tr>
+                        <td>@t.TicketNumber</td>
+                        <td>@t.Subject</td>
+                        <td>@t.Status</td>
+                        <td>@t.Priority</td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="4" class="text-center text-muted">No tickets found.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+ </div>
+
+

@@ -1,0 +1,49 @@
+@page
+@model Web.Pages.Sales.InvoicesModel
+@{
+    ViewData["Title"] = "Invoices";
+}
+
+<div class="page-header">
+    <h1><i class="fas fa-file-invoice"></i> Invoices</h1>
+    <p>Placeholder listing of invoices.</p>
+    <a class="btn btn-secondary" href="/Sales">Back to Sales</a>
+</div>
+
+<div class="table-container">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Invoice #</th>
+                <th>Date</th>
+                <th>Customer</th>
+                <th>Total</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Invoices != null && Model.Invoices.Any())
+            {
+                foreach (var inv in Model.Invoices)
+                {
+                    <tr>
+                        <td>#@inv.SaleID.ToString().Substring(0,8)</td>
+                        <td>@inv.SaleDate.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td>@inv.CustomerName</td>
+                        <td>$@inv.TotalAmount.ToString("F2")</td>
+                        <td>@inv.PaymentStatus</td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="5" class="text-center text-muted">No invoices found.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    
+</div>
+
+

@@ -1,0 +1,24 @@
+@page
+@model Web.Pages.ProfileModel
+@{
+    ViewData["Title"] = "Profile";
+}
+
+<div class="page-header">
+    <h1><i class="fas fa-user"></i> Profile</h1>
+</div>
+
+@if (Model.CurrentUser != null)
+{
+    <div class="dashboard-card">
+        <p><strong>Name:</strong> @Model.CurrentUser.FullName</p>
+        <p><strong>Email:</strong> @Model.CurrentUser.Email</p>
+        <p><strong>Role:</strong> @Model.CurrentUser.Role</p>
+    </div>
+}
+else
+{
+    <div class="alert alert-info">No user context available.</div>
+}
+
+

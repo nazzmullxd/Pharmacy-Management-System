@@ -1,0 +1,18 @@
+@page
+@model Web.Pages.Sales.CreateModel
+@{
+    ViewData["Title"] = "New Sale";
+}
+
+<div class="page-header">
+    <h1><i class="fas fa-plus"></i> New Sale</h1>
+    <p>Placeholder page for creating a new sale.</p>
+    <p>
+        @if (Request.Query.ContainsKey("customerId"))
+        {
+            <span class="text-muted">CustomerId: @Request.Query["customerId"]</span>
+        }
+    </p>
+    <a class="btn btn-secondary" href="/Sales">Back to Sales</a>
+    <a class="btn btn-primary" href="#">Start Sale</a>
+</div>

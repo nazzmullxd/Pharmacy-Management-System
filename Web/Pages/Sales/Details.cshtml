@@ -1,0 +1,33 @@
+@page "/Sales/Details/{id}"
+@model Web.Pages.Sales.DetailsModel
+@{
+    ViewData["Title"] = "Sale Details";
+}
+
+<div class="page-header">
+    <h1><i class="fas fa-eye"></i> Sale Details</h1>
+    <a class="btn btn-secondary" href="/Sales">Back to Sales</a>
+</div>
+
+@if (Model.Sale != null)
+{
+    <div class="dashboard-card">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Invoice:</strong> #@Model.Sale.SaleID.ToString().Substring(0,8)</p>
+                <p><strong>Date:</strong> @Model.Sale.SaleDate.ToString("yyyy-MM-dd HH:mm")</p>
+                <p><strong>Customer:</strong> @Model.Sale.CustomerName</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Total:</strong> $@Model.Sale.TotalAmount.ToString("F2")</p>
+                <p><strong>Status:</strong> @Model.Sale.PaymentStatus</p>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-warning">Sale not found.</div>
+}
+
+
