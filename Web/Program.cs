@@ -28,6 +28,9 @@ builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 
 // Register all business services
 builder.Services.AddBusinessServices();
+// Register services and repositories
+builder.Services.AddScoped<Business.Interfaces.IProductService, Business.Services.ProductService>();
+builder.Services.AddScoped<Database.Interfaces.IProductRepository, Database.Repositories.ProductRepository>();
 
 
 var app = builder.Build();

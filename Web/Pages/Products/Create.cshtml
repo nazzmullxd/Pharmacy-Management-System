@@ -15,6 +15,7 @@
     <div class="col-md-8">
         <div class="dashboard-card">
             <form method="post">
+                @Html.AntiForgeryToken()
                 <div class="row">
                     <div class="col-md-6">
                         <div class="mb-3">
@@ -152,7 +153,7 @@
                     <li>Wholesale Price</li>
                 </ul>
             </div>
-            
+
             <h6 class="mt-3">Pricing Guidelines:</h6>
             <ul class="small text-muted">
                 <li><strong>Unit Price:</strong> Cost price from supplier</li>
@@ -172,14 +173,14 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    
+
     <script>
         // Auto-calculate retail price based on unit price
         document.getElementById('Product_UnitPrice').addEventListener('input', function() {
             const unitPrice = parseFloat(this.value) || 0;
             const retailPrice = unitPrice * 1.5; // 50% markup
             const wholesalePrice = unitPrice * 1.2; // 20% markup
-            
+
             document.getElementById('Product_DefaultRetailPrice').value = retailPrice.toFixed(2);
             document.getElementById('Product_DefaultWholeSalePrice').value = wholesalePrice.toFixed(2);
         });
