@@ -249,7 +249,7 @@ namespace Business.Services
                 if (sale == null)
                     return false;
 
-                sale.PaymentSatus = paymentStatus;
+                sale.PaymentStatus = paymentStatus;
                 await _saleRepository.UpdateAsync(sale);
                 return true;
             }
@@ -315,7 +315,7 @@ namespace Business.Services
                 UserName = user != null ? $"{user.FirstName} {user.LastName}" : string.Empty,
                 SaleDate = sale.SaleDate,
                 TotalAmount = sale.TotalAmount,
-                PaymentStatus = sale.PaymentSatus,
+                PaymentStatus = sale.PaymentStatus,
                 Note = sale.Note,
                 SaleItems = saleItemDtos
             };
@@ -330,7 +330,7 @@ namespace Business.Services
                 UserID = saleDto.UserID,
                 SaleDate = saleDto.SaleDate,
                 TotalAmount = saleDto.TotalAmount,
-                PaymentSatus = saleDto.PaymentStatus,
+                PaymentStatus = saleDto.PaymentStatus,
                 Note = saleDto.Note
             };
         }

@@ -287,11 +287,6 @@ namespace Business.Services
                     UserID = log.UserID,
                     UserName = user != null ? $"{user.FirstName} {user.LastName}" : string.Empty,
                     Action = log.Action,
-                    EntityType = log.EntityType,
-                    EntityID = log.EntityID,
-                    OldValues = log.OldValues,
-                    NewValues = log.NewValues,
-                    Timestamp = log.Timestamp,
                     IPAddress = log.IPAddress
                 });
             }
@@ -374,7 +369,7 @@ namespace Business.Services
                 UserName = user != null ? $"{user.FirstName} {user.LastName}" : string.Empty,
                 SaleDate = sale.SaleDate,
                 TotalAmount = sale.TotalAmount,
-                PaymentStatus = sale.PaymentSatus,
+                PaymentStatus = sale.PaymentStatus,
                 Note = sale.Note,
                 SaleItems = saleItemDtos
             };

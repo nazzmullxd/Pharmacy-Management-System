@@ -55,15 +55,15 @@ namespace Business.Services
                 
                 // Today's Metrics
                 TodaySaleOrdersCount = todaySales.Count(),
-                TodayInvoicesCount = todaySales.Count(s => s.PaymentSatus == "Paid"),
+                TodayInvoicesCount = todaySales.Count(s => s.PaymentStatus == "Paid"),
                 TodaySalesAmount = todaySales.Sum(s => s.TotalAmount),
-                TodayInvoiceAmount = todaySales.Where(s => s.PaymentSatus == "Paid").Sum(s => s.TotalAmount),
+                TodayInvoiceAmount = todaySales.Where(s => s.PaymentStatus == "Paid").Sum(s => s.TotalAmount),
                 
                 // This Month's Metrics
                 ThisMonthSaleOrdersCount = thisMonthSales.Count(),
-                ThisMonthInvoicesCount = thisMonthSales.Count(s => s.PaymentSatus == "Paid"),
+                ThisMonthInvoicesCount = thisMonthSales.Count(s => s.PaymentStatus == "Paid"),
                 ThisMonthSalesAmount = thisMonthSales.Sum(s => s.TotalAmount),
-                ThisMonthInvoiceAmount = thisMonthSales.Where(s => s.PaymentSatus == "Paid").Sum(s => s.TotalAmount),
+                ThisMonthInvoiceAmount = thisMonthSales.Where(s => s.PaymentStatus == "Paid").Sum(s => s.TotalAmount),
                 
                 // Stock Metrics
                 StockItemsCount = allProducts.Count(p => p.IsActive),
@@ -106,9 +106,9 @@ namespace Business.Services
             {
                 Date = now,
                 ThisMonthSaleOrdersCount = thisMonthSales.Count(),
-                ThisMonthInvoicesCount = thisMonthSales.Count(s => s.PaymentSatus == "Paid"),
+                ThisMonthInvoicesCount = thisMonthSales.Count(s => s.PaymentStatus == "Paid"),
                 ThisMonthSalesAmount = thisMonthSales.Sum(s => s.TotalAmount),
-                ThisMonthInvoiceAmount = thisMonthSales.Where(s => s.PaymentSatus == "Paid").Sum(s => s.TotalAmount),
+                ThisMonthInvoiceAmount = thisMonthSales.Where(s => s.PaymentStatus == "Paid").Sum(s => s.TotalAmount),
                 NetProfit = await CalculateNetProfit(),
                 TotalStockValue = await CalculateTotalStockValue()
             };
@@ -263,7 +263,7 @@ namespace Business.Services
                     UserName = user != null ? $"{user.FirstName} {user.LastName}" : string.Empty,
                     SaleDate = sale.SaleDate,
                     TotalAmount = sale.TotalAmount,
-                    PaymentStatus = sale.PaymentSatus,
+                    PaymentStatus = sale.PaymentStatus,
                     Note = sale.Note
                 });
             }
@@ -323,7 +323,7 @@ namespace Business.Services
         private async Task<decimal> CalculateSalesDue()
         {
             var sales = await _saleRepository.GetAllAsync();
-            return sales.Where(s => s.PaymentSatus == "Pending").Sum(s => s.TotalAmount);
+            return sales.Where(s => s.PaymentStatus == "Pending").Sum(s => s.TotalAmount);
         }
 
         private async Task<decimal> CalculateInvoiceDue()

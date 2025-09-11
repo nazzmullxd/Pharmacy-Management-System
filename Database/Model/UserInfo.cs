@@ -38,7 +38,7 @@ namespace Database.Model
         [Required]
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 
-        public DateTime? UpdatedDate { get; set; }
+        public DateTime UpdatedDate { get; set; }= DateTime.UtcNow;
 
         [Required]
         public DateTime LastLoginDate { get; set; } = DateTime.UtcNow;

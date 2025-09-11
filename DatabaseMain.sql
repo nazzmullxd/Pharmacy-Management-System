@@ -79,7 +79,7 @@ CREATE TABLE dbo.Sales (
     UserID UNIQUEIDENTIFIER NOT NULL,
     SaleDate DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
     TotalAmount DECIMAL(18,2) NOT NULL CHECK ([TotalAmount] >= 0),
-    PaymentSatus NVARCHAR(20) NOT NULL DEFAULT 'Paid',
+    PaymentStatus NVARCHAR(20) NOT NULL DEFAULT 'Paid',
     Note NVARCHAR(500) NULL,
     CONSTRAINT FK_Sales_Customers FOREIGN KEY (CustomerID) REFERENCES dbo.Customers(CustomerID),
     CONSTRAINT FK_Sales_Users FOREIGN KEY (UserID) REFERENCES dbo.Users(UserID)
