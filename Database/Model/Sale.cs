@@ -30,7 +30,7 @@ namespace Database.Model
 
         [Required]
         [MaxLength(20, ErrorMessage = "Payment status cannot exceed 20 characters.")]
-        public string PaymentSatus { get; set; } = "Paid"; // Example statuses: Pending, Paid, Failed
+        public string PaymentStatus { get; set; } = "Paid"; // Example statuses: Pending, Paid, Failed
 
         [MaxLength(500, ErrorMessage = "Note cannot exceed 500 characters.")]
         public string Note { get; set; } = string.Empty;

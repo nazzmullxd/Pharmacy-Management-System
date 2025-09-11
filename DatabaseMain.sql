@@ -171,20 +171,20 @@ ALTER TABLE dbo.AuditLogs DROP CONSTRAINT FK_AuditLogs_Users;
 GO
 
 -- Step 2: Rename the table from Users to UserInfo
-EXEC sp_rename 'dbo.Users', 'UserInfo';
+EXEC sp_rename 'dbo.Users', 'UsersInfo';
 GO
 
 -- Step 3: Recreate the foreign keys pointing to the renamed table
 ALTER TABLE dbo.Sales
-ADD CONSTRAINT FK_Sales_UserInfo FOREIGN KEY (UserID) REFERENCES dbo.UserInfo(UserID);
+ADD CONSTRAINT FK_Sales_UsersInfo FOREIGN KEY (UserID) REFERENCES dbo.UsersInfo(UserID);
 GO
 
 ALTER TABLE dbo.Purchases
-ADD CONSTRAINT FK_Purchases_UserInfo FOREIGN KEY (UserID) REFERENCES dbo.UserInfo(UserID);
+ADD CONSTRAINT FK_Purchases_UsersInfo FOREIGN KEY (UserID) REFERENCES dbo.UsersInfo(UserID);
 GO
 
 ALTER TABLE dbo.AuditLogs
-ADD CONSTRAINT FK_AuditLogs_UserInfo FOREIGN KEY (UserId) REFERENCES dbo.UserInfo(UserID);
+ADD CONSTRAINT FK_AuditLogs_UsersInfo FOREIGN KEY (UserId) REFERENCES dbo.UserInfo(UserID);
 GO
 
 

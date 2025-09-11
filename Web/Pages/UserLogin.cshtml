@@ -4,18 +4,122 @@
     ViewData["Title"] = "User Login";
 }
 
-<h2>User Login</h2>
+<!-- CSS -->
+<style>
+    body {
+        font-family: "Segoe UI", Tahoma, sans-serif;
+        background: linear-gradient(135deg, #4facfe, #00f2fe);
+        margin: 0;
+        padding: 0;
+        display: flex;
+        height: 100vh;
+        justify-content: center;
+        align-items: center;
+    }
 
-<form method="post">
-    <div>
-        <label asp-for="Input.Email"></label>
-        <input asp-for="Input.Email" type="email" />
-        <span asp-validation-for="Input.Email"></span>
-    </div>
-    <div>
-        <label asp-for="Input.Password"></label>
-        <input asp-for="Input.Password" type="password" />
-        <span asp-validation-for="Input.Password"></span>
-    </div>
-    <button type="submit">Login</button>
-</form>
+    .login-container {
+        background: #fff;
+        padding: 2.5rem;
+        border-radius: 16px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        width: 100%;
+        max-width: 380px;
+        animation: fadeIn 0.6s ease-in-out;
+    }
+
+        .login-container h2 {
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-size: 1.8rem;
+            color: #333;
+        }
+
+    .form-group {
+        margin-bottom: 1.2rem;
+        position: relative;
+    }
+
+    label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 0.4rem;
+        color: #555;
+    }
+
+    input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+
+        input:focus {
+            border-color: #4facfe;
+            outline: none;
+            box-shadow: 0 0 6px rgba(79, 172, 254, 0.4);
+        }
+
+    span.field-validation-error {
+        color: #e74c3c;
+        font-size: 0.85rem;
+        margin-top: 0.3rem;
+        display: block;
+    }
+
+    button {
+        width: 100%;
+        padding: 0.9rem;
+        font-size: 1rem;
+        font-weight: 600;
+        background: linear-gradient(135deg, #4facfe, #00f2fe);
+        border: none;
+        border-radius: 8px;
+        color: #fff;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px rgba(0,0,0,0.2);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+   
+ 
+</style>
+
+<!-- HTML -->
+<div class="login-container">
+    <h2>User Login</h2>
+    <form method="post">
+        <div class="form-group">
+            <label asp-for="Input.Email"></label>
+            <input asp-for="Input.Email" type="email" />
+            <span asp-validation-for="Input.Email"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="Input.Password"></label>
+            <input asp-for="Input.Password" type="password" />
+            <span asp-validation-for="Input.Password"></span>
+        </div>
+        <button type="submit">Login</button>
+    </form>
+</div>
+
+<!-- JS -->
+<script>
+    document.querySelectorAll("input").forEach(input => {
+        input.addEventListener("focus", () => {
+            input.parentElement.classList.add("focused");
+        });
+        input.addEventListener("blur", () => {
+            input.parentElement.classList.remove("focused");
+        });
+    });
+</script>
