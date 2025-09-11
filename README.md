@@ -157,8 +157,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 👨‍💻 Author
 
-**Nasim Ahmed**
-- GitHub: [@yourusername](https://github.com/yourusername)
+**Nazmul Huda**
+**Zahidul Islam**
+**Iftekhar Ahmed**
+- GitHub: [@nazzmullxd](https://github.com/nazzmullxd)
 
 ## 🙏 Acknowledgments
 
