@@ -13,7 +13,7 @@ namespace Database.Context
         {
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseSqlServer(@"Server=.;Database=Pharmacy Management System;Trusted_Connection=True;TrustServerCertificate=True;");
+                optionsBuilder.UseSqlServer(@"Server=localhost\MSSQLSERVER02;Database=Pharmacy Management System;Trusted_Connection=True;TrustServerCertificate=True;");
             }
         }
 

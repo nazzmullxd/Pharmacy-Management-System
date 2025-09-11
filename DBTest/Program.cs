@@ -13,7 +13,7 @@ namespace Database.Tests
         public void CanInsertAndRetrieveUserSupplierAndProduct()
         {
             var options = new DbContextOptionsBuilder<PharmacyManagementContext>()
-                .UseSqlServer(@"Server=.;Database=Pharmacy Management System;Trusted_Connection=True;TrustServerCertificate=True;")
+                .UseSqlServer(@"Server=localhost\MSSQLSERVER02;Database=PharmacyManagementSystem;Trusted_Connection=True;TrustServerCertificate=True;")
                 .Options;
 
             using var context = new PharmacyManagementContext(options);

@@ -6,7 +6,7 @@ class Program
 {
     static async Task Main()
     {
-        string connectionString = "Server=.;Database=PharmacyManagementSystem;Trusted_Connection=True;TrustServerCertificate=True;";
+        string connectionString = "Server=localhost\\MSSQLSERVER02;Database=PharmacyManagementSystem;Trusted_Connection=True;TrustServerCertificate=True;";
         try
         {
             using (SqlConnection connection = new SqlConnection(connectionString))
