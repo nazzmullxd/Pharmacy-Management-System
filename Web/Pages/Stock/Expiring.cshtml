@@ -6,8 +6,39 @@
 
 <div class="page-header">
     <h1><i class="fas fa-clock"></i> Expiring Stock</h1>
-    <p>Placeholder for items nearing expiry.</p>
     <a class="btn btn-secondary" href="/Stock">Back to Stock</a>
 </div>
 
-
+<div class="card p-3 mt-3">
+    <h5>Expiring within 30 days</h5>
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Batch</th>
+                    <th>Expiry</th>
+                    <th>Qty</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Batches != null && Model.Batches.Any())
+                {
+                    foreach (var b in Model.Batches)
+                    {
+                        <tr>
+                            <td>@b.ProductName</td>
+                            <td>@b.BatchNumber</td>
+                            <td>@b.ExpiryDate.ToString("yyyy-MM-dd")</td>
+                            <td>@b.QuantityInStock</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="4" class="text-center">No expiring items.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

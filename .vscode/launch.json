@@ -5,6 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Launch Edge",
+            "request": "launch",
+            "type": "msedge",
+            "url": "http://localhost:5067",
+            "webRoot": "${workspaceFolder}"
+        },
+        {
             "name": "Launch Pharmacy Management System",
             "type": "coreclr",
             "request": "launch",
@@ -14,6 +21,9 @@
             "cwd": "${workspaceFolder}/Web",
             "console": "internalConsole",
             "stopAtEntry": false,
+            "env": {
+                "ASPNETCORE_URLS": "http://localhost:5067"
+            },
             "serverReadyAction": {
                 "action": "openExternally",
                 "pattern": "\\bNow listening on:\\s+(https?://\\S+)",

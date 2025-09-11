@@ -6,8 +6,41 @@
 
 <div class="page-header">
     <h1><i class="fas fa-edit"></i> Edit Product</h1>
-    <p>Placeholder for editing product. ID: <strong>@Model.Id</strong></p>
     <a class="btn btn-secondary" href="/Products">Back to Products</a>
 </div>
-
-
+<form method="post" class="card p-3">
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label">Name</label>
+            <input asp-for="Product.ProductName" class="form-control" />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Generic</label>
+            <input asp-for="Product.GenericName" class="form-control" />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Manufacturer</label>
+            <input asp-for="Product.Manufacturer" class="form-control" />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Category</label>
+            <input asp-for="Product.Category" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Unit Price</label>
+            <input asp-for="Product.UnitPrice" type="number" step="0.01" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Barcode</label>
+            <input asp-for="Product.Barcode" class="form-control" />
+        </div>
+        <div class="col-md-4 form-check mt-4">
+            <input asp-for="Product.IsActive" class="form-check-input" />
+            <label class="form-check-label" for="Product_IsActive">Active</label>
+        </div>
+    </div>
+    <div class="mt-3">
+        <button type="submit" class="btn btn-success">Save</button>
+    </div>
+    <div asp-validation-summary="All" class="text-danger mt-2"></div>
+</form>

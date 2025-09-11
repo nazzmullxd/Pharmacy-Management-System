@@ -6,8 +6,22 @@
 
 <div class="page-header">
     <h1><i class="fas fa-tags"></i> Product Categories</h1>
-    <p>Placeholder for category management.</p>
     <a class="btn btn-secondary" href="/Products">Back to Products</a>
 </div>
-
-
+<form method="post" asp-page-handler="Add" class="card p-3">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-8">
+            <label class="form-label">New Category</label>
+            <input name="category" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <button type="submit" class="btn btn-primary">Add</button>
+        </div>
+    </div>
+    <ul class="mt-3">
+        @foreach (var c in Model.Categories)
+        {
+            <li>@c</li>
+        }
+    </ul>
+</form>

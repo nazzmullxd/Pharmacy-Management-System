@@ -6,8 +6,35 @@
 
 <div class="page-header">
     <h1><i class="fas fa-layer-group"></i> Stock Batches</h1>
-    <p>Placeholder for viewing batches per product.</p>
     <a class="btn btn-secondary" href="/Stock">Back to Stock</a>
 </div>
-
-
+<div class="table-responsive card p-3">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Batch</th>
+                <th>Expiry</th>
+                <th>Qty</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Batches != null && Model.Batches.Any())
+            {
+                foreach (var b in Model.Batches)
+                {
+                    <tr>
+                        <td>@b.ProductName</td>
+                        <td>@b.BatchNumber</td>
+                        <td>@b.ExpiryDate.ToString("yyyy-MM-dd")</td>
+                        <td>@b.QuantityInStock</td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr><td colspan="4" class="text-center">No batches found.</td></tr>
+            }
+        </tbody>
+    </table>
+</div>

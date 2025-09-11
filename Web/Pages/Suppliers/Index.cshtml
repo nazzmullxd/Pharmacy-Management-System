@@ -6,8 +6,38 @@
 
 <div class="page-header">
     <h1><i class="fas fa-industry"></i> Suppliers</h1>
-    <p>Placeholder for suppliers list.</p>
     <a class="btn btn-primary" href="/Suppliers/Create">Add Supplier</a>
 </div>
 
-
+<div class="table-responsive card p-3">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Contact Person</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th>Address</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Suppliers != null && Model.Suppliers.Any())
+            {
+                foreach (var s in Model.Suppliers)
+                {
+                    <tr>
+                        <td>@s.SupplierName</td>
+                        <td>@s.ContactPerson</td>
+                        <td>@s.PhoneNumber</td>
+                        <td>@s.Email</td>
+                        <td>@s.Address</td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr><td colspan="5" class="text-center">No suppliers found.</td></tr>
+            }
+        </tbody>
+    </table>
+</div>

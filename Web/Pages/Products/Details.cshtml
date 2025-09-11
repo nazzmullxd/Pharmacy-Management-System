@@ -6,8 +6,20 @@
 
 <div class="page-header">
     <h1><i class="fas fa-eye"></i> Product Details</h1>
-    <p>Placeholder for viewing product details. ID: <strong>@Model.Id</strong></p>
     <a class="btn btn-secondary" href="/Products">Back to Products</a>
 </div>
-
-
+@if (Model.Product != null)
+{
+    <div class="card p-3">
+        <h5>@Model.Product.ProductName</h5>
+        <div>Generic: @Model.Product.GenericName</div>
+        <div>Manufacturer: @Model.Product.Manufacturer</div>
+        <div>Category: @Model.Product.Category</div>
+        <div>Price: @Model.Product.UnitPrice.ToString("C")</div>
+        <div>Total Stock: @Model.Product.TotalStock</div>
+    </div>
+}
+else
+{
+    <div class="alert alert-warning">Product not found.</div>
+}

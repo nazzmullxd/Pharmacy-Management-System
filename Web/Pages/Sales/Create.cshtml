@@ -6,13 +6,76 @@
 
 <div class="page-header">
     <h1><i class="fas fa-plus"></i> New Sale</h1>
-    <p>Placeholder page for creating a new sale.</p>
-    <p>
-        @if (Request.Query.ContainsKey("customerId"))
-        {
-            <span class="text-muted">CustomerId: @Request.Query["customerId"]</span>
-        }
-    </p>
     <a class="btn btn-secondary" href="/Sales">Back to Sales</a>
-    <a class="btn btn-primary" href="#">Start Sale</a>
 </div>
+<form method="post" class="card p-3">
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label">Customer</label>
+            <select asp-for="Sale.CustomerID" class="form-select">
+                <option value="">-- Select Customer --</option>
+                @foreach (var c in Model.Customers)
+                {
+                    <option value="@c.CustomerID" selected="@(Model.Sale.CustomerID==c.CustomerID)">@c.CustomerName</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Note</label>
+            <input asp-for="Sale.Note" class="form-control" />
+        </div>
+    </div>
+
+    <hr />
+    <h5>Add Items</h5>
+    <div class="row g-2 align-items-end">
+        <div class="col-md-6">
+            <label class="form-label">Product</label>
+            <select name="productId" class="form-select">
+                <option value="">-- Select Product --</option>
+                @foreach (var p in Model.Products)
+                {
+                    <option value="@p.ProductID">@p.ProductName (@p.UnitPrice.ToString("C"))</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Quantity</label>
+            <input name="quantity" type="number" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <button type="submit" asp-page-handler="AddItem" class="btn btn-outline-primary">Add Item</button>
+        </div>
+    </div>
+
+    <div class="table-responsive mt-3">
+        <table class="table table-sm table-bordered">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Qty</th>
+                    <th>Unit</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var i in Model.Sale.SaleItems)
+                {
+                    <tr>
+                        <td>@i.ProductName</td>
+                        <td>@i.Quantity</td>
+                        <td>@i.UnitPrice.ToString("C")</td>
+                        <td>@i.TotalPrice.ToString("C")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="text-end">
+        <div><strong>Total:</strong> @Model.Sale.TotalAmount.ToString("C")</div>
+        <button type="submit" asp-page-handler="Create" class="btn btn-success mt-2">Create Sale</button>
+    </div>
+
+    <div asp-validation-summary="All" class="text-danger mt-2"></div>
+</form>

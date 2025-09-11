@@ -43,6 +43,12 @@ namespace Web.Pages
 
         public async Task OnGetAsync()
         {
+            // Simple session-based guard
+            if (string.IsNullOrEmpty(HttpContext.Session.GetString("auth")))
+            {
+                Response.Redirect("/UserLogin");
+                return;
+            }
             try
             {
                 // Load dashboard KPIs

@@ -6,8 +6,48 @@
 
 <div class="page-header">
     <h1><i class="fas fa-notes-medical"></i> Antibiotic Register</h1>
-    <p>Placeholder for antibiotic register reporting.</p>
     <a class="btn btn-secondary" href="/">Back to Dashboard</a>
 </div>
 
+<div class="card">
+    <div class="card-header">
+        <h5>Antibiotic Sales Log</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Product</th>
+                        <th>Customer</th>
+                        <th>Quantity</th>
+                        <th>Prescription</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.AntibioticLogs != null && Model.AntibioticLogs.Any())
+                    {
+                        @foreach (var log in Model.AntibioticLogs)
+                        {
+                            <tr>
+                                <td>@log.SaleDate.ToString("yyyy-MM-dd")</td>
+                                <td>@log.ProductName</td>
+                                <td>@log.CustomerName</td>
+                                <td>@log.Quantity</td>
+                                <td>@log.PrescriptionNumber</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">No antibiotic sales recorded.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 

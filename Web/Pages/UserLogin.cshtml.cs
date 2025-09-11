@@ -38,8 +38,9 @@ namespace Web.Pages
                 return Page();
             }
 
-            // User is authenticated, redirect to dashboard
-
+            // Mark session as authenticated
+            HttpContext.Session.SetString("auth", "1");
+            HttpContext.Session.SetString("userEmail", Input.Email);
             return RedirectToPage("Index");
         }
 

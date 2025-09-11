@@ -6,8 +6,44 @@
 
 <div class="page-header">
     <h1><i class="fas fa-truck"></i> Purchase Orders</h1>
-    <p>Placeholder for listing purchase orders.</p>
     <a class="btn btn-primary" href="/Purchases/Create">New Purchase</a>
 </div>
 
+<div class="table-responsive card p-3">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Order #</th>
+                <th>Supplier</th>
+                <th>Status</th>
+                <th>Total</th>
+                <th>Paid</th>
+                <th>Due</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Orders != null && Model.Orders.Any())
+            {
+                foreach (var o in Model.Orders)
+                {
+                    <tr>
+                        <td>@o.OrderNumber</td>
+                        <td>@o.SupplierName</td>
+                        <td>@o.Status</td>
+                        <td>@o.TotalAmount.ToString("C")</td>
+                        <td>@o.PaidAmount.ToString("C")</td>
+                        <td>@o.DueAmount.ToString("C")</td>
+                        <td>@o.OrderDate.ToString("yyyy-MM-dd")</td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr><td colspan="7" class="text-center">No purchase orders yet.</td></tr>
+            }
+        </tbody>
+    </table>
+    <small class="text-muted">Data will appear here once orders are created.</small>
+    </div>
 
