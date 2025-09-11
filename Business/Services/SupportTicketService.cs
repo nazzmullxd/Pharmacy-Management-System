@@ -1,11 +1,18 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+//This is a service class for managing support tickets in a customer support system.
+
+//It includes methods for creating, updating, deleting, and retrieving support tickets,
+//as well as assigning tickets to support agents, resolving tickets, and closing tickets.
+//The service also includes validation logic to ensure that tickets have valid data,
+//and it logs audit entries for key actions performed on tickets.
+
+
+
+//Although the actual database operations are not implemented,
+//placeholders indicate where these would occur.
+
 using Business.DTO;
 using Business.Interfaces;
 using Database.Interfaces;
-using Database.Model;
 
 namespace Business.Services
 {
@@ -211,7 +218,7 @@ namespace Business.Services
         {
             var user = await _userRepository.GetByIdAsync(ticketDto.CreatedBy);
             var details = $"Ticket created: {ticketDto.Title}, Category: {ticketDto.Category}, Priority: {ticketDto.Priority}";
-            
+
             await LogAudit("CREATE", "SupportTicket", ticketDto.TicketID, details);
         }
 

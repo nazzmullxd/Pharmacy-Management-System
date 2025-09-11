@@ -91,7 +91,7 @@ namespace Business.Services
             await _userRepository.UpdateAsync(existingUser);
             return MapToDTO(existingUser);
         }
-
+        // Delete user by ID
         public async Task<bool> DeleteUserAsync(Guid userId)
         {
             if (userId == Guid.Empty)
@@ -104,7 +104,7 @@ namespace Business.Services
             await _userRepository.DeleteAsync(userId);
             return true;
         }
-
+        //Authenticate user by email and password
         public async Task<bool> AuthenticateUserAsync(string email, string password)
         {
             if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
@@ -120,7 +120,7 @@ namespace Business.Services
 
             return true;
         }
-
+        //Password change method
         public async Task<bool> ChangePasswordAsync(Guid userId, string currentPassword, string newPassword)
         {
             if (string.IsNullOrWhiteSpace(newPassword))
@@ -139,7 +139,7 @@ namespace Business.Services
 
             return true;
         }
-
+        //User Role based retrieval
         public async Task<IEnumerable<UserDTO>> GetUsersByRoleAsync(string role)
         {
             if (string.IsNullOrWhiteSpace(role))
@@ -148,7 +148,7 @@ namespace Business.Services
             var users = await _userRepository.GetByRoleAsync(role);
             return users.Select(MapToDTO);
         }
-
+        //Login Log update
         public async Task<bool> UpdateLastLoginAsync(Guid userId)
         {
             var user = await _userRepository.GetByIdAsync(userId);
@@ -159,7 +159,7 @@ namespace Business.Services
             await _userRepository.UpdateAsync(user);
             return true;
         }
-
+        //Check Whether email already exists in Database
         public async Task<bool> IsEmailUniqueAsync(string email, Guid? excludeUserId = null)
         {
             if (string.IsNullOrWhiteSpace(email))
@@ -168,7 +168,7 @@ namespace Business.Services
             var user = await _userRepository.GetByEmailAsync(email);
             return user == null || user.UserID == excludeUserId;
         }
-
+        //DTO Manual Mapping
         private UserDTO MapToDTO(UserInfo user)
         {
             return new UserDTO
@@ -181,7 +181,7 @@ namespace Business.Services
                 LastLoginDate = user.LastLoginDate
             };
         }
-
+        //Mapping DTO to Entity
         private UserInfo MapToEntity(UserDTO userDto)
         {
             return new UserInfo
@@ -194,7 +194,7 @@ namespace Business.Services
                 LastLoginDate = userDto.LastLoginDate
             };
         }
-
+        //Hashing Passwords
         private string HashPassword(string password)
         {
             using (var sha256 = SHA256.Create())
@@ -203,7 +203,7 @@ namespace Business.Services
                 return Convert.ToBase64String(hashedBytes);
             }
         }
-
+        //PassWord Verification
         private bool VerifyPassword(string password, string hash)
         {
             var hashedPassword = HashPassword(password);

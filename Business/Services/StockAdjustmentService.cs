@@ -1,3 +1,6 @@
+//Placeholder For Stock Adjustment Service
+
+
 using Business.DTO;
 using Business.Interfaces;
 using Database.Interfaces;

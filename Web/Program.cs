@@ -30,6 +30,8 @@ builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 builder.Services.AddBusinessServices();
 // Register services and repositories
 builder.Services.AddScoped<Business.Interfaces.IProductService, Business.Services.ProductService>();
+builder.Services.AddScoped<Business.Interfaces.IUserService, Business.Services.UserService>();
+builder.Services.AddScoped<Business.Services.UserService>(); // Register concrete class
 builder.Services.AddScoped<Database.Interfaces.IProductRepository, Database.Repositories.ProductRepository>();
 
 
