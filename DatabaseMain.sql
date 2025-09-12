@@ -1,16 +1,20 @@
 ﻿USE [Pharmacy Management System];
 GO
 
--- 1. Users
-CREATE TABLE dbo.Users (
-    UserID UNIQUEIDENTIFIER NOT NULL PRIMARY KEY DEFAULT NEWID(),
-    FirstName NVARCHAR(50) NOT NULL,
-    LastName NVARCHAR(50) NOT NULL,
-    Email NVARCHAR(255) NOT NULL,
-    PasswordHash NVARCHAR(255) NOT NULL,
-    LastLoginDate DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
-    Role NVARCHAR(20) NOT NULL
+-- 1. UsersInfo
+CREATE TABLE [dbo].[UsersInfo] (
+    [UserID]        UNIQUEIDENTIFIER DEFAULT (newid()) NOT NULL,
+    [FirstName]     NVARCHAR (50)    NOT NULL,
+    [LastName]      NVARCHAR (50)    NOT NULL,
+    [Email]         NVARCHAR (255)   NOT NULL,
+    [PasswordHash]  NVARCHAR (255)   NOT NULL,
+    [LastLoginDate] DATETIME2 (7)    DEFAULT (sysutcdatetime()) NOT NULL,
+    [Role]          NVARCHAR (20)    NOT NULL,
+    [CreatedDate]   DATETIME2 (7)    DEFAULT (sysutcdatetime()) NOT NULL,
+    [UpdatedDate]   DATETIME2 (7)    DEFAULT (sysutcdatetime()) NOT NULL,
+    PRIMARY KEY CLUSTERED ([UserID] ASC)
 );
+
 GO
 
 -- 2. Suppliers
@@ -73,32 +77,36 @@ CREATE TABLE dbo.ProductBatches (
 GO
 
 -- 6. Sales
-CREATE TABLE dbo.Sales (
-    SaleID UNIQUEIDENTIFIER NOT NULL PRIMARY KEY DEFAULT NEWID(),
-    CustomerID UNIQUEIDENTIFIER NOT NULL,
-    UserID UNIQUEIDENTIFIER NOT NULL,
-    SaleDate DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
-    TotalAmount DECIMAL(18,2) NOT NULL CHECK ([TotalAmount] >= 0),
-    PaymentStatus NVARCHAR(20) NOT NULL DEFAULT 'Paid',
-    Note NVARCHAR(500) NULL,
-    CONSTRAINT FK_Sales_Customers FOREIGN KEY (CustomerID) REFERENCES dbo.Customers(CustomerID),
-    CONSTRAINT FK_Sales_Users FOREIGN KEY (UserID) REFERENCES dbo.Users(UserID)
+CREATE TABLE [dbo].[Sales] (
+    [SaleID]       UNIQUEIDENTIFIER DEFAULT (newid()) NOT NULL,
+    [CustomerID]   UNIQUEIDENTIFIER NOT NULL,
+    [UserID]       UNIQUEIDENTIFIER NOT NULL,
+    [SaleDate]     DATETIME2 (7)    DEFAULT (sysutcdatetime()) NOT NULL,
+    [TotalAmount]  DECIMAL (18, 2)  NOT NULL,
+    [PaymentStatus] NVARCHAR (20)    DEFAULT ('Paid') NULL,
+    [Note]         NVARCHAR (500)   NULL,
+    PRIMARY KEY CLUSTERED ([SaleID] ASC),
+    CONSTRAINT [FK_Sales_UsersInfo] FOREIGN KEY ([UserID]) REFERENCES [dbo].[UsersInfo] ([UserID]),
+    CONSTRAINT [FK_Sales_Customers] FOREIGN KEY ([CustomerID]) REFERENCES [dbo].[Customers] ([CustomerID]),
+    CHECK ([TotalAmount]>=(0))
 );
 GO
 
 -- 7. Purchases
-CREATE TABLE dbo.Purchases (
-    PurchaseID UNIQUEIDENTIFIER NOT NULL PRIMARY KEY DEFAULT NEWID(),
-    SupplierID UNIQUEIDENTIFIER NOT NULL,
-    UserID UNIQUEIDENTIFIER NOT NULL,
-    ProductBatchID UNIQUEIDENTIFIER NOT NULL,
-    TotalAmount DECIMAL(18,2) NOT NULL CHECK ([TotalAmount] >= 0),
-    PurchaseDate DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
-    CreatedDate DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
-    Notes NVARCHAR(MAX) NULL,
-    CONSTRAINT FK_Purchases_Suppliers FOREIGN KEY (SupplierID) REFERENCES dbo.Suppliers(SupplierID),
-    CONSTRAINT FK_Purchases_Users FOREIGN KEY (UserID) REFERENCES dbo.Users(UserID),
-    CONSTRAINT FK_Purchases_ProductBatches FOREIGN KEY (ProductBatchID) REFERENCES dbo.ProductBatches(ProductBatchID)
+CREATE TABLE [dbo].[Purchases] (
+    [PurchaseID]     UNIQUEIDENTIFIER DEFAULT (newid()) NOT NULL,
+    [SupplierID]     UNIQUEIDENTIFIER NOT NULL,
+    [UserID]         UNIQUEIDENTIFIER NOT NULL,
+    [ProductBatchID] UNIQUEIDENTIFIER NOT NULL,
+    [TotalAmount]    DECIMAL (18, 2)  NOT NULL,
+    [PurchaseDate]   DATETIME2 (7)    DEFAULT (sysutcdatetime()) NOT NULL,
+    [CreatedDate]    DATETIME2 (7)    DEFAULT (sysutcdatetime()) NOT NULL,
+    [Notes]          NVARCHAR (MAX)   NULL,
+    PRIMARY KEY CLUSTERED ([PurchaseID] ASC),
+    CONSTRAINT [FK_Purchases_UsersInfo] FOREIGN KEY ([UserID]) REFERENCES [dbo].[UsersInfo] ([UserID]),
+    CONSTRAINT [FK_Purchases_Suppliers] FOREIGN KEY ([SupplierID]) REFERENCES [dbo].[Suppliers] ([SupplierID]),
+    CONSTRAINT [FK_Purchases_ProductBatches] FOREIGN KEY ([ProductBatchID]) REFERENCES [dbo].[ProductBatches] ([ProductBatchID]),
+    CHECK ([TotalAmount]>=(0))
 );
 GO
 
@@ -134,13 +142,14 @@ CREATE TABLE dbo.PurchaseItems (
 GO
 
 -- 10. AuditLogs
-CREATE TABLE dbo.AuditLogs (
-    AuditLogID UNIQUEIDENTIFIER NOT NULL PRIMARY KEY DEFAULT NEWID(),
-    UserId UNIQUEIDENTIFIER NOT NULL,
-    Action NVARCHAR(MAX) NOT NULL,
-    Details NVARCHAR(MAX) NULL,
-    ActionDate DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
-    CONSTRAINT FK_AuditLogs_Users FOREIGN KEY (UserId) REFERENCES dbo.Users(UserID)
+CREATE TABLE [dbo].[AuditLogs] (
+    [AuditLogID] UNIQUEIDENTIFIER DEFAULT (newid()) NOT NULL,
+    [UserId]     UNIQUEIDENTIFIER NOT NULL,
+    [Action]     NVARCHAR (MAX)   NOT NULL,
+    [Details]    NVARCHAR (MAX)   NULL,
+    [ActionDate] DATETIME2 (7)    DEFAULT (sysutcdatetime()) NOT NULL,
+    PRIMARY KEY CLUSTERED ([AuditLogID] ASC),
+    CONSTRAINT [FK_AuditLogs_UsersInfo] FOREIGN KEY ([UserId]) REFERENCES [dbo].[UsersInfo] ([UserID])
 );
 GO
 
@@ -159,33 +168,5 @@ CREATE TABLE dbo.AntibioticLogs (
     CONSTRAINT FK_AntibioticLogs_Customers FOREIGN KEY (CustomerID) REFERENCES dbo.Customers(CustomerID)
 );
 GO
-
-
-USE [PharmacyManagementSystem];
-GO
-
--- Step 1: Drop foreign key constraints that reference dbo.Users
-ALTER TABLE dbo.Sales DROP CONSTRAINT FK_Sales_Users;
-ALTER TABLE dbo.Purchases DROP CONSTRAINT FK_Purchases_Users;
-ALTER TABLE dbo.AuditLogs DROP CONSTRAINT FK_AuditLogs_Users;
-GO
-
--- Step 2: Rename the table from Users to UserInfo
-EXEC sp_rename 'dbo.Users', 'UsersInfo';
-GO
-
--- Step 3: Recreate the foreign keys pointing to the renamed table
-ALTER TABLE dbo.Sales
-ADD CONSTRAINT FK_Sales_UsersInfo FOREIGN KEY (UserID) REFERENCES dbo.UsersInfo(UserID);
-GO
-
-ALTER TABLE dbo.Purchases
-ADD CONSTRAINT FK_Purchases_UsersInfo FOREIGN KEY (UserID) REFERENCES dbo.UsersInfo(UserID);
-GO
-
-ALTER TABLE dbo.AuditLogs
-ADD CONSTRAINT FK_AuditLogs_UsersInfo FOREIGN KEY (UserId) REFERENCES dbo.UserInfo(UserID);
-GO
-
 
 
