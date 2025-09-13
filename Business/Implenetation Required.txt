@@ -1,10 +1,2 @@
-﻿//Placeholder For Stock Adjustment Service
-//Placeholder for Purchase Order Service
-//Placeholders for Notification Service
-//Placeholder for Stock Adjustment Service
-
-This are the Serives that are needed to Implemented 
-Although some of them are not used in the current implementation,
-they are reserved for future use or for maintaining a consistent
-structure across the application.
+﻿All Services Have been Implemented
 

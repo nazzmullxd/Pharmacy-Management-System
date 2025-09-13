@@ -30,17 +30,29 @@ namespace Database.Model
         // Value Properties
         [Required]
         public decimal TotalAmount { get; set; } = 0.0m;
+        // Value Properties
+      
 
         [Required]
         public string PaymentStatus { get; set; } = "Pending";
 
-        // Metadata
         [Required]
-        public DateTime PurchaseDate { get; set; } = DateTime.UtcNow;
+        public decimal PaidAmount { get; set; } = 0.0m; // New property
+
+        public decimal DueAmount { get; set; } = 0.0m; // New property
 
         [Required]
+        [MaxLength(50)]
+        public string Status { get; set; } = "Pending"; // New property
+
+        // Metadata
+        public DateTime PurchaseDate { get; set; } = DateTime.UtcNow;
+
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 
         public string Notes { get; set; } = string.Empty;
+
+        public DateTime OrderDate { get; set; } = DateTime.UtcNow;
+        public string OrderNumber { get; set; }
     }
 }

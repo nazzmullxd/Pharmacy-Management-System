@@ -27,7 +27,10 @@ namespace Database.Context
         public DbSet<Purchase> Purchases { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<AntibioticLog> AntibioticLogs { get; set; }
-        public DbSet<Customer> Customers { get; set; } 
+        public DbSet<Customer> Customers { get; set; }
+        public DbSet<StockAdjustment> StockAdjustments { get; set; }
+
+
 
 
 

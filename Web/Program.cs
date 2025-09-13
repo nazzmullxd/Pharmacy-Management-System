@@ -31,7 +31,7 @@ builder.Services.AddScoped<ISaleRepository, SaleRepository>();
 builder.Services.AddScoped<ISaleItemRepository, SaleItemRepository>();
 builder.Services.AddScoped<IAntibioticLogRepository, AntibioticLogRepository>();
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
-
+builder.Services.AddScoped<IStockAdjustmentRepository, StockAdjustmentRepository>();
 // Register all business services
 builder.Services.AddBusinessServices();
 // Register services and repositories

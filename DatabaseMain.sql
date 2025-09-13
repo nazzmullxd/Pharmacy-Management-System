@@ -169,4 +169,21 @@ CREATE TABLE dbo.AntibioticLogs (
 );
 GO
 
+CREATE TABLE [dbo].[StockAdjustments] (
+    [StockAdjustmentID]  UNIQUEIDENTIFIER DEFAULT (newid()) NOT NULL,
+    [ProductBatchID]     UNIQUEIDENTIFIER NOT NULL,
+    [PreviousQuantity]   INT              NOT NULL,
+    [AdjustedQuantity]   INT              NOT NULL,
+    [QuantityDifference] INT              NOT NULL,
+    [AdjustmentType]     NVARCHAR (255)   NOT NULL,
+    [Reason]             NVARCHAR (MAX)   NULL,
+    [UserID]             UNIQUEIDENTIFIER NOT NULL,
+    [AdjustmentDate]     DATETIME2 (7)    DEFAULT (sysutcdatetime()) NOT NULL,
+    [IsApproved]         BIT              DEFAULT ((0)) NOT NULL,
+    [ApprovedBy]         UNIQUEIDENTIFIER NULL,
+    [ApprovalDate]       DATETIME2 (7)    NULL,
+    PRIMARY KEY CLUSTERED ([StockAdjustmentID] ASC),
+    CONSTRAINT [FK_StockAdjustments_ProductBatch] FOREIGN KEY ([ProductBatchID]) REFERENCES [dbo].[ProductBatches] ([ProductBatchID])
+);
+
 

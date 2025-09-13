@@ -1,25 +1,43 @@
-using System;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Business.DTO
+namespace Database.Model
 {
-    public class StockAdjustmentDTO
+    public class StockAdjustment
     {
-        public Guid StockAdjustmentID { get; set; }
+        [Key]
+        public Guid StockAdjustmentID { get; set; } = Guid.NewGuid();
+
+        [Required]
+        [ForeignKey(nameof(ProductBatch))]
         public Guid ProductBatchID { get; set; }
-        public string ProductName { get; set; } = string.Empty;
-        public string BatchNumber { get; set; } = string.Empty;
+
+        public ProductBatch? ProductBatch { get; set; }
+
+        [Required]
         public int PreviousQuantity { get; set; }
+
+        [Required]
         public int AdjustedQuantity { get; set; }
+
+        [Required]
         public int QuantityDifference { get; set; }
+
+        [Required]
         public string AdjustmentType { get; set; } = string.Empty; // "Increase", "Decrease", "Correction"
+
         public string Reason { get; set; } = string.Empty;
-        public string Notes { get; set; } = string.Empty;
+
+        [Required]
         public Guid UserID { get; set; }
-        public string UserName { get; set; } = string.Empty;
-        public DateTime AdjustmentDate { get; set; }
+
+        public DateTime AdjustmentDate { get; set; } = DateTime.UtcNow;
+
         public bool IsApproved { get; set; }
+
         public Guid? ApprovedBy { get; set; }
-        public string ApprovedByName { get; set; } = string.Empty;
+
         public DateTime? ApprovalDate { get; set; }
     }
 }

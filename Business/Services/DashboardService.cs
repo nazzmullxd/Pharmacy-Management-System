@@ -52,36 +52,36 @@ namespace Business.Services
             return new DashboardKPIDTO
             {
                 Date = targetDate,
-                
+
                 // Today's Metrics
                 TodaySaleOrdersCount = todaySales.Count(),
                 TodayInvoicesCount = todaySales.Count(s => s.PaymentStatus == "Paid"),
                 TodaySalesAmount = todaySales.Sum(s => s.TotalAmount),
                 TodayInvoiceAmount = todaySales.Where(s => s.PaymentStatus == "Paid").Sum(s => s.TotalAmount),
-                
+
                 // This Month's Metrics
                 ThisMonthSaleOrdersCount = thisMonthSales.Count(),
                 ThisMonthInvoicesCount = thisMonthSales.Count(s => s.PaymentStatus == "Paid"),
                 ThisMonthSalesAmount = thisMonthSales.Sum(s => s.TotalAmount),
                 ThisMonthInvoiceAmount = thisMonthSales.Where(s => s.PaymentStatus == "Paid").Sum(s => s.TotalAmount),
-                
+
                 // Stock Metrics
                 StockItemsCount = allProducts.Count(p => p.IsActive),
                 StockAdjustmentsCount = 0, // Would need to implement stock adjustments tracking
                 TotalStockValue = await CalculateTotalStockValue(),
                 LowStockItemsCount = await GetLowStockItemsCountAsync(),
                 ExpiringItemsCount = await GetExpiringItemsCountAsync(),
-                
+
                 // Financial Metrics
                 SalesDue = await CalculateSalesDue(),
                 InvoiceDue = await CalculateInvoiceDue(),
                 TotalDue = await CalculateSalesDue() + await CalculateInvoiceDue(),
                 NetProfit = await CalculateNetProfit(),
-                
+
                 // Support Metrics
                 SupportTicketsCount = 0, // Would need to implement support tickets
                 OpenSupportTicketsCount = 0,
-                
+
                 // Performance Indicators
                 SalesGrowthPercentage = await CalculateSalesGrowthPercentage(),
                 ProfitMarginPercentage = await CalculateProfitMarginPercentage(),
@@ -89,9 +89,9 @@ namespace Business.Services
             };
         }
 
-        public async Task<DashboardKPIDTO> GetTodayKPIsAsync()
+        public Task<DashboardKPIDTO> GetTodayKPIsAsync()
         {
-            return await GetDashboardKPIsAsync(DateTime.UtcNow);
+            return GetDashboardKPIsAsync(DateTime.UtcNow);
         }
 
         public async Task<DashboardKPIDTO> GetThisMonthKPIsAsync()
@@ -118,7 +118,7 @@ namespace Business.Services
         {
             var lastMonth = DateTime.UtcNow.AddMonths(-1);
             var sales = await _saleRepository.GetByDateRangeAsync(lastMonth, DateTime.UtcNow);
-            
+
             var productSales = new Dictionary<Guid, (string ProductName, string Category, int TotalQuantity, decimal TotalRevenue)>();
 
             foreach (var sale in sales)
@@ -219,12 +219,12 @@ namespace Business.Services
         {
             var allBatches = await _productBatchRepository.GetAllAsync();
             var expiringBatches = allBatches.Where(b => b.ExpiryDate <= DateTime.UtcNow.AddDays(daysAhead) && b.QuantityInStock > 0);
-            
+
             var alerts = new List<ExpiryAlertDTO>();
             foreach (var batch in expiringBatches)
             {
                 var product = await _productRepository.GetByIdAsync(batch.ProductID);
-                
+
                 alerts.Add(new ExpiryAlertDTO
                 {
                     ProductBatchID = batch.ProductBatchID,
@@ -234,7 +234,7 @@ namespace Business.Services
                     ExpiryDate = batch.ExpiryDate,
                     QuantityInStock = batch.QuantityInStock,
                     DaysUntilExpiry = (int)(batch.ExpiryDate - DateTime.UtcNow).TotalDays,
-                    AlertLevel = batch.ExpiryDate <= DateTime.UtcNow ? "Critical" : 
+                    AlertLevel = batch.ExpiryDate <= DateTime.UtcNow ? "Critical" :
                                 batch.ExpiryDate <= DateTime.UtcNow.AddDays(7) ? "Warning" : "Info",
                     SupplierName = string.Empty // Would need supplier lookup
                 });
@@ -247,13 +247,13 @@ namespace Business.Services
         {
             var sales = await _saleRepository.GetAllAsync();
             var recentSales = sales.OrderByDescending(s => s.SaleDate).Take(count);
-            
+
             var saleDtos = new List<SaleDTO>();
             foreach (var sale in recentSales)
             {
                 var customer = await _customerRepository.GetByIdAsync(sale.CustomerID);
                 var user = await _userRepository.GetByIdAsync(sale.UserID);
-                
+
                 saleDtos.Add(new SaleDTO
                 {
                     SaleID = sale.SaleID,
@@ -271,35 +271,35 @@ namespace Business.Services
             return saleDtos;
         }
 
-        public async Task<IEnumerable<StockAdjustmentDTO>> GetRecentAdjustmentsAsync(int count = 5)
+        public Task<IEnumerable<StockAdjustmentDTO>> GetRecentAdjustmentsAsync(int count = 5)
         {
             // In a real implementation, this would query recent stock adjustments
-            return new List<StockAdjustmentDTO>();
+            return Task.FromResult<IEnumerable<StockAdjustmentDTO>>(new List<StockAdjustmentDTO>());
         }
 
-        public async Task<decimal> GetTotalStockValueAsync()
+        public Task<decimal> GetTotalStockValueAsync()
         {
-            return await CalculateTotalStockValue();
+            return CalculateTotalStockValue();
         }
 
-        public async Task<decimal> GetTotalSalesDueAsync()
+        public Task<decimal> GetTotalSalesDueAsync()
         {
-            return await CalculateSalesDue();
+            return CalculateSalesDue();
         }
 
-        public async Task<decimal> GetTotalInvoiceDueAsync()
+        public Task<decimal> GetTotalInvoiceDueAsync()
         {
-            return await CalculateInvoiceDue();
+            return CalculateInvoiceDue();
         }
 
-        public async Task<int> GetLowStockItemsCountAsync(int threshold = 10)
+        public Task<int> GetLowStockItemsCountAsync(int threshold = 10)
         {
-            return await GetLowStockItemsCountAsync();
+            return GetLowStockItemsCountAsync();
         }
 
-        public async Task<int> GetExpiringItemsCountAsync(int daysAhead = 30)
+        public Task<int> GetExpiringItemsCountAsync(int daysAhead = 30)
         {
-            return await GetExpiringItemsCountAsync();
+            return GetExpiringItemsCountAsync();
         }
 
         // Helper methods
@@ -336,10 +336,10 @@ namespace Business.Services
         {
             var sales = await _saleRepository.GetAllAsync();
             var purchases = await _purchaseRepository.GetAllAsync();
-            
+
             var totalSales = sales.Sum(s => s.TotalAmount);
             var totalPurchases = purchases.Sum(p => p.TotalAmount);
-            
+
             return totalSales - totalPurchases;
         }
 
