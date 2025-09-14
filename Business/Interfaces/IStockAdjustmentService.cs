@@ -9,7 +9,7 @@ namespace Business.Interfaces
     {
         Task<IEnumerable<StockAdjustmentDTO>> GetAllStockAdjustmentsAsync();
         Task<StockAdjustmentDTO?> GetStockAdjustmentByIdAsync(Guid adjustmentId);
-        Task<StockAdjustmentDTO> CreateStockAdjustmentAsync(StockAdjustmentDTO adjustmentDto);
+        Task<StockAdjustmentResultDTO> CreateStockAdjustmentAsync(StockAdjustmentDTO adjustmentDto);
         Task<StockAdjustmentDTO> UpdateStockAdjustmentAsync(StockAdjustmentDTO adjustmentDto);
         Task<bool> DeleteStockAdjustmentAsync(Guid adjustmentId);
         Task<IEnumerable<StockAdjustmentDTO>> GetAdjustmentsByProductAsync(Guid productId);
@@ -18,6 +18,5 @@ namespace Business.Interfaces
         Task<bool> ApproveStockAdjustmentAsync(Guid adjustmentId, Guid approvedBy);
         Task<bool> RejectStockAdjustmentAsync(Guid adjustmentId, string reason);
         Task<IEnumerable<StockAdjustmentDTO>> GetPendingApprovalsAsync();
-        Task<bool> ProcessStockAdjustmentAsync(StockAdjustmentDTO adjustmentDto);
     }
 }

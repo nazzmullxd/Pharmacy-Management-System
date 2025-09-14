@@ -2,6 +2,7 @@ using Business.DTO;
 using Business.Interfaces;
 using Database.Interfaces;
 using Database.Model;
+using Microsoft.Extensions.Logging;
 
 namespace Business.Services
 {
@@ -9,16 +10,16 @@ namespace Business.Services
     {
         private readonly IProductBatchRepository _productBatchRepository;
         private readonly IStockAdjustmentRepository _stockAdjustmentRepository;
-        private readonly IAuditLogRepository _auditLogRepository;
+        private readonly ILogger<StockAdjustmentService> _logger;
 
         public StockAdjustmentService(
             IProductBatchRepository productBatchRepository,
             IStockAdjustmentRepository stockAdjustmentRepository,
-            IAuditLogRepository auditLogRepository)
+            ILogger<StockAdjustmentService> logger)
         {
             _productBatchRepository = productBatchRepository ?? throw new ArgumentNullException(nameof(productBatchRepository));
             _stockAdjustmentRepository = stockAdjustmentRepository ?? throw new ArgumentNullException(nameof(stockAdjustmentRepository));
-            _auditLogRepository = auditLogRepository ?? throw new ArgumentNullException(nameof(auditLogRepository));
+            _logger = logger;
         }
 
         public async Task<IEnumerable<StockAdjustmentDTO>> GetAllStockAdjustmentsAsync()
@@ -33,65 +34,69 @@ namespace Business.Services
             return adjustment != null ? MapToDTO(adjustment) : null;
         }
 
-        public async Task<StockAdjustmentDTO> CreateStockAdjustmentAsync(StockAdjustmentDTO adjustmentDto)
+        public async Task<StockAdjustmentResultDTO> CreateStockAdjustmentAsync(StockAdjustmentDTO adjustmentDto)
         {
             if (adjustmentDto == null)
-                throw new ArgumentNullException(nameof(adjustmentDto));
+                return new StockAdjustmentResultDTO { Success = false, ErrorMessage = "Adjustment data is required." };
 
-            ValidateAdjustment(adjustmentDto);
-
-            var batch = await _productBatchRepository.GetByIdAsync(adjustmentDto.ProductBatchID);
-            if (batch == null)
-                throw new InvalidOperationException("Product batch not found");
-
-            var previousQuantity = batch.QuantityInStock;
-
-            // Determine new quantity based on adjustment type
-            int newQuantity = adjustmentDto.AdjustmentType.ToLower() switch
+            try
             {
-                "increase" => previousQuantity + adjustmentDto.AdjustedQuantity,
-                "decrease" => previousQuantity - adjustmentDto.AdjustedQuantity,
-                "correction" => adjustmentDto.AdjustedQuantity,
-                _ => throw new InvalidOperationException("Invalid adjustment type")
-            };
+                ValidateAdjustment(adjustmentDto);
 
-            if (newQuantity < 0)
-                throw new InvalidOperationException("Adjusted quantity cannot result in negative stock");
+                var batch = await _productBatchRepository.GetByIdAsync(adjustmentDto.ProductBatchID);
+                if (batch == null)
+                    return new StockAdjustmentResultDTO { Success = false, ErrorMessage = "Product batch not found." };
 
-            // Update product batch
-            batch.QuantityInStock = newQuantity;
-            await _productBatchRepository.UpdateAsync(batch);
+                if (batch.ExpiryDate <= DateTime.UtcNow)
+                    return new StockAdjustmentResultDTO { Success = false, ErrorMessage = "Cannot adjust expired batch." };
 
-            // Create stock adjustment
-            var adjustment = new StockAdjustment
+                var previousQuantity = batch.QuantityInStock;
+                int newQuantity = adjustmentDto.AdjustmentType.ToLower() switch
+                {
+                    "increase" => previousQuantity + adjustmentDto.AdjustedQuantity,
+                    "decrease" => previousQuantity - adjustmentDto.AdjustedQuantity,
+                    "correction" => adjustmentDto.AdjustedQuantity,
+                    _ => throw new InvalidOperationException("Invalid adjustment type")
+                };
+
+                if (newQuantity < 0)
+                    return new StockAdjustmentResultDTO { Success = false, ErrorMessage = "Resulting stock would be negative." };
+
+                batch.QuantityInStock = newQuantity;
+                await _productBatchRepository.UpdateAsync(batch);
+
+                var adjustment = new StockAdjustment
+                {
+                    StockAdjustmentID = Guid.NewGuid(),
+                    ProductBatchID = adjustmentDto.ProductBatchID,
+                    PreviousQuantity = previousQuantity,
+                    AdjustedQuantity = adjustmentDto.AdjustedQuantity,
+                    QuantityDifference = newQuantity - previousQuantity,
+                    AdjustmentType = adjustmentDto.AdjustmentType,
+                    Reason = adjustmentDto.Reason,
+                    UserID = adjustmentDto.UserID,
+                    AdjustmentDate = DateTime.UtcNow,
+                    IsApproved = false
+                };
+
+                await _stockAdjustmentRepository.AddAsync(adjustment);
+
+                _logger.LogInformation("Stock adjustment created: {AdjustmentId} for batch {BatchId} by user {UserId}. Type: {Type}, Reason: {Reason}",
+                    adjustment.StockAdjustmentID, batch.ProductBatchID, adjustmentDto.UserID, adjustmentDto.AdjustmentType, adjustmentDto.Reason);
+
+                return new StockAdjustmentResultDTO { Success = true };
+            }
+            catch (Exception ex)
             {
-                StockAdjustmentID = Guid.NewGuid(),
-                ProductBatchID = adjustmentDto.ProductBatchID,
-                PreviousQuantity = previousQuantity,
-                AdjustedQuantity = adjustmentDto.AdjustedQuantity,
-                QuantityDifference = newQuantity - previousQuantity,
-                AdjustmentType = adjustmentDto.AdjustmentType,
-                Reason = adjustmentDto.Reason,
-                UserID = adjustmentDto.UserID,
-                AdjustmentDate = DateTime.UtcNow,
-                IsApproved = false
-            };
-
-            await _stockAdjustmentRepository.AddAsync(adjustment);
-
-            // Log audit
-            var details = $"Batch {batch.ProductBatchID} adjusted from {previousQuantity} to {newQuantity}. Reason: {adjustmentDto.Reason}";
-            await LogAudit("ADJUST", "ProductBatch", batch.ProductBatchID, details, adjustmentDto.UserID);
-
-            return MapToDTO(adjustment);
+                _logger.LogError(ex, "Failed to create stock adjustment for batch {BatchId}", adjustmentDto.ProductBatchID);
+                return new StockAdjustmentResultDTO { Success = false, ErrorMessage = ex.Message };
+            }
         }
 
         public async Task<StockAdjustmentDTO> UpdateStockAdjustmentAsync(StockAdjustmentDTO adjustmentDto)
         {
             if (adjustmentDto == null)
                 throw new ArgumentNullException(nameof(adjustmentDto));
-
-            ValidateAdjustment(adjustmentDto);
 
             var adjustment = await _stockAdjustmentRepository.GetByIdAsync(adjustmentDto.StockAdjustmentID);
             if (adjustment == null)
@@ -104,9 +109,7 @@ namespace Business.Services
 
             await _stockAdjustmentRepository.UpdateAsync(adjustment);
 
-            // Log audit
-            var details = $"Stock adjustment {adjustment.StockAdjustmentID} updated. Reason: {adjustmentDto.Reason}";
-            await LogAudit("UPDATE", "StockAdjustment", adjustment.StockAdjustmentID, details, adjustmentDto.UserID);
+            _logger.LogInformation("Stock adjustment updated: {AdjustmentId}", adjustment.StockAdjustmentID);
 
             return MapToDTO(adjustment);
         }
@@ -119,8 +122,7 @@ namespace Business.Services
 
             await _stockAdjustmentRepository.DeleteAsync(adjustmentId);
 
-            // Log audit
-            await LogAudit("DELETE", "StockAdjustment", adjustmentId, "Stock adjustment deleted", adjustment.UserID);
+            _logger.LogInformation("Stock adjustment deleted: {AdjustmentId}", adjustmentId);
             return true;
         }
 
@@ -148,28 +150,6 @@ namespace Business.Services
             return adjustments.Select(MapToDTO);
         }
 
-        public async Task<bool> ProcessStockAdjustmentAsync(StockAdjustmentDTO adjustmentDto)
-        {
-            if (adjustmentDto == null)
-                throw new ArgumentNullException(nameof(adjustmentDto));
-
-            var adjustment = await _stockAdjustmentRepository.GetByIdAsync(adjustmentDto.StockAdjustmentID);
-            if (adjustment == null)
-                return false;
-
-            adjustment.IsApproved = true;
-            adjustment.ApprovedBy = adjustmentDto.UserID;
-            adjustment.ApprovalDate = DateTime.UtcNow;
-
-            await _stockAdjustmentRepository.UpdateAsync(adjustment);
-
-            // Log audit
-            var details = $"Stock adjustment {adjustment.StockAdjustmentID} processed.";
-            await LogAudit("PROCESS", "StockAdjustment", adjustment.StockAdjustmentID, details, adjustmentDto.UserID);
-
-            return true;
-        }
-
         public async Task<bool> ApproveStockAdjustmentAsync(Guid adjustmentId, Guid approvedBy)
         {
             var adjustment = await _stockAdjustmentRepository.GetByIdAsync(adjustmentId);
@@ -182,7 +162,7 @@ namespace Business.Services
 
             await _stockAdjustmentRepository.UpdateAsync(adjustment);
 
-            await LogAudit("APPROVE", "StockAdjustment", adjustmentId, $"Approved by {approvedBy}", approvedBy);
+            _logger.LogInformation("Stock adjustment approved: {AdjustmentId} by {UserId}", adjustmentId, approvedBy);
             return true;
         }
 
@@ -192,30 +172,12 @@ namespace Business.Services
             if (adjustment == null)
                 return false;
 
-            await LogAudit("REJECT", "StockAdjustment", adjustmentId, $"Rejected. Reason: {reason}", adjustment.UserID);
+            adjustment.IsApproved = false;
+            adjustment.Reason += $" (Rejected: {reason})";
+            await _stockAdjustmentRepository.UpdateAsync(adjustment);
+
+            _logger.LogInformation("Stock adjustment rejected: {AdjustmentId}. Reason: {Reason}", adjustmentId, reason);
             return true;
-        }
-
-        private async Task LogAudit(string action, string entityType, Guid entityId, string details, Guid userId)
-        {
-            var audit = new AuditLog
-            {
-                AuditLogID = Guid.NewGuid(),
-                UserID = userId,
-                Action = action,
-                Details = $"{entityType}:{entityId} - {details}",
-                IPAddress = string.Empty,
-                ActionDate = DateTime.UtcNow
-            };
-
-            try
-            {
-                await _auditLogRepository.AddAsync(audit);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Failed to log audit: {ex.Message}");
-            }
         }
 
         private void ValidateAdjustment(StockAdjustmentDTO adjustmentDto)

@@ -60,11 +60,34 @@ namespace Web.Pages.Stock
                 AdjustmentDate = DateTime.UtcNow
             };
 
-            var ok = await _stockAdjustmentService.ProcessStockAdjustmentAsync(adjustment);
-            TempData["Message"] = ok ? "Stock adjusted successfully." : "Failed to adjust stock.";
+            var result = await _stockAdjustmentService.CreateStockAdjustmentAsync(adjustment);
+
+            bool stockUpdated = false;
+            if (result.Success)
+            {
+                if (AdjustmentType.ToLower() == "correction")
+                {
+                    // Correction: set the stock to AdjustedQuantity
+                    stockUpdated = await _stockService.ProcessStockAdjustmentAsync(SelectedBatchId, AdjustedQuantity, Reason);
+                }
+                else if (AdjustmentType.ToLower() == "increase")
+                {
+                    stockUpdated = await _stockService.AdjustStockAsync(SelectedBatchId, AdjustedQuantity, Reason);
+                }
+                else if (AdjustmentType.ToLower() == "decrease")
+                {
+                    stockUpdated = await _stockService.AdjustStockAsync(SelectedBatchId, -AdjustedQuantity, Reason);
+                }
+            }
+
+            TempData["Message"] = (result.Success && stockUpdated)
+                ? "Stock adjusted successfully."
+                : $"Failed to adjust stock: {result.ErrorMessage}";
+
+            // Fetch latest batches to ensure UI is updated after redirect
+            Batches = await _stockService.GetAllProductBatchesAsync();
+
             return RedirectToPage();
         }
     }
 }
-
-

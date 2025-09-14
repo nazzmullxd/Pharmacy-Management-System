@@ -1,11 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Business.DTO;
 using Business.Interfaces;
 using Database.Interfaces;
 using Database.Model;
+using Microsoft.Extensions.Logging;
 
 namespace Business.Services
 {
@@ -14,15 +11,18 @@ namespace Business.Services
         private readonly IProductBatchRepository _productBatchRepository;
         private readonly IProductRepository _productRepository;
         private readonly ISupplierRepository _supplierRepository;
+        private readonly ILogger<StockService> _logger;
 
         public StockService(
             IProductBatchRepository productBatchRepository,
             IProductRepository productRepository,
-            ISupplierRepository supplierRepository)
+            ISupplierRepository supplierRepository,
+            ILogger<StockService> logger)
         {
             _productBatchRepository = productBatchRepository ?? throw new ArgumentNullException(nameof(productBatchRepository));
             _productRepository = productRepository ?? throw new ArgumentNullException(nameof(productRepository));
             _supplierRepository = supplierRepository ?? throw new ArgumentNullException(nameof(supplierRepository));
+            _logger = logger;
         }
 
         public async Task<IEnumerable<ProductBatchDTO>> GetAllProductBatchesAsync()
@@ -57,6 +57,10 @@ namespace Business.Services
             batch.CreatedDate = DateTime.UtcNow;
 
             await _productBatchRepository.AddAsync(batch);
+
+            // Keep product total stock in sync
+            await UpdateProductTotalStock(batch.ProductID);
+
             return await MapToDTO(batch);
         }
 
@@ -75,6 +79,10 @@ namespace Business.Services
             batch.CreatedDate = existingBatch.CreatedDate; // Preserve original creation date
 
             await _productBatchRepository.UpdateAsync(batch);
+
+            // Keep product total stock in sync
+            await UpdateProductTotalStock(batch.ProductID);
+
             return await MapToDTO(batch);
         }
 
@@ -82,7 +90,15 @@ namespace Business.Services
         {
             try
             {
+                var batch = await _productBatchRepository.GetByIdAsync(batchId);
+                if (batch == null)
+                    return false;
+
                 await _productBatchRepository.DeleteAsync(batchId);
+
+                // Keep product total stock in sync
+                await UpdateProductTotalStock(batch.ProductID);
+
                 return true;
             }
             catch
@@ -110,7 +126,7 @@ namespace Business.Services
             var cutoffDate = DateTime.UtcNow.AddDays(daysAhead);
             var allBatches = await _productBatchRepository.GetAllAsync();
             var expiringBatches = allBatches.Where(b => b.ExpiryDate <= cutoffDate && b.QuantityInStock > 0);
-            
+
             var batchDtos = new List<ProductBatchDTO>();
             foreach (var batch in expiringBatches)
             {
@@ -125,7 +141,7 @@ namespace Business.Services
         {
             var allBatches = await _productBatchRepository.GetAllAsync();
             var expiredBatches = allBatches.Where(b => b.ExpiryDate <= DateTime.UtcNow && b.QuantityInStock > 0);
-            
+
             var batchDtos = new List<ProductBatchDTO>();
             foreach (var batch in expiredBatches)
             {
@@ -186,25 +202,38 @@ namespace Business.Services
             return batches.Where(b => b.ExpiryDate > DateTime.UtcNow).Sum(b => b.QuantityInStock);
         }
 
-        public async Task<bool> AdjustStockAsync(Guid batchId, int quantityChange, string reason)
+        // Renamed to avoid CS0111 conflict
+        public async Task<StockAdjustmentResultDTO> AdjustStockWithResultAsync(Guid batchId, int quantityChange, string reason)
         {
             try
             {
                 var batch = await _productBatchRepository.GetByIdAsync(batchId);
                 if (batch == null)
-                    return false;
+                    return new StockAdjustmentResultDTO { Success = false, ErrorMessage = "Batch not found." };
+
+                if (batch.ExpiryDate <= DateTime.UtcNow)
+                    return new StockAdjustmentResultDTO { Success = false, ErrorMessage = "Batch is expired." };
 
                 var newQuantity = batch.QuantityInStock + quantityChange;
                 if (newQuantity < 0)
-                    return false; // Cannot have negative stock
+                    return new StockAdjustmentResultDTO { Success = false, ErrorMessage = "Resulting stock would be negative." };
 
                 batch.QuantityInStock = newQuantity;
                 await _productBatchRepository.UpdateAsync(batch);
-                return true;
+
+                // Keep product total stock in sync
+                await UpdateProductTotalStock(batch.ProductID);
+
+                // Log success
+                Console.WriteLine($"Stock adjusted for batch {batchId}: {quantityChange} ({reason})");
+
+                return new StockAdjustmentResultDTO { Success = true };
             }
-            catch
+            catch (Exception ex)
             {
-                return false;
+                // Log exception
+                _logger.LogError(ex, "Stock adjustment failed for batch {BatchId}", batchId);
+                return new StockAdjustmentResultDTO { Success = false, ErrorMessage = ex.Message };
             }
         }
 
@@ -212,7 +241,7 @@ namespace Business.Services
         {
             var allBatches = await _productBatchRepository.GetAllAsync();
             var lowStockBatches = allBatches.Where(b => b.QuantityInStock <= threshold && b.QuantityInStock > 0);
-            
+
             var batchDtos = new List<ProductBatchDTO>();
             foreach (var batch in lowStockBatches)
             {
@@ -223,23 +252,83 @@ namespace Business.Services
             return batchDtos;
         }
 
+        public async Task<bool> AdjustStockAsync(Guid batchId, int quantityChange, string reason)
+        {
+            try
+            {
+                var batch = await _productBatchRepository.GetByIdAsync(batchId);
+                if (batch == null)
+                {
+                    _logger.LogWarning("AdjustStockAsync failed: Batch not found. BatchId={BatchId}", batchId);
+                    return false;
+                }
+
+                if (batch.ExpiryDate <= DateTime.UtcNow)
+                {
+                    _logger.LogWarning("AdjustStockAsync failed: Batch expired. BatchId={BatchId}, ExpiryDate={ExpiryDate}", batchId, batch.ExpiryDate);
+                    return false;
+                }
+
+                var newQuantity = batch.QuantityInStock + quantityChange;
+                if (newQuantity < 0)
+                {
+                    _logger.LogWarning("AdjustStockAsync failed: Negative stock. BatchId={BatchId}, CurrentQty={CurrentQty}, Change={Change}", batchId, batch.QuantityInStock, quantityChange);
+                    return false;
+                }
+
+                batch.QuantityInStock = newQuantity;
+                await _productBatchRepository.UpdateAsync(batch);
+
+                // Keep product total stock in sync
+                await UpdateProductTotalStock(batch.ProductID);
+
+                _logger.LogInformation("Stock adjusted for batch {BatchId}: Change={Change}, Reason={Reason}, NewQty={NewQty}", batchId, quantityChange, reason, newQuantity);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "AdjustStockAsync exception for batch {BatchId}", batchId);
+                return false;
+            }
+        }
+
         public async Task<bool> ProcessStockAdjustmentAsync(Guid batchId, int newQuantity, string reason)
         {
             try
             {
                 var batch = await _productBatchRepository.GetByIdAsync(batchId);
                 if (batch == null)
+                {
+                    _logger.LogWarning("ProcessStockAdjustmentAsync failed: Batch not found. BatchId={BatchId}", batchId);
                     return false;
+                }
+
+                if (batch.ExpiryDate <= DateTime.UtcNow)
+                {
+                    _logger.LogWarning("ProcessStockAdjustmentAsync failed: Batch expired. BatchId={BatchId}, ExpiryDate={ExpiryDate}", batchId, batch.ExpiryDate);
+                    return false;
+                }
 
                 if (newQuantity < 0)
-                    return false; // Cannot have negative stock
+                {
+                    _logger.LogWarning("ProcessStockAdjustmentAsync failed: Negative stock. BatchId={BatchId}, NewQty={NewQty}", batchId, newQuantity);
+                    return false;
+                }
 
                 batch.QuantityInStock = newQuantity;
                 await _productBatchRepository.UpdateAsync(batch);
+
+                // Keep product total stock in sync
+                await UpdateProductTotalStock(batch.ProductID);
+
+                _logger.LogInformation("Stock adjustment processed for batch {BatchId}: NewQty={NewQty}, Reason={Reason}", batchId, newQuantity, reason);
+
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "ProcessStockAdjustmentAsync exception for batch {BatchId}", batchId);
                 return false;
             }
         }
@@ -293,6 +382,25 @@ namespace Business.Services
                 QuantityInStock = batchDto.QuantityInStock,
                 CreatedDate = batchDto.CreatedDate
             };
+        }
+
+        // Helper to update the Product.TotalStock field to reflect current batches
+        private async Task UpdateProductTotalStock(Guid productId)
+        {
+            try
+            {
+                var total = await GetTotalStockForProductAsync(productId);
+                var product = await _productRepository.GetByIdAsync(productId);
+                if (product != null)
+                {
+                    product.TotalStock = total;
+                    await _productRepository.UpdateAsync(product);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to update Product.TotalStock for ProductId={ProductId}", productId);
+            }
         }
     }
 }

@@ -1,0 +1,50 @@
+@page
+@model Web.Pages.Stock.AddBatchModel
+@{
+    ViewData["Title"] = "Add Stock Batch";
+}
+
+<div class="page-header">
+    <h1><i class="fas fa-plus"></i> Add Stock Batch</h1>
+    <a class="btn btn-secondary" href="/Stock/Batches">Back to Batches</a>
+</div>
+<form method="post" class="card p-3">
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label">Product</label>
+            <select asp-for="Batch.ProductID" class="form-select" required>
+                <option value="">-- Select Product --</option>
+                @foreach (var p in Model.Products)
+                {
+                    <option value="@p.ProductID">@p.ProductName</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Supplier</label>
+            <select asp-for="Batch.SupplierID" class="form-select" required>
+                <option value="">-- Select Supplier --</option>
+                @foreach (var s in Model.Suppliers)
+                {
+                    <option value="@s.SupplierID">@s.SupplierName</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Batch Number</label>
+            <input asp-for="Batch.BatchNumber" class="form-control" required />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Expiry Date</label>
+            <input asp-for="Batch.ExpiryDate" type="date" class="form-control" required min="@DateTime.Now.AddDays(1).ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Quantity</label>
+            <input asp-for="Batch.QuantityInStock" type="number" min="1" class="form-control" required />
+        </div>
+    </div>
+    <div class="mt-3">
+        <button type="submit" class="btn btn-success">Save Batch</button>
+    </div>
+    <div asp-validation-summary="All" class="text-danger mt-2"></div>
+</form>

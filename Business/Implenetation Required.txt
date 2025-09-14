@@ -1,2 +1,9 @@
 ﻿All Services Have been Implemented
 
+1. Stock 
+		a. New Purchase Issue
+		b. 
+
+Fixed
+
+Stock Adjustment issue

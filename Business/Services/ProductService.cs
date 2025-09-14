@@ -12,23 +12,37 @@ namespace Business.Services
     public class ProductService : IProductService
     {
         private readonly IProductRepository _productRepository;
+        private readonly IStockService _stockService;
 
-        public ProductService(IProductRepository productRepository)
+        public ProductService(IProductRepository productRepository, IStockService stockService)
         {
             _productRepository = productRepository ?? throw new ArgumentNullException(nameof(productRepository));
+            _stockService = stockService ?? throw new ArgumentNullException(nameof(stockService));
         }
 
         // IProductService implementation
         public async Task<IEnumerable<ProductDTO>> GetAllProductsAsync()
         {
             var products = await _productRepository.GetAllAsync();
-            return products.Select(MapToDTO);
+            var dtos = products.Select(MapToDTO).ToList();
+
+            // Populate TotalStock from batches for each product so UI reflects current batch quantities
+            foreach (var dto in dtos)
+            {
+                dto.TotalStock = await _stockService.GetTotalStockForProductAsync(dto.ProductID);
+            }
+
+            return dtos;
         }
 
         public async Task<ProductDTO?> GetProductByIdAsync(Guid productId)
         {
             var product = await _productRepository.GetByIdAsync(productId);
-            return product != null ? MapToDTO(product) : null;
+            if (product == null) return null;
+
+            var dto = MapToDTO(product);
+            dto.TotalStock = await _stockService.GetTotalStockForProductAsync(dto.ProductID);
+            return dto;
         }
 
         public async Task<ProductDTO> CreateProductAsync(ProductDTO productDto)
@@ -72,7 +86,12 @@ namespace Business.Services
                 throw new ArgumentException("Search name cannot be null or empty", nameof(name));
 
             var products = await _productRepository.GetByNameAsync(name);
-            return products.Select(MapToDTO);
+            var dtos = products.Select(MapToDTO).ToList();
+            foreach (var dto in dtos)
+            {
+                dto.TotalStock = await _stockService.GetTotalStockForProductAsync(dto.ProductID);
+            }
+            return dtos;
         }
 
         public async Task<IEnumerable<ProductDTO>> GetProductsByCategoryAsync(string category)
@@ -81,19 +100,34 @@ namespace Business.Services
                 throw new ArgumentException("Category cannot be null or empty", nameof(category));
 
             var products = await _productRepository.GetByCategoryAsync(category);
-            return products.Select(MapToDTO);
+            var dtos = products.Select(MapToDTO).ToList();
+            foreach (var dto in dtos)
+            {
+                dto.TotalStock = await _stockService.GetTotalStockForProductAsync(dto.ProductID);
+            }
+            return dtos;
         }
 
         public async Task<IEnumerable<ProductDTO>> GetActiveProductsAsync()
         {
             var products = await _productRepository.GetActiveProductsAsync();
-            return products.Select(MapToDTO);
+            var dtos = products.Select(MapToDTO).ToList();
+            foreach (var dto in dtos)
+            {
+                dto.TotalStock = await _stockService.GetTotalStockForProductAsync(dto.ProductID);
+            }
+            return dtos;
         }
 
         public async Task<IEnumerable<ProductDTO>> GetLowStockProductsAsync(int threshold = 10)
         {
             var products = await _productRepository.GetAllAsync();
-            return products.Where(p => p.TotalStock <= threshold).Select(MapToDTO);
+            var dtos = products.Select(MapToDTO).ToList();
+            foreach (var dto in dtos)
+            {
+                dto.TotalStock = await _stockService.GetTotalStockForProductAsync(dto.ProductID);
+            }
+            return dtos.Where(p => p.TotalStock <= threshold);
         }
 
         public async Task<bool> IsBarcodeUniqueAsync(string barcode, Guid? excludeProductId = null)
@@ -111,7 +145,12 @@ namespace Business.Services
                 throw new ArgumentException("Manufacturer cannot be null or empty", nameof(manufacturer));
 
             var products = await _productRepository.GetAllAsync();
-            return products.Where(p => p.Manufacturer.Equals(manufacturer, StringComparison.OrdinalIgnoreCase)).Select(MapToDTO);
+            var dtos = products.Where(p => p.Manufacturer.Equals(manufacturer, StringComparison.OrdinalIgnoreCase)).Select(MapToDTO).ToList();
+            foreach (var dto in dtos)
+            {
+                dto.TotalStock = await _stockService.GetTotalStockForProductAsync(dto.ProductID);
+            }
+            return dtos;
         }
 
         public async Task<bool> ToggleProductStatusAsync(Guid productId)

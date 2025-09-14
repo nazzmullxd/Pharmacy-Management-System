@@ -18,7 +18,6 @@ namespace Web.Pages.Sales
             _productService = productService;
         }
 
-        public IEnumerable<CustomerDTO> Customers { get; set; } = Enumerable.Empty<CustomerDTO>();
         public IEnumerable<ProductDTO> Products { get; set; } = Enumerable.Empty<ProductDTO>();
 
         [BindProperty]
@@ -26,9 +25,7 @@ namespace Web.Pages.Sales
 
         public async Task OnGet()
         {
-            Customers = await _customerService.GetAllCustomersAsync();
             Products = await _productService.GetAllProductsAsync();
-
             // Preselect customer if provided
             if (Request.Query.ContainsKey("customerId") && Guid.TryParse(Request.Query["customerId"], out var cid))
             {
@@ -38,12 +35,9 @@ namespace Web.Pages.Sales
 
         public async Task<IActionResult> OnPostAddItemAsync(Guid productId, int quantity)
         {
-            Customers = await _customerService.GetAllCustomersAsync();
             Products = await _productService.GetAllProductsAsync();
-
             if (Sale == null)
                 Sale = new SaleDTO();
-
             if (productId != Guid.Empty && quantity > 0)
             {
                 var product = Products.FirstOrDefault(p => p.ProductID == productId);
@@ -59,25 +53,40 @@ namespace Web.Pages.Sales
                 });
                 Sale.TotalAmount = Sale.SaleItems.Sum(i => i.TotalPrice);
             }
-
             return Page();
         }
 
         public async Task<IActionResult> OnPostCreateAsync()
         {
-            Customers = await _customerService.GetAllCustomersAsync();
             Products = await _productService.GetAllProductsAsync();
-
-            if (Sale == null || Sale.CustomerID == Guid.Empty || !Sale.SaleItems.Any())
+            if (Sale == null || string.IsNullOrWhiteSpace(Sale.CustomerName) || !Sale.SaleItems.Any())
             {
-                ModelState.AddModelError(string.Empty, "Customer and at least one item are required.");
+                ModelState.AddModelError(string.Empty, "Customer name and at least one item are required.");
                 return Page();
             }
-
+            // Try to find customer by name
+            var customers = await _customerService.SearchCustomersByNameAsync(Sale.CustomerName);
+            var customer = customers.FirstOrDefault(c => c.CustomerName.Equals(Sale.CustomerName, StringComparison.OrdinalIgnoreCase));
+            if (customer != null)
+            {
+                Sale.CustomerID = customer.CustomerID;
+            }
+            else
+            {
+                // Create minimal customer record
+                var newCustomer = new CustomerDTO
+                {
+                    CustomerName = Sale.CustomerName,
+                    ContactNumber = string.Empty,
+                    Email = string.Empty,
+                    Address = string.Empty
+                };
+                var createdCustomer = await _customerService.CreateCustomerAsync(newCustomer);
+                Sale.CustomerID = createdCustomer.CustomerID;
+            }
             Sale.SaleID = Guid.NewGuid();
             Sale.SaleDate = DateTime.UtcNow;
             Sale.PaymentStatus = "Paid";
-
             await _salesService.CreateSaleAsync(Sale);
             TempData["Message"] = "Sale created.";
             return RedirectToPage("Index");

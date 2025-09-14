@@ -21,7 +21,7 @@ namespace Web.Pages.Stock
         public IEnumerable<ProductDTO> StockItems { get; set; } = new List<ProductDTO>();
         public IEnumerable<ProductDTO> LowStockAlerts { get; set; } = new List<ProductDTO>();
         public IEnumerable<ExpiryAlertDTO> ExpiringAlerts { get; set; } = new List<ExpiryAlertDTO>();
-        
+
         // Summary properties
         public int TotalProducts { get; set; }
         public int LowStockItems { get; set; }
@@ -32,15 +32,31 @@ namespace Web.Pages.Stock
         {
             try
             {
-                // Load all products with stock information
-                StockItems = await _productService.GetAllProductsAsync();
-                
-                // Load low stock products
-                LowStockAlerts = await _productService.GetLowStockProductsAsync();
-                
+                // Load all products
+                var products = await _productService.GetAllProductsAsync();
+                var stockItems = new List<ProductDTO>();
+
+                // Ensure TotalStock is up-to-date for each product
+                foreach (var product in products)
+                {
+                    product.TotalStock = await _stockService.GetTotalStockForProductAsync(product.ProductID);
+                    stockItems.Add(product);
+                }
+                StockItems = stockItems;
+
+                // Load low stock products (recalculate stock for each)
+                var lowStockProducts = await _productService.GetLowStockProductsAsync();
+                var lowStockAlerts = new List<ProductDTO>();
+                foreach (var product in lowStockProducts)
+                {
+                    product.TotalStock = await _stockService.GetTotalStockForProductAsync(product.ProductID);
+                    lowStockAlerts.Add(product);
+                }
+                LowStockAlerts = lowStockAlerts;
+
                 // Load expiring products
                 ExpiringAlerts = await _stockService.GetExpiryAlertsAsync(); // Next 30 days
-                
+
                 // Calculate summary statistics
                 CalculateSummaryStatistics();
             }

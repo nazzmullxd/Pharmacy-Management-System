@@ -53,6 +53,6 @@ namespace Database.Model
         public string Notes { get; set; } = string.Empty;
 
         public DateTime OrderDate { get; set; } = DateTime.UtcNow;
-        public string OrderNumber { get; set; }
+        public string OrderNumber { get; set; } = string.Empty;
     }
 }

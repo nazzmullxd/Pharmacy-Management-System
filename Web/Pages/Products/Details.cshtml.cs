@@ -8,10 +8,12 @@ namespace Web.Pages.Products
     public class DetailsModel : PageModel
     {
         private readonly IProductService _productService;
+        private readonly IStockService _stockService;
 
-        public DetailsModel(IProductService productService)
+        public DetailsModel(IProductService productService, IStockService stockService)
         {
             _productService = productService;
+            _stockService = stockService;
         }
 
         [FromRoute]
@@ -23,8 +25,11 @@ namespace Web.Pages.Products
         {
             Id = id;
             Product = await _productService.GetProductByIdAsync(id);
+            if (Product != null)
+            {
+                // Always fetch latest stock from batches
+                Product.TotalStock = await _stockService.GetTotalStockForProductAsync(Product.ProductID);
+            }
         }
     }
 }
-
-
