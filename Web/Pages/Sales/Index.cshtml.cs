@@ -17,7 +17,7 @@ namespace Web.Pages.Sales
         }
 
         public IEnumerable<SaleDTO> Sales { get; set; } = new List<SaleDTO>();
-        
+
         // Summary properties
         public decimal TodaySales { get; set; }
         public int TodaySalesCount { get; set; }
@@ -30,61 +30,74 @@ namespace Web.Pages.Sales
         {
             try
             {
-                // Load recent sales (last 50)
-                Sales = await _salesService.GetAllSalesAsync();
-                Sales = Sales.Take(50).ToList();
+                // Pull all sales once (consider future pagination)
+                var all = await _salesService.GetAllSalesAsync();
+                // Display only most recent 50 (order by date desc)
+                Sales = all
+                    .OrderByDescending(s => s.SaleDate)
+                    .Take(50)
+                    .ToList();
 
-                // Calculate summary statistics
-                await CalculateSummaryStatistics();
+                CalculateSummaryStatistics(all);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading sales data");
                 Sales = new List<SaleDTO>();
+                ResetSummaries();
             }
         }
 
-        private async Task CalculateSummaryStatistics()
+        private void CalculateSummaryStatistics(IEnumerable<SaleDTO> allSales)
         {
             try
             {
-                var today = DateTime.Today;
-                var monthStart = new DateTime(today.Year, today.Month, 1);
+                // Use UTC boundaries because SaleDate stored as UTC
+                var utcToday = DateTime.UtcNow.Date;
+                var utcMonthStart = new DateTime(utcToday.Year, utcToday.Month, 1);
 
-                // Get today's sales
-                var todaySales = await _salesService.GetSalesByDateRangeAsync(today, today.AddDays(1));
-                TodaySales = todaySales.Sum(s => s.TotalAmount);
-                TodaySalesCount = todaySales.Count();
+                var todaySlice = allSales.Where(s => s.SaleDate >= utcToday && s.SaleDate < utcToday.AddDays(1)).ToList();
+                TodaySales = todaySlice.Sum(s => s.TotalAmount);
+                TodaySalesCount = todaySlice.Count;
 
-                // Get this month's sales
-                var monthlySales = await _salesService.GetSalesByDateRangeAsync(monthStart, today.AddDays(1));
-                MonthlySales = monthlySales.Sum(s => s.TotalAmount);
-                MonthlySalesCount = monthlySales.Count();
+                var monthSlice = allSales.Where(s => s.SaleDate >= utcMonthStart && s.SaleDate < utcToday.AddDays(1)).ToList();
+                MonthlySales = monthSlice.Sum(s => s.TotalAmount);
+                MonthlySalesCount = monthSlice.Count;
 
-                // Get pending orders
-                var allSales = await _salesService.GetAllSalesAsync();
-                PendingOrders = allSales.Count(s => s.PaymentStatus == "Pending");
+                PendingOrders = allSales.Count(s => s.PaymentStatus == SaleDTO.PaymentStatuses.Pending);
                 TotalOrders = allSales.Count();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error calculating summary statistics");
-                // Set default values
-                TodaySales = 0;
-                TodaySalesCount = 0;
-                MonthlySales = 0;
-                MonthlySalesCount = 0;
-                PendingOrders = 0;
-                TotalOrders = 0;
+                ResetSummaries();
             }
         }
 
+        private void ResetSummaries()
+        {
+            TodaySales = 0;
+            TodaySalesCount = 0;
+            MonthlySales = 0;
+            MonthlySalesCount = 0;
+            PendingOrders = 0;
+            TotalOrders = 0;
+        }
+
+        // Server-side action to mark as paid (ensure form posts here; JS alone should not mutate UI)
         public async Task<IActionResult> OnPostMarkAsPaidAsync(Guid saleId)
         {
+            if (saleId == Guid.Empty)
+            {
+                TempData["ErrorMessage"] = "Invalid sale identifier.";
+                return RedirectToPage();
+            }
+
             try
             {
-                await _salesService.UpdatePaymentStatusAsync(saleId, "Paid");
-                TempData["SuccessMessage"] = "Sale marked as paid successfully.";
+                var ok = await _salesService.UpdatePaymentStatusAsync(saleId, SaleDTO.PaymentStatuses.Paid);
+                TempData[ok ? "SuccessMessage" : "ErrorMessage"] =
+                    ok ? "Sale marked as paid successfully." : "Failed to update payment status.";
             }
             catch (Exception ex)
             {

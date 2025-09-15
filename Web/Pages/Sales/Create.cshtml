@@ -1,122 +1,213 @@
 @page
 @model Web.Pages.Sales.CreateModel
 @{
-    ViewData["Title"] = "New Sale";
+    ViewData["Title"] = "Create Sale";
 }
 
-<div class="page-header">
-    <h1><i class="fas fa-plus"></i> New Sale</h1>
-    <a class="btn btn-secondary" href="/Sales">Back to Sales</a>
-</div>
-<form method="post" class="card p-3">
-    <div class="row g-3">
-        <div class="col-md-6">
-            <label class="form-label">Customer Name</label>
-            <input type="text" asp-for="Sale.CustomerName" class="form-control" id="customerNameInput" autocomplete="off" placeholder="Type customer name..." />
-            <div id="customerSuggestions" class="list-group position-absolute w-100" style="z-index:1000;"></div>
-            <input type="hidden" asp-for="Sale.CustomerID" id="customerIdInput" />
-            <small class="form-text text-muted">Type to search or add new customer by name.</small>
-        </div>
-        <div class="col-md-6">
-            <label class="form-label">Note</label>
-            <input asp-for="Sale.Note" class="form-control" />
-        </div>
-    </div>
+<h2>Create Sale</h2>
 
-    <hr />
-    <h5>Add Items</h5>
-    <div class="row g-2 align-items-end">
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
+<form method="post" id="saleForm">
+    <!-- Customer Selection -->
+    <div class="row mb-3">
         <div class="col-md-6">
-            <label class="form-label">Product</label>
-            <select name="productId" class="form-select">
-                <option value="">-- Select Product --</option>
-                @foreach (var p in Model.Products)
+            <label class="form-label">Select Existing Customer</label>
+            <select asp-for="SelectedCustomerID" class="form-select">
+                <option value="">-- Select Customer --</option>
+                @foreach (var c in Model.Customers)
                 {
-                    <option value="@p.ProductID">@p.ProductName (@p.UnitPrice.ToString("C"))</option>
+                    <option value="@c.CustomerID">@c.CustomerName</option>
                 }
             </select>
+            <span asp-validation-for="SelectedCustomerID" class="text-danger"></span>
         </div>
-        <div class="col-md-3">
-            <label class="form-label">Quantity</label>
-            <input name="quantity" type="number" class="form-control" />
-        </div>
-        <div class="col-md-3">
-            <button type="submit" asp-page-handler="AddItem" class="btn btn-outline-primary">Add Item</button>
+        <div class="col-md-6">
+            <label class="form-label">Or Enter New Customer Name</label>
+            <input asp-for="Sale.CustomerName" class="form-control" placeholder="New customer name" />
+            <span asp-validation-for="Sale.CustomerName" class="text-danger"></span>
         </div>
     </div>
 
-    <div class="table-responsive mt-3">
-        <table class="table table-sm table-bordered">
-            <thead>
-                <tr>
-                    <th>Product</th>
-                    <th>Qty</th>
-                    <th>Unit</th>
-                    <th>Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var i in Model.Sale.SaleItems)
-                {
+    <!-- Add Item Section -->
+    <fieldset class="border rounded p-3 mb-3">
+        <legend class="fs-6 mb-2">Add Item</legend>
+        <div class="row g-2 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label">Product</label>
+                <select asp-for="ProductIdToAdd" class="form-select">
+                    <option value="">-- Select Product --</option>
+                    @foreach (var p in Model.Products)
+                    {
+                        <option value="@p.ProductID">@p.ProductName (@p.UnitPrice.ToString("C"))</option>
+                    }
+                </select>
+                <span asp-validation-for="ProductIdToAdd" class="text-danger"></span>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Quantity</label>
+                <input asp-for="QuantityToAdd" type="number" min="1" class="form-control" />
+                <span asp-validation-for="QuantityToAdd" class="text-danger"></span>
+            </div>
+            <div class="col-md-4">
+                <button type="submit" asp-page-handler="AddItem" class="btn btn-primary w-100 mt-md-0 mt-2">
+                    <i class="fas fa-plus"></i> Add Item
+                </button>
+            </div>
+        </div>
+    </fieldset>
+
+    <!-- Sale Items Table -->
+    @if (Model.Sale.SaleItems != null && Model.Sale.SaleItems.Any())
+    {
+        <div class="table-responsive mb-3">
+            <table class="table table-sm table-bordered align-middle">
+                <thead class="table-light">
                     <tr>
-                        <td>@i.ProductName</td>
-                        <td>@i.Quantity</td>
-                        <td>@i.UnitPrice.ToString("C")</td>
-                        <td>@i.TotalPrice.ToString("C")</td>
+                        <th>Product</th>
+                        <th class="text-end">Qty</th>
+                        <th class="text-end">Unit Price</th>
+                        <th class="text-end">Discount</th>
+                        <th class="text-end">Total</th>
+                        <th>Batch</th>
+                        <th></th>
                     </tr>
-                }
-            </tbody>
-        </table>
-    </div>
+                </thead>
+                <tbody>
+                    @for (int i = 0; i < Model.Sale.SaleItems.Count; i++)
+                    {
+                        <tr>
+                            <td>
+                                @Model.Sale.SaleItems[i].ProductName
+                                <input type="hidden" asp-for="Sale.SaleItems[i].ProductID" />
+                                <input type="hidden" asp-for="Sale.SaleItems[i].ProductName" />
+                            </td>
+                            <td class="text-end">
+                                <input asp-for="Sale.SaleItems[i].Quantity" type="number" min="1" class="form-control form-control-sm" style="width: 70px;" />
+                                <span asp-validation-for="Sale.SaleItems[i].Quantity" class="text-danger"></span>
+                            </td>
+                            <td class="text-end">
+                                <input asp-for="Sale.SaleItems[i].UnitPrice" type="number" step="0.01" min="0" class="form-control form-control-sm" style="width: 100px;" />
+                                <span asp-validation-for="Sale.SaleItems[i].UnitPrice" class="text-danger"></span>
+                            </td>
+                            <td class="text-end">
+                                <input asp-for="Sale.SaleItems[i].Discount" type="number" step="0.01" min="0" class="form-control form-control-sm" style="width: 100px;" />
+                                <span asp-validation-for="Sale.SaleItems[i].Discount" class="text-danger"></span>
+                            </td>
+                            <td class="text-end">
+                                @Model.Sale.SaleItems[i].TotalPrice.ToString("C")
+                                <input type="hidden" asp-for="Sale.SaleItems[i].TotalPrice" />
+                            </td>
+                            <td>
+                                <input asp-for="Sale.SaleItems[i].BatchNumber" class="form-control form-control-sm" placeholder="Batch #" />
+                                <span asp-validation-for="Sale.SaleItems[i].BatchNumber" class="text-danger"></span>
+                            </td>
+                            <td class="text-center">
+                                <button type="submit" asp-page-handler="RemoveItem"
+                                        name="index" value="@i" class="btn btn-sm btn-outline-danger"
+                                        title="Remove item">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <input type="hidden" asp-for="Sale.SaleItems[i].SaleItemID" />
+                    }
+                </tbody>
+                <tfoot>
+                    <tr class="fw-semibold">
+                        <td colspan="4" class="text-end">Total:</td>
+                        <td class="text-end">@Model.Sale.TotalAmount.ToString("C")</td>
+                        <td colspan="2"></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
 
-    <div class="text-end">
-        <div><strong>Total:</strong> @Model.Sale.TotalAmount.ToString("C")</div>
-        <button type="submit" asp-page-handler="Create" class="btn btn-success mt-2">Create Sale</button>
-    </div>
+        <!-- Payment Status -->
+        <div class="mb-3">
+            <label class="form-label">Payment Status</label>
+            <select asp-for="Sale.PaymentStatus" class="form-select">
+                <option value="Paid">Paid</option>
+                <option value="Pending">Pending</option>
+                <option value="Partial">Partial Payment</option>
+            </select>
+            <span asp-validation-for="Sale.PaymentStatus" class="text-danger"></span>
+        </div>
 
-    <div asp-validation-summary="All" class="text-danger mt-2"></div>
+        <!-- Notes -->
+        <div class="mb-3">
+            <label class="form-label">Notes</label>
+            <textarea asp-for="Sale.Note" class="form-control" rows="2"></textarea>
+            <span asp-validation-for="Sale.Note" class="text-danger"></span>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info mb-3">
+            <i class="fas fa-info-circle"></i> No items added yet. Please add products above.
+        </div>
+    }
+
+    <div asp-validation-summary="All" class="alert alert-danger"></div>
+
+    <div class="d-flex gap-2">
+        @if (Model.Sale.SaleItems != null && Model.Sale.SaleItems.Any())
+        {
+            <button type="submit" class="btn btn-success">
+                <i class="fas fa-save"></i> Create Sale
+            </button>
+        }
+        <a asp-page="Index" class="btn btn-secondary">Cancel</a>
+    </div>
 </form>
 
 @section Scripts {
+    <partial name="_ValidationScriptsPartial" />
     <script>
-        // Basic autocomplete logic (AJAX endpoint to be implemented)
-        const input = document.getElementById('customerNameInput');
-        const suggestions = document.getElementById('customerSuggestions');
-        const customerIdInput = document.getElementById('customerIdInput');
-        let timeout;
-        input.addEventListener('input', function() {
-            clearTimeout(timeout);
-            const query = this.value.trim();
-            if (query.length < 2) {
-                suggestions.innerHTML = '';
-                return;
+        // Recalculate totals when quantity, price, or discount changes
+        document.addEventListener('input', function(e) {
+            if (e.target.matches('input[data-recalculate]')) {
+                // Find the row
+                const row = e.target.closest('tr');
+                if (row) {
+                    const quantity = parseFloat(row.querySelector('input[name*="Quantity"]').value) || 0;
+                    const unitPrice = parseFloat(row.querySelector('input[name*="UnitPrice"]').value) || 0;
+                    const discount = parseFloat(row.querySelector('input[name*="Discount"]').value) || 0;
+
+                    const total = (quantity * unitPrice) - discount;
+                    row.querySelector('td:nth-child(5)').textContent = '$' + total.toFixed(2);
+
+                    // Update hidden total field
+                    const totalInput = row.querySelector('input[name*="TotalPrice"]');
+                    if (totalInput) {
+                        totalInput.value = total.toFixed(2);
+                    }
+
+                    // Update grand total
+                    updateGrandTotal();
+                }
             }
-            timeout = setTimeout(() => {
-                fetch(`/api/customers/search?name=${encodeURIComponent(query)}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        suggestions.innerHTML = '';
-                        if (data.length > 0) {
-                            data.forEach(c => {
-                                const item = document.createElement('button');
-                                item.type = 'button';
-                                item.className = 'list-group-item list-group-item-action';
-                                item.textContent = c.customerName;
-                                item.onclick = () => {
-                                    input.value = c.customerName;
-                                    customerIdInput.value = c.customerID;
-                                    suggestions.innerHTML = '';
-                                };
-                                suggestions.appendChild(item);
-                            });
-                        }
-                    });
-            }, 300);
         });
-        document.addEventListener('click', function(e) {
-            if (!suggestions.contains(e.target) && e.target !== input) {
-                suggestions.innerHTML = '';
-            }
+
+        function updateGrandTotal() {
+            let grandTotal = 0;
+            document.querySelectorAll('input[name*="TotalPrice"]').forEach(input => {
+                grandTotal += parseFloat(input.value) || 0;
+            });
+
+            document.querySelector('tfoot td:nth-child(2)').textContent = '$' + grandTotal.toFixed(2);
+        }
+
+        // Initialize recalculations
+        document.querySelectorAll('input[name*="Quantity"], input[name*="UnitPrice"], input[name*="Discount"]').forEach(input => {
+            input.setAttribute('data-recalculate', 'true');
         });
     </script>
 }

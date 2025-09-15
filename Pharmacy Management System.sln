@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.0.11010.61 d18.0
+VisualStudioVersion = 18.0.11010.61
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Database", "Database\Database.csproj", "{0C82F56D-A421-46F0-9A61-9C27C5862B46}"
 EndProject
@@ -10,10 +10,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Presentation", "Presentation", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Web", "Web\Web.csproj", "{792C6DCC-97A9-4AA2-A8C1-3D4B31DBC98A}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{86B949F0-B5F0-4B49-8030-88ABA4D8BF91}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DBTest", "DBTest\DBTest.csproj", "{A3FF1847-F743-48B5-9EF3-EEE74DF20907}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbConnectionTest", "DbConnectionTest\DbConnectionTest.csproj", "{C613BB9C-0A98-4E37-8493-68D74FEBB19B}"
 EndProject
@@ -26,8 +22,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DB Backup", "DB Backup", "{
 	ProjectSection(SolutionItems) = preProject
 		..\..\..\..\..\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER02\MSSQL\Backup\PharmacyManagementSystem.bak = ..\..\..\..\..\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER02\MSSQL\Backup\PharmacyManagementSystem.bak
 	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{9D544588-113D-43E3-B2C5-3DC99906716E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -47,10 +41,6 @@ Global
 		{792C6DCC-97A9-4AA2-A8C1-3D4B31DBC98A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{792C6DCC-97A9-4AA2-A8C1-3D4B31DBC98A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{792C6DCC-97A9-4AA2-A8C1-3D4B31DBC98A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A3FF1847-F743-48B5-9EF3-EEE74DF20907}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A3FF1847-F743-48B5-9EF3-EEE74DF20907}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A3FF1847-F743-48B5-9EF3-EEE74DF20907}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A3FF1847-F743-48B5-9EF3-EEE74DF20907}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C613BB9C-0A98-4E37-8493-68D74FEBB19B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C613BB9C-0A98-4E37-8493-68D74FEBB19B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C613BB9C-0A98-4E37-8493-68D74FEBB19B}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -61,7 +51,6 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{792C6DCC-97A9-4AA2-A8C1-3D4B31DBC98A} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
-		{A3FF1847-F743-48B5-9EF3-EEE74DF20907} = {86B949F0-B5F0-4B49-8030-88ABA4D8BF91}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9B3D64D0-4185-4478-98C5-920479F50A10}

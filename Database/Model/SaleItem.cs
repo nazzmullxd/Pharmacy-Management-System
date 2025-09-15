@@ -15,7 +15,7 @@ namespace Database.Model
         [ForeignKey(nameof(Sale))]
         public Guid SaleID { get; set; } = Guid.Empty;
 
-        [Required]
+        
         [ForeignKey(nameof(ProductBatch))]
         public Guid ProductBatchID { get; set; } = Guid.Empty;
 
