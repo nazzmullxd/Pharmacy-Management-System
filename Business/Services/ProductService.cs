@@ -23,16 +23,31 @@ namespace Business.Services
         // IProductService implementation
         public async Task<IEnumerable<ProductDTO>> GetAllProductsAsync()
         {
-            var products = await _productRepository.GetAllAsync();
-            var dtos = products.Select(MapToDTO).ToList();
-
-            // Populate TotalStock from batches for each product so UI reflects current batch quantities
-            foreach (var dto in dtos)
+            try
             {
-                dto.TotalStock = await _stockService.GetTotalStockForProductAsync(dto.ProductID);
-            }
+                var products = await _productRepository.GetAllAsync();
+                var dtos = products.Select(MapToDTO).ToList();
 
-            return dtos;
+                // Populate TotalStock from batches for each product so UI reflects current batch quantities
+                foreach (var dto in dtos)
+                {
+                    try
+                    {
+                        dto.TotalStock = await _stockService.GetTotalStockForProductAsync(dto.ProductID);
+                    }
+                    catch
+                    {
+                        dto.TotalStock = 0; // Default value if stock service fails
+                    }
+                }
+
+                return dtos;
+            }
+            catch (Exception)
+            {
+                // Return empty list if database is not available (for development/demo)
+                return Enumerable.Empty<ProductDTO>();
+            }
         }
 
         public async Task<ProductDTO?> GetProductByIdAsync(Guid productId)
