@@ -24,8 +24,16 @@ namespace Business.Services
 
         public async Task<IEnumerable<SupplierDTO>> GetAllSuppliersAsync()
         {
-            var suppliers = await _supplierRepository.GetAllAsync();
-            return suppliers.Select(MapToDTO);
+            try
+            {
+                var suppliers = await _supplierRepository.GetAllAsync();
+                return suppliers.Select(MapToDTO);
+            }
+            catch (Exception)
+            {
+                // Return empty list if database is not available (for development/demo)
+                return Enumerable.Empty<SupplierDTO>();
+            }
         }
 
         public async Task<SupplierDTO?> GetSupplierByIdAsync(Guid supplierId)
