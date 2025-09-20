@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace Business.DTO
 {
@@ -7,15 +8,23 @@ namespace Business.DTO
     {
         public Guid PurchaseOrderID { get; set; }
         public string OrderNumber { get; set; } = string.Empty;
+        
+        [Required(ErrorMessage = "Please select a supplier")]
         public Guid SupplierID { get; set; }
         public string SupplierName { get; set; } = string.Empty;
         public Guid CreatedBy { get; set; }
         public string CreatedByName { get; set; } = string.Empty;
+        
+        [Required]
         public DateTime OrderDate { get; set; }
         public DateTime? ExpectedDeliveryDate { get; set; }
         public DateTime? ActualDeliveryDate { get; set; }
         public string Status { get; set; } = "Pending"; // "Pending", "Approved", "Ordered", "Delivered", "Cancelled"
+        
+        [Range(0, double.MaxValue, ErrorMessage = "Total amount must be greater than or equal to 0")]
         public decimal TotalAmount { get; set; }
+        
+        [Range(0, double.MaxValue, ErrorMessage = "Paid amount must be greater than or equal to 0")]
         public decimal PaidAmount { get; set; }
         public decimal DueAmount { get; set; }
         public string PaymentStatus { get; set; } = "Pending"; // "Pending", "Partial", "Paid"

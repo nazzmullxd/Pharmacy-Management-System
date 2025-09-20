@@ -15,9 +15,8 @@ namespace Database.Model
         [ForeignKey(nameof(Purchase))]
         public Guid PurchaseID { get; set; } = Guid.Empty;
 
-        [Required]
         [ForeignKey(nameof(ProductBatch))]
-        public Guid ProductBatchID { get; set; } = Guid.Empty;
+        public Guid? ProductBatchID { get; set; } = null;
 
         [Required]
         [ForeignKey(nameof(Product))]
@@ -34,6 +33,8 @@ namespace Database.Model
 
         [Required]
         public decimal UnitPrice { get; set; } = 0.0m;
+
+        // TotalPrice is calculated dynamically: Quantity * UnitPrice
 
         // Metadata
         [Required]

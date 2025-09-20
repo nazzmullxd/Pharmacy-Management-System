@@ -1,0 +1,351 @@
+@page "/Reports"
+@model Web.Pages.Reports.IndexModel
+@{
+    ViewData["Title"] = "Reports Dashboard";
+}
+
+<!-- Enhanced Page Header -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-chart-line text-primary"></i> Reports Dashboard</h1>
+            <p class="mb-0">Comprehensive analytics and reporting for your pharmacy operations</p>
+        </div>
+        <div>
+            <button class="btn btn-outline-primary" onclick="window.print()">
+                <i class="fas fa-print"></i> Print Dashboard
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Sales Reports Section -->
+    <div class="col-lg-6">
+        <div class="dashboard-card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar text-success me-2"></i>Sales Reports
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-3">Analyze sales performance, trends, and customer insights</p>
+                <div class="d-grid gap-2">
+                    <a href="/Reports/Sales" class="btn btn-success">
+                        <i class="fas fa-chart-line"></i> Sales Analytics
+                    </a>
+                    <a href="/Reports/Sales?type=daily" class="btn btn-outline-success btn-sm">
+                        <i class="fas fa-calendar-day"></i> Daily Sales Report
+                    </a>
+                    <a href="/Reports/Sales?type=monthly" class="btn btn-outline-success btn-sm">
+                        <i class="fas fa-calendar-alt"></i> Monthly Sales Report
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stock Reports Section -->
+    <div class="col-lg-6">
+        <div class="dashboard-card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-boxes text-warning me-2"></i>Inventory Reports
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-3">Monitor stock levels, expiry alerts, and inventory movements</p>
+                <div class="d-grid gap-2">
+                    <a href="/Reports/Stock" class="btn btn-warning">
+                        <i class="fas fa-warehouse"></i> Stock Overview
+                    </a>
+                    <a href="/Reports/Stock?type=lowstock" class="btn btn-outline-warning btn-sm">
+                        <i class="fas fa-exclamation-triangle"></i> Low Stock Alert
+                    </a>
+                    <a href="/Reports/Stock?type=expiry" class="btn btn-outline-warning btn-sm">
+                        <i class="fas fa-clock"></i> Expiry Report
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial Reports Section -->
+    <div class="col-lg-6">
+        <div class="dashboard-card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-dollar-sign text-info me-2"></i>Financial Reports
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-3">Track profitability, expenses, and financial performance</p>
+                <div class="d-grid gap-2">
+                    <a href="/Reports/ProfitLoss" class="btn btn-info">
+                        <i class="fas fa-chart-pie"></i> Profit & Loss
+                    </a>
+                    <a href="/Reports/ProfitLoss?type=revenue" class="btn btn-outline-info btn-sm">
+                        <i class="fas fa-money-bill-wave"></i> Revenue Analysis
+                    </a>
+                    <a href="/Reports/ProfitLoss?type=expenses" class="btn btn-outline-info btn-sm">
+                        <i class="fas fa-receipt"></i> Expense Breakdown
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Regulatory Reports Section -->
+    <div class="col-lg-6">
+        <div class="dashboard-card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-shield-alt text-danger me-2"></i>Regulatory Reports
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-3">Compliance tracking and antibiotic usage monitoring</p>
+                <div class="d-grid gap-2">
+                    <a href="/Reports/Antibiotic" class="btn btn-danger">
+                        <i class="fas fa-pills"></i> Antibiotic Usage
+                    </a>
+                    <a href="/Reports/Antibiotic?type=tracking" class="btn btn-outline-danger btn-sm">
+                        <i class="fas fa-search"></i> Usage Tracking
+                    </a>
+                    <a href="/Reports/Antibiotic?type=compliance" class="btn btn-outline-danger btn-sm">
+                        <i class="fas fa-clipboard-check"></i> Compliance Report
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Stats Overview -->
+<div class="row g-4 mt-2">
+    <div class="col-12">
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-tachometer-alt text-secondary me-2"></i>Quick Overview
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <div class="quick-stat-card">
+                            <div class="stat-icon bg-success">
+                                <i class="fas fa-cash-register text-white"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h4>$@(Model.TodaysSales?.ToString("N2") ?? "0.00")</h4>
+                                <p>Today's Sales</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="quick-stat-card">
+                            <div class="stat-icon bg-warning">
+                                <i class="fas fa-boxes text-white"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h4>@(Model.LowStockItems ?? 0)</h4>
+                                <p>Low Stock Items</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="quick-stat-card">
+                            <div class="stat-icon bg-danger">
+                                <i class="fas fa-clock text-white"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h4>@(Model.ExpiringItems ?? 0)</h4>
+                                <p>Expiring Soon</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="quick-stat-card">
+                            <div class="stat-icon bg-info">
+                                <i class="fas fa-users text-white"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h4>@(Model.TotalCustomers ?? 0)</h4>
+                                <p>Total Customers</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export and Print Options -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-download text-secondary me-2"></i>Export Options
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-2">
+                    <button class="btn btn-outline-primary btn-sm" onclick="exportToPDF()">
+                        <i class="fas fa-file-pdf"></i> Export to PDF
+                    </button>
+                    <button class="btn btn-outline-success btn-sm" onclick="exportToExcel()">
+                        <i class="fas fa-file-excel"></i> Export to Excel
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="window.print()">
+                        <i class="fas fa-print"></i> Print Reports
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .page-header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .dashboard-card {
+            background: #fff;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border: 1px solid #e3e6f0;
+            transition: transform 0.2s ease;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .dashboard-card .card-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-bottom: 1px solid #dee2e6;
+            padding: 1rem 1.25rem;
+        }
+
+        .quick-stat-card {
+            display: flex;
+            align-items: center;
+            padding: 1.5rem;
+            background: #f8f9fa;
+            border-radius: 0.5rem;
+            border: 1px solid #e3e6f0;
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+        }
+
+        .stat-icon i {
+            font-size: 1.5rem;
+        }
+
+        .stat-content h4 {
+            margin: 0;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .stat-content p {
+            margin: 0;
+            color: #6c757d;
+            font-size: 0.875rem;
+        }
+
+        /* Mobile responsive styles */
+        @@media (max-width: 768px) {
+            .page-header .d-flex {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .page-header .btn {
+                width: 100%;
+            }
+
+            .quick-stat-card {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .stat-icon {
+                margin-right: 0;
+                margin-bottom: 0.5rem;
+            }
+        }
+
+        .btn-group-reports {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .btn-group-reports .btn {
+            justify-content: flex-start;
+        }
+
+        /* Print styles */
+        @@media print {
+            .btn, .page-header .btn {
+                display: none !important;
+            }
+            
+            .dashboard-card {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+                break-inside: avoid;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        // Export functions
+        function exportToPDF() {
+            alert('PDF export functionality will be implemented. This would generate a comprehensive PDF report.');
+        }
+
+        function exportToExcel() {
+            alert('Excel export functionality will be implemented. This would generate an Excel workbook with all reports.');
+        }
+
+        // Auto-refresh quick stats every 5 minutes
+        setInterval(function() {
+            // This would normally make an AJAX call to refresh stats
+            console.log('Refreshing quick stats...');
+        }, 300000); // 5 minutes
+
+        // Load time tracking
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Reports dashboard loaded successfully');
+            
+            // Add click tracking for report buttons
+            const reportButtons = document.querySelectorAll('a[href^="/Reports/"]');
+            reportButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    console.log('Report accessed:', this.href);
+                });
+            });
+        });
+    </script>
+}

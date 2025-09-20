@@ -5,6 +5,8 @@ namespace Database.Interfaces
     public interface IPurchaseRepository
     {
         Task<IEnumerable<Purchase>> GetAllAsync();
+        Task<IEnumerable<Purchase>> GetBasicOrdersAsync(); // Simple query without includes
+        Task<int> GetPurchaseCountAsync(); // Raw count query
         Task<Purchase?> GetByIdAsync(Guid purchaseId);
         Task AddAsync(Purchase purchase);
         Task UpdateAsync(Purchase purchase);

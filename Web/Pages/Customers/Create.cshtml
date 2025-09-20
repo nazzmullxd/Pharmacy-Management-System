@@ -4,31 +4,277 @@
     ViewData["Title"] = "Add Customer";
 }
 
+<!-- Enhanced Page Header -->
 <div class="page-header">
-    <h1><i class="fas fa-user-plus"></i> Add Customer</h1>
-    <a class="btn btn-secondary" href="/Customers">Back to Customers</a>
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-user-plus text-success"></i> Add Customer</h1>
+            <p class="mb-0">Create a new customer profile for the pharmacy system</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-secondary" href="/Customers">
+                <i class="fas fa-arrow-left"></i> Back to Customers
+            </a>
+            <a class="btn btn-outline-info" href="/Customers/Import">
+                <i class="fas fa-file-import"></i> Import Customers
+            </a>
+        </div>
+    </div>
 </div>
-<form method="post" class="card p-3">
-    <div class="row g-3">
-        <div class="col-md-6">
-            <label class="form-label">Name</label>
-            <input asp-for="Customer.CustomerName" class="form-control" />
+
+<div class="row">
+    <!-- Main Form Section -->
+    <div class="col-lg-8">
+        <form method="post" class="customer-form">
+            <div asp-validation-summary="All" class="alert alert-danger"></div>
+            
+            <!-- Customer Information Card -->
+            <div class="dashboard-card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user text-primary me-2"></i>Customer Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="Customer.CustomerName" class="form-label required">Full Name</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-user text-muted"></i>
+                                </span>
+                                <input asp-for="Customer.CustomerName" 
+                                       class="form-control" 
+                                       placeholder="Enter customer's full name" 
+                                       required />
+                            </div>
+                            <span asp-validation-for="Customer.CustomerName" class="text-danger small"></span>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label asp-for="Customer.ContactNumber" class="form-label required">Contact Number</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-phone text-muted"></i>
+                                </span>
+                                <input asp-for="Customer.ContactNumber" 
+                                       class="form-control" 
+                                       placeholder="e.g., +1 234 567 8900" 
+                                       pattern="[+]?[0-9\s\-\(\)]+"
+                                       required />
+                            </div>
+                            <span asp-validation-for="Customer.ContactNumber" class="text-danger small"></span>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label asp-for="Customer.Email" class="form-label required">Email Address</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-envelope text-muted"></i>
+                                </span>
+                                <input asp-for="Customer.Email" 
+                                       type="email" 
+                                       class="form-control" 
+                                       placeholder="customer@example.com" 
+                                       required />
+                            </div>
+                            <span asp-validation-for="Customer.Email" class="text-danger small"></span>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label asp-for="Customer.Address" class="form-label required">Address</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-map-marker-alt text-muted"></i>
+                                </span>
+                                <textarea asp-for="Customer.Address" 
+                                          class="form-control" 
+                                          rows="3" 
+                                          placeholder="Enter full address including street, city, state, zip code" 
+                                          required></textarea>
+                            </div>
+                            <span asp-validation-for="Customer.Address" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="dashboard-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">Customer Registration</h6>
+                            <small class="text-muted">Complete all required fields to create the customer profile</small>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-outline-secondary" onclick="resetForm()">
+                                <i class="fas fa-undo"></i> Reset Form
+                            </button>
+                            <button type="submit" class="btn btn-success" id="saveCustomerBtn">
+                                <i class="fas fa-save"></i> Save Customer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Sidebar Information -->
+    <div class="col-lg-4">
+        <div class="dashboard-card mb-4 sticky-sidebar">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-lightbulb text-warning me-2"></i>Customer Guidelines
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="small text-muted">
+                    <li><strong>Full Name:</strong> Enter complete legal name for identification</li>
+                    <li><strong>Contact:</strong> Primary phone number for communication</li>
+                    <li><strong>Email:</strong> Valid email for receipts and notifications</li>
+                    <li><strong>Address:</strong> Complete address for delivery services</li>
+                </ul>
+                
+                <div class="mt-3">
+                    <h6 class="small text-muted">Data Privacy:</h6>
+                    <ul class="small text-muted">
+                        <li>Customer information is securely stored</li>
+                        <li>Data used only for pharmacy services</li>
+                        <li>Customer consent assumed for service delivery</li>
+                    </ul>
+                </div>
+            </div>
         </div>
-        <div class="col-md-6">
-            <label class="form-label">Contact</label>
-            <input asp-for="Customer.ContactNumber" class="form-control" />
-        </div>
-        <div class="col-md-6">
-            <label class="form-label">Email</label>
-            <input asp-for="Customer.Email" class="form-control" />
-        </div>
-        <div class="col-md-6">
-            <label class="form-label">Address</label>
-            <input asp-for="Customer.Address" class="form-control" />
+
+        <!-- Quick Stats -->
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-chart-pie text-primary me-2"></i>Customer Statistics
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="text-center">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="border-end">
+                                <h5 class="text-primary mb-0">Total</h5>
+                                <small class="text-muted">Customers</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <h5 class="text-success mb-0">Active</h5>
+                            <small class="text-muted">This Month</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="mt-3">
-        <button type="submit" class="btn btn-success">Save</button>
-    </div>
-    <div asp-validation-summary="All" class="text-danger mt-2"></div>
-</form>
+</div>
+
+@section Styles {
+    <style>
+        .required::after {
+            content: " *";
+            color: #e74c3c;
+        }
+
+        .sticky-sidebar {
+            position: sticky;
+            top: 20px;
+        }
+
+        .input-group-text {
+            background: #f8f9fa;
+            border-color: #ced4da;
+        }
+
+        .dashboard-card .card-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .customer-form .form-control:focus {
+            border-color: #28a745;
+            box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        /* Mobile responsive styles */
+        @@media (max-width: 768px) {
+            .page-header .d-flex {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .page-header .btn {
+                width: 100%;
+            }
+
+            .sticky-sidebar {
+                position: relative;
+            }
+
+            .d-flex.gap-2 {
+                flex-direction: column;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        // Reset form function
+        function resetForm() {
+            if (confirm('Are you sure you want to reset the form? All entered data will be lost.')) {
+                document.querySelector('.customer-form').reset();
+                // Clear validation errors
+                document.querySelectorAll('.text-danger').forEach(el => el.textContent = '');
+                document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+            }
+        }
+
+        // Form submission handling
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('.customer-form');
+            const saveBtn = document.getElementById('saveCustomerBtn');
+            
+            if (form && saveBtn) {
+                form.addEventListener('submit', function(e) {
+                    // Show loading state
+                    saveBtn.disabled = true;
+                    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+                    
+                    // Set a timeout to re-enable button if something goes wrong
+                    setTimeout(() => {
+                        if (saveBtn.disabled) {
+                            saveBtn.disabled = false;
+                            saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Customer';
+                        }
+                    }, 30000); // 30 seconds timeout
+                });
+            }
+
+            // Remove validation styling on input
+            form.querySelectorAll('input, textarea').forEach(field => {
+                field.addEventListener('input', function() {
+                    this.classList.remove('is-invalid');
+                    const validationSpan = this.parentNode.parentNode.querySelector('.text-danger');
+                    if (validationSpan) {
+                        validationSpan.textContent = '';
+                    }
+                });
+            });
+        });
+    </script>
+}

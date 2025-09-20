@@ -18,6 +18,7 @@ namespace Business.Interfaces
         Task<bool> ApprovePurchaseOrderAsync(Guid orderId, Guid approvedBy);
         Task<bool> ReceivePurchaseOrderAsync(Guid orderId, List<PurchaseOrderItemDTO> receivedItems);
         Task<bool> CancelPurchaseOrderAsync(Guid orderId, string reason);
+        Task<bool> ProcessPurchaseOrderAsync(Guid orderId, Guid processedBy);
         Task<string> GenerateOrderNumberAsync();
         Task<decimal> GetTotalOrderValueAsync(DateTime? startDate = null, DateTime? endDate = null);
         Task<IEnumerable<PurchaseOrderDTO>> GetPendingOrdersAsync();

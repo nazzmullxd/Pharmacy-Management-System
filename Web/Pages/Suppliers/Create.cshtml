@@ -1,40 +1,525 @@
 @page
 @model Web.Pages.Suppliers.CreateModel
 @{
-    ViewData["Title"] = "Add Supplier";
+    ViewData["Title"] = "Add New Supplier";
 }
 
+<!-- Enhanced Page Header -->
 <div class="page-header">
-    <h1><i class="fas fa-user-plus"></i> Add Supplier</h1>
-    <a class="btn btn-secondary" href="/Suppliers">Back to Suppliers</a>
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-industry text-primary"></i> Add New Supplier</h1>
+            <p class="mb-0">Create a new supplier profile for your pharmacy network</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/Suppliers" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Suppliers
+            </a>
+            <button type="button" class="btn btn-outline-info" onclick="clearForm()">
+                <i class="fas fa-eraser"></i> Clear Form
+            </button>
+        </div>
+    </div>
 </div>
 
-<form method="post" class="card p-3">
-    <div class="row g-3">
-        <div class="col-md-6">
-            <label class="form-label">Name</label>
-            <input asp-for="Supplier.SupplierName" class="form-control" />
+<!-- Form Progress Indicator -->
+<div class="dashboard-card mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <h6 class="mb-2 text-muted">Form Progress</h6>
+            <div class="progress" style="height: 8px;">
+                <div class="progress-bar bg-primary" role="progressbar" style="width: 0%" id="formProgress"></div>
+            </div>
         </div>
-        <div class="col-md-6">
-            <label class="form-label">Contact Person</label>
-            <input asp-for="Supplier.ContactPerson" class="form-control" />
-        </div>
-        <div class="col-md-6">
-            <label class="form-label">Phone</label>
-            <input asp-for="Supplier.PhoneNumber" class="form-control" />
-        </div>
-        <div class="col-md-6">
-            <label class="form-label">Email</label>
-            <input asp-for="Supplier.Email" class="form-control" />
-        </div>
-        <div class="col-md-12">
-            <label class="form-label">Address</label>
-            <input asp-for="Supplier.Address" class="form-control" />
+        <div class="col-md-4 text-end">
+            <small class="text-muted">
+                <span id="completedFields">0</span> of <span id="totalFields">5</span> required fields completed
+            </small>
         </div>
     </div>
-    <div class="mt-3">
-        <button type="submit" class="btn btn-success">Save</button>
+</div>
+
+<!-- Enhanced Form -->
+<form method="post" id="supplierForm" class="needs-validation" novalidate>
+    <!-- Basic Information Section -->
+    <div class="dashboard-card mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">
+                <i class="fas fa-info-circle text-primary me-2"></i>
+                Basic Information
+            </h5>
+            <small class="text-muted">Essential supplier details</small>
+        </div>
+        <div class="card-body">
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        <input asp-for="Supplier.SupplierName" 
+                               class="form-control form-field" 
+                               id="supplierName"
+                               placeholder="Enter supplier company name"
+                               required />
+                        <label for="supplierName">
+                            <i class="fas fa-industry me-2"></i>Supplier Name *
+                        </label>
+                        <span asp-validation-for="Supplier.SupplierName" class="text-danger"></span>
+                        <div class="invalid-feedback">
+                            Please provide a valid supplier name.
+                        </div>
+                        <div class="valid-feedback">
+                            <i class="fas fa-check"></i> Looks good!
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        <input asp-for="Supplier.ContactPerson" 
+                               class="form-control form-field" 
+                               id="contactPerson"
+                               placeholder="Enter contact person name" />
+                        <label for="contactPerson">
+                            <i class="fas fa-user me-2"></i>Contact Person
+                        </label>
+                        <span asp-validation-for="Supplier.ContactPerson" class="text-danger"></span>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>Primary contact at the supplier company
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <div asp-validation-summary="All" class="text-danger mt-2"></div>
+
+    <!-- Contact Information Section -->
+    <div class="dashboard-card mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">
+                <i class="fas fa-phone text-success me-2"></i>
+                Contact Information
+            </h5>
+            <small class="text-muted">Communication details</small>
+        </div>
+        <div class="card-body">
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        <input asp-for="Supplier.PhoneNumber" 
+                               class="form-control form-field" 
+                               id="phoneNumber"
+                               type="tel"
+                               placeholder="Enter phone number"
+                               pattern="[0-9+\-\s\(\)]+"
+                               required />
+                        <label for="phoneNumber">
+                            <i class="fas fa-phone me-2"></i>Phone Number *
+                        </label>
+                        <span asp-validation-for="Supplier.PhoneNumber" class="text-danger"></span>
+                        <div class="invalid-feedback">
+                            Please provide a valid phone number.
+                        </div>
+                        <div class="valid-feedback">
+                            <i class="fas fa-check"></i> Looks good!
+                        </div>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>Include country code if international
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        <input asp-for="Supplier.Email" 
+                               class="form-control form-field" 
+                               id="email"
+                               type="email"
+                               placeholder="Enter email address"
+                               required />
+                        <label for="email">
+                            <i class="fas fa-envelope me-2"></i>Email Address *
+                        </label>
+                        <span asp-validation-for="Supplier.Email" class="text-danger"></span>
+                        <div class="invalid-feedback">
+                            Please provide a valid email address.
+                        </div>
+                        <div class="valid-feedback">
+                            <i class="fas fa-check"></i> Looks good!
+                        </div>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>Primary email for communications
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Location Information Section -->
+    <div class="dashboard-card mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">
+                <i class="fas fa-map-marker-alt text-warning me-2"></i>
+                Location Information
+            </h5>
+            <small class="text-muted">Physical address and location details</small>
+        </div>
+        <div class="card-body">
+            <div class="row g-4">
+                <div class="col-12">
+                    <div class="form-floating">
+                        <textarea asp-for="Supplier.Address" 
+                                  class="form-control form-field" 
+                                  id="address"
+                                  placeholder="Enter complete address"
+                                  style="height: 100px"
+                                  required></textarea>
+                        <label for="address">
+                            <i class="fas fa-map-marker-alt me-2"></i>Complete Address *
+                        </label>
+                        <span asp-validation-for="Supplier.Address" class="text-danger"></span>
+                        <div class="invalid-feedback">
+                            Please provide a complete address.
+                        </div>
+                        <div class="valid-feedback">
+                            <i class="fas fa-check"></i> Looks good!
+                        </div>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>Include street address, city, state, and postal code
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="dashboard-card">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h6 class="mb-1">Ready to Save?</h6>
+                    <small class="text-muted">Review all information before submitting</small>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex gap-2 justify-content-end">
+                        <button type="button" class="btn btn-outline-secondary" onclick="clearForm()">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                        <button type="submit" class="btn btn-success btn-lg" id="submitBtn">
+                            <i class="fas fa-save me-2"></i>Create Supplier
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Validation Summary -->
+    <div asp-validation-summary="All" class="alert alert-danger mt-3" style="display: none;" id="validationAlert">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <div>
+                <strong>Please correct the following errors:</strong>
+            </div>
+        </div>
+    </div>
 </form>
+
+@section Styles {
+    <style>
+        .form-field {
+            transition: all 0.3s ease;
+            border: 2px solid #e9ecef;
+        }
+        
+        .form-field:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+            transform: translateY(-2px);
+        }
+        
+        .form-field.is-valid {
+            border-color: #198754;
+            background-image: none;
+        }
+        
+        .form-field.is-invalid {
+            border-color: #dc3545;
+            background-image: none;
+        }
+        
+        .form-floating > label {
+            color: #6c757d;
+            font-weight: 500;
+        }
+        
+        .form-floating > .form-control:focus ~ label,
+        .form-floating > .form-control:not(:placeholder-shown) ~ label {
+            color: #0d6efd;
+            transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem);
+        }
+        
+        .dashboard-card .card-header {
+            border-bottom: 1px solid rgba(0,0,0,0.125);
+            padding: 1rem 1.25rem;
+        }
+        
+        .btn-lg {
+            padding: 0.75rem 1.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 0.5rem;
+        }
+        
+        .progress {
+            background-color: #e9ecef;
+            border-radius: 1rem;
+        }
+        
+        .progress-bar {
+            border-radius: 1rem;
+            transition: width 0.6s ease;
+        }
+        
+        .invalid-feedback {
+            display: block;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+        
+        .valid-feedback {
+            display: block;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            color: #198754;
+        }
+        
+        .form-text {
+            color: #6c757d;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+        
+        @@keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        .shake {
+            animation: shake 0.5s ease-in-out;
+        }
+        
+        .card-header h5 {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        
+        .card-header small {
+            color: #6c757d;
+            font-style: italic;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        // Form validation and enhancement
+        (function() {
+            'use strict';
+            
+            const form = document.getElementById('supplierForm');
+            const formFields = form.querySelectorAll('.form-field');
+            const progressBar = document.getElementById('formProgress');
+            const completedFieldsSpan = document.getElementById('completedFields');
+            const totalFieldsSpan = document.getElementById('totalFields');
+            const submitBtn = document.getElementById('submitBtn');
+            const validationAlert = document.getElementById('validationAlert');
+            
+            // Set total fields count
+            const totalFields = formFields.length;
+            totalFieldsSpan.textContent = totalFields;
+            
+            // Real-time validation and progress tracking
+            formFields.forEach(field => {
+                field.addEventListener('input', function() {
+                    validateField(this);
+                    updateProgress();
+                });
+                
+                field.addEventListener('blur', function() {
+                    validateField(this);
+                });
+                
+                field.addEventListener('focus', function() {
+                    this.classList.remove('shake');
+                });
+            });
+            
+            // Form submission handling
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();
+                event.stopPropagation();
+                
+                let isValid = true;
+                
+                // Validate all fields
+                formFields.forEach(field => {
+                    if (!validateField(field)) {
+                        isValid = false;
+                        field.classList.add('shake');
+                        setTimeout(() => field.classList.remove('shake'), 500);
+                    }
+                });
+                
+                if (isValid) {
+                    // Show loading state
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating Supplier...';
+                    
+                    // Hide validation alert
+                    validationAlert.style.display = 'none';
+                    
+                    // Submit the form
+                    setTimeout(() => {
+                        form.submit();
+                    }, 1000);
+                } else {
+                    // Show validation alert
+                    validationAlert.style.display = 'block';
+                    validationAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                
+                form.classList.add('was-validated');
+            });
+            
+            // Field validation function
+            function validateField(field) {
+                const value = field.value.trim();
+                const isRequired = field.hasAttribute('required');
+                const fieldType = field.type;
+                let isValid = true;
+                
+                // Check if required field is empty
+                if (isRequired && !value) {
+                    isValid = false;
+                }
+                
+                // Specific validations
+                if (value) {
+                    switch (fieldType) {
+                        case 'email':
+                            const emailRegex = /^[^\\s@@]+@@[^\\s@@]+\\.[^\\s@@]+$/;
+                            isValid = emailRegex.test(value);
+                            break;
+                        case 'tel':
+                            const phoneRegex = /^[0-9+\\-\\s\\(\\)]{10,}$/;
+                            isValid = phoneRegex.test(value);
+                            break;
+                        default:
+                            if (field.id === 'supplierName') {
+                                isValid = value.length >= 2;
+                            }
+                            break;
+                    }
+                }
+                
+                // Update field appearance
+                if (isValid) {
+                    field.classList.remove('is-invalid');
+                    field.classList.add('is-valid');
+                } else {
+                    field.classList.remove('is-valid');
+                    field.classList.add('is-invalid');
+                }
+                
+                return isValid;
+            }
+            
+            // Update progress bar
+            function updateProgress() {
+                const validFields = form.querySelectorAll('.form-field.is-valid').length;
+                const progress = (validFields / totalFields) * 100;
+                
+                progressBar.style.width = progress + '%';
+                completedFieldsSpan.textContent = validFields;
+                
+                // Change progress bar color based on completion
+                progressBar.classList.remove('bg-danger', 'bg-warning', 'bg-success');
+                if (progress < 40) {
+                    progressBar.classList.add('bg-danger');
+                } else if (progress < 80) {
+                    progressBar.classList.add('bg-warning');
+                } else {
+                    progressBar.classList.add('bg-success');
+                }
+            }
+            
+            // Auto-format phone number
+            document.getElementById('phoneNumber').addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length >= 10) {
+                    value = value.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3');
+                }
+                e.target.value = value;
+            });
+            
+            // Auto-capitalize supplier name
+            document.getElementById('supplierName').addEventListener('input', function(e) {
+                const words = e.target.value.split(' ');
+                const capitalizedWords = words.map(word => 
+                    word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                );
+                e.target.value = capitalizedWords.join(' ');
+            });
+            
+            // Clear form function
+            window.clearForm = function() {
+                if (confirm('Are you sure you want to clear all form data? This action cannot be undone.')) {
+                    form.reset();
+                    formFields.forEach(field => {
+                        field.classList.remove('is-valid', 'is-invalid');
+                    });
+                    form.classList.remove('was-validated');
+                    updateProgress();
+                    
+                    // Reset submit button
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-save me-2"></i>Create Supplier';
+                    
+                    // Hide validation alert
+                    validationAlert.style.display = 'none';
+                }
+            };
+            
+            // Initial progress update
+            updateProgress();
+            
+            // Auto-focus first field
+            setTimeout(() => {
+                document.getElementById('supplierName').focus();
+            }, 500);
+            
+        })();
+        
+        // Show success message if form was submitted successfully
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <text>
+            setTimeout(() => {
+                alert('Success! @TempData["SuccessMessage"]');
+                window.location.href = '/Suppliers';
+            }, 500);
+            </text>
+        }
+
+        // Show error message if there was an error
+        @if (ViewData.ModelState.Where(x => x.Key == "").Any())
+        {
+            <text>
+            setTimeout(() => {
+                alert('Error: @ViewData.ModelState[""].Errors.FirstOrDefault()?.ErrorMessage');
+            }, 500);
+            </text>
+        }
+    </script>
+}
 

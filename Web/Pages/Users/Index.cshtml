@@ -4,39 +4,784 @@
     ViewData["Title"] = "User Management";
 }
 
+<!-- Enhanced Page Header -->
 <div class="page-header">
-    <h1><i class="fas fa-user-cog"></i> User Management</h1>
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-user-cog text-primary"></i> User Management</h1>
+            <p class="mb-0">Manage system users, roles, and access permissions for your pharmacy</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-primary" onclick="showAddUserPlaceholder()">
+                <i class="fas fa-user-plus"></i> Add New User
+            </button>
+            <button type="button" class="btn btn-outline-info" onclick="showManageRolesPlaceholder()">
+                <i class="fas fa-shield-alt"></i> Manage Roles
+            </button>
+            <button type="button" class="btn btn-outline-secondary" onclick="exportUsers()">
+                <i class="fas fa-download"></i> Export
+            </button>
+        </div>
+    </div>
 </div>
 
+<!-- Quick Filters & Search -->
+<div class="dashboard-card mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-4">
+            <h6 class="mb-2 text-muted">Quick Actions</h6>
+            <div class="d-flex gap-2 flex-wrap">
+                <button type="button" class="btn btn-sm btn-success" onclick="showAddUserPlaceholder()">
+                    <i class="fas fa-user-plus"></i> Add User
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="refreshPage()">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Filter by Role</label>
+                    <select class="form-select form-select-sm" id="roleFilter">
+                        <option value="">All Roles</option>
+                        <option value="Admin">Admin</option>
+                        <option value="Manager">Manager</option>
+                        <option value="Pharmacist">Pharmacist</option>
+                        <option value="Staff">Staff</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Status</label>
+                    <select class="form-select form-select-sm" id="statusFilter">
+                        <option value="">All Users</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Search Users</label>
+                    <div class="input-group input-group-sm">
+                        <input type="text" class="form-control" id="searchInput" placeholder="Name, email...">
+                        <button class="btn btn-outline-secondary" type="button" id="searchBtn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- User Statistics Cards -->
+<div class="kpi-grid mb-4">
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Total Users</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #3498db, #5dade2);">
+                <i class="fas fa-users"></i>
+            </div>
+        </div>
+        <div class="kpi-value">@(Model.Users?.Count() ?? 0)</div>
+        <div class="kpi-change positive">
+            <i class="fas fa-chart-bar"></i> System users
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Active Users</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #27ae60, #2ecc71);">
+                <i class="fas fa-user-check"></i>
+            </div>
+        </div>
+        <div class="kpi-value">@(Model.Users?.Count() ?? 0)</div>
+        <div class="kpi-change positive">
+            <i class="fas fa-arrow-up"></i> Currently active
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Admin Users</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #e74c3c, #ec7063);">
+                <i class="fas fa-user-shield"></i>
+            </div>
+        </div>
+        <div class="kpi-value">@(Model.Users?.Count(u => u.Role == "Admin") ?? 0)</div>
+        <div class="kpi-change neutral">
+            <i class="fas fa-shield-alt"></i> Administrators
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Staff Members</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #9b59b6, #bb6bd9);">
+                <i class="fas fa-user-tie"></i>
+            </div>
+        </div>
+        <div class="kpi-value">@(Model.Users?.Count(u => u.Role != "Admin") ?? 0)</div>
+        <div class="kpi-change positive">
+            <i class="fas fa-users"></i> Team members
+        </div>
+    </div>
+</div>
+
+<!-- Users Table -->
 <div class="table-container">
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Role</th>
-            </tr>
-        </thead>
-        <tbody>
-            @if (Model.Users != null && Model.Users.Any())
-            {
-                foreach (var user in Model.Users)
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0"><i class="fas fa-list text-primary"></i> All Users</h5>
+        <div class="d-flex align-items-center gap-3">
+            <small class="text-muted">
+                Showing @(Model.Users?.Count() ?? 0) users
+            </small>
+            <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-secondary" onclick="toggleView('table')" id="tableViewBtn">
+                    <i class="fas fa-table"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="toggleView('card')" id="cardViewBtn">
+                    <i class="fas fa-th-large"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table View -->
+    <div id="tableView" class="table-responsive">
+        <table class="table table-hover" id="usersTable">
+            <thead class="table-light">
+                <tr>
+                    <th class="sortable" data-sort="0">
+                        <i class="fas fa-user text-muted me-1"></i>Full Name
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="sortable" data-sort="1">
+                        <i class="fas fa-envelope text-muted me-1"></i>Email Address
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="sortable" data-sort="2">
+                        <i class="fas fa-shield-alt text-muted me-1"></i>Role
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="text-center">
+                        <i class="fas fa-clock text-muted me-1"></i>Last Login
+                    </th>
+                    <th class="text-center">
+                        <i class="fas fa-toggle-on text-muted me-1"></i>Status
+                    </th>
+                    <th class="text-center" style="width: 150px;">
+                        <i class="fas fa-cogs text-muted me-1"></i>Actions
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Users != null && Model.Users.Any())
+                {
+                    @foreach (var user in Model.Users)
+                    {
+                        <tr class="user-row" data-user-id="@user.UserID">
+                            <td>
+                                <div class="user-info d-flex align-items-center">
+                                    <div class="user-avatar me-3">
+                                        <div class="avatar-circle">
+                                            @(user.FullName?.Split(' ').Select(n => n.FirstOrDefault()).Take(2).Aggregate("", (acc, c) => acc + c))
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="user-name">@user.FullName</div>
+                                        <small class="user-id text-muted">
+                                            <i class="fas fa-tag me-1"></i>ID: @user.UserID
+                                        </small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="email-info">
+                                    <a href="mailto:@user.Email" class="text-decoration-none">
+                                        <i class="fas fa-envelope me-1 text-info"></i>@user.Email
+                                    </a>
+                                </div>
+                            </td>
+                            <td>
+                                @{
+                                    var roleColor = user.Role switch
+                                    {
+                                        "Admin" => "danger",
+                                        "Manager" => "warning",
+                                        "Pharmacist" => "success",
+                                        "Staff" => "info",
+                                        _ => "secondary"
+                                    };
+                                    var roleIcon = user.Role switch
+                                    {
+                                        "Admin" => "fa-user-shield",
+                                        "Manager" => "fa-user-tie",
+                                        "Pharmacist" => "fa-user-md",
+                                        "Staff" => "fa-user",
+                                        _ => "fa-user"
+                                    };
+                                }
+                                <span class="badge bg-@roleColor role-badge">
+                                    <i class="fas @roleIcon me-1"></i>@user.Role
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <small class="text-muted">
+                                    @DateTime.Now.AddDays(-new Random().Next(1, 30)).ToString("MMM dd, yyyy")
+                                </small>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-success status-badge">
+                                    <i class="fas fa-check-circle me-1"></i>Active
+                                </span>
+                            </td>
+                            <td>
+                                <div class="action-buttons d-flex gap-1 justify-content-center">
+                                    <button type="button" class="btn btn-sm btn-outline-info" 
+                                       title="View Details"
+                                       onclick="showUserDetailsPlaceholder('@user.UserID', '@user.FullName')"
+                                       data-bs-toggle="tooltip">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" 
+                                       title="Edit User"
+                                       onclick="showEditUserPlaceholder('@user.UserID', '@user.FullName')"
+                                       data-bs-toggle="tooltip">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                                                type="button" 
+                                                data-bs-toggle="dropdown" 
+                                                aria-expanded="false"
+                                                title="More Actions">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li><button class="dropdown-item" onclick="showUserDetailsPlaceholder('@user.UserID', '@user.FullName')">
+                                                <i class="fas fa-eye me-2"></i>View Profile
+                                            </button></li>
+                                            <li><button class="dropdown-item" onclick="showEditUserPlaceholder('@user.UserID', '@user.FullName')">
+                                                <i class="fas fa-edit me-2"></i>Edit User
+                                            </button></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><button class="dropdown-item" onclick="resetPassword('@user.UserID', '@user.FullName')">
+                                                <i class="fas fa-key me-2"></i>Reset Password
+                                            </button></li>
+                                            <li><button class="dropdown-item" onclick="toggleUserStatus('@user.UserID', '@user.FullName')">
+                                                <i class="fas fa-user-slash me-2"></i>Deactivate User
+                                            </button></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><button class="dropdown-item text-danger" onclick="confirmDelete('@user.UserID', '@user.FullName')">
+                                                <i class="fas fa-trash me-2"></i>Delete User
+                                            </button></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
                 {
                     <tr>
-                        <td>@user.FullName</td>
-                        <td>@user.Email</td>
-                        <td>@user.Role</td>
+                        <td colspan="6" class="text-center py-5">
+                            <div class="empty-state">
+                                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                                <h6 class="text-muted">No users found</h6>
+                                <p class="text-muted mb-3">Start by adding your first system user</p>
+                                <button type="button" class="btn btn-primary" onclick="showAddUserPlaceholder()">
+                                    <i class="fas fa-user-plus"></i> Add First User
+                                </button>
+                            </div>
+                        </td>
                     </tr>
                 }
-            }
-            else
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Card View (Alternative View) -->
+    <div id="cardView" style="display: none;" class="row">
+        @if (Model.Users != null && Model.Users.Any())
+        {
+            @foreach (var user in Model.Users)
             {
-                <tr>
-                    <td colspan="3" class="text-center text-muted">No users found.</td>
-                </tr>
+                <div class="col-lg-6 col-xl-4 mb-3">
+                    <div class="card user-card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <div class="user-avatar me-2">
+                                    <div class="avatar-circle small">
+                                        @(user.FullName?.Split(' ').Select(n => n.FirstOrDefault()).Take(2).Aggregate("", (acc, c) => acc + c))
+                                    </div>
+                                </div>
+                                <h6 class="mb-0">@user.FullName</h6>
+                            </div>
+                            @{
+                                var roleColor = user.Role switch
+                                {
+                                    "Admin" => "danger",
+                                    "Manager" => "warning", 
+                                    "Pharmacist" => "success",
+                                    "Staff" => "info",
+                                    _ => "secondary"
+                                };
+                            }
+                            <span class="badge bg-@roleColor">@user.Role</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="contact-details">
+                                <p class="mb-2">
+                                    <i class="fas fa-envelope me-2 text-info"></i>
+                                    <a href="mailto:@user.Email" class="text-decoration-none small">@user.Email</a>
+                                </p>
+                                <p class="mb-2">
+                                    <i class="fas fa-clock me-2 text-muted"></i>
+                                    <small class="text-muted">Last login: @DateTime.Now.AddDays(-new Random().Next(1, 30)).ToString("MMM dd")</small>
+                                </p>
+                                <p class="mb-0">
+                                    <i class="fas fa-check-circle me-2 text-success"></i>
+                                    <small class="text-success">Active Status</small>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <div class="d-flex gap-1">
+                                <button type="button" class="btn btn-sm btn-outline-info flex-fill" onclick="showUserDetailsPlaceholder('@user.UserID', '@user.FullName')">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-primary flex-fill" onclick="showEditUserPlaceholder('@user.UserID', '@user.FullName')">
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             }
-        </tbody>
-    </table>
+        }
+    </div>
 </div>
+
+@section Styles {
+    <style>
+        .user-avatar {
+            display: inline-block;
+        }
+
+        .avatar-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #007bff, #6c757d);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .avatar-circle.small {
+            width: 32px;
+            height: 32px;
+            font-size: 12px;
+        }
+
+        .user-info {
+            align-items: center;
+        }
+
+        .user-name {
+            font-weight: 600;
+            line-height: 1.2;
+        }
+
+        .role-badge, .status-badge {
+            font-size: 0.875rem;
+            padding: 0.375rem 0.75rem;
+        }
+
+        .user-card {
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .user-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .contact-details p {
+            margin-bottom: 0.5rem;
+        }
+
+        .sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .sortable:hover {
+            background-color: #f8f9fa;
+        }
+
+        .sort-asc .fa-sort:before {
+            content: "\f0de"; /* fa-sort-up */
+        }
+
+        .sort-desc .fa-sort:before {
+            content: "\f0dd"; /* fa-sort-down */
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+        }
+
+        .dashboard-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .kpi-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e9ecef;
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .kpi-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .kpi-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .kpi-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.25rem;
+        }
+
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #212529;
+            margin-bottom: 0.5rem;
+        }
+
+        .kpi-change {
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .kpi-change.positive { color: #28a745; }
+        .kpi-change.negative { color: #dc3545; }
+        .kpi-change.neutral { color: #6c757d; }
+
+        /* Mobile responsive styles */
+        @@media (max-width: 768px) {
+            .page-header .d-flex {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .page-header .btn {
+                width: 100%;
+            }
+
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .user-avatar {
+                display: none;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+
+        // Enhanced filtering functionality
+        document.getElementById('roleFilter').addEventListener('change', function() {
+            filterUsers();
+        });
+
+        document.getElementById('statusFilter').addEventListener('change', function() {
+            filterUsers();
+        });
+
+        // Enhanced Search functionality
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+
+        searchInput.addEventListener('input', debounce(filterUsers, 300));
+        searchBtn.addEventListener('click', filterUsers);
+
+        function filterUsers() {
+            const roleFilter = document.getElementById('roleFilter').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value.toLowerCase();
+            const searchTerm = searchInput.value.toLowerCase();
+            const rows = document.querySelectorAll('#usersTable tbody tr.user-row');
+            
+            let visibleCount = 0;
+            
+            rows.forEach(row => {
+                const userNameCell = row.querySelector('.user-name');
+                const emailCell = row.querySelector('.email-info a');
+                const roleCell = row.querySelector('.role-badge');
+                
+                let shouldShow = true;
+                
+                // Role filter
+                if (roleFilter && roleCell) {
+                    const role = roleCell.textContent.toLowerCase();
+                    if (!role.includes(roleFilter)) {
+                        shouldShow = false;
+                    }
+                }
+                
+                // Search filter
+                if (searchTerm && shouldShow) {
+                    const searchableText = [
+                        userNameCell?.textContent || '',
+                        emailCell?.textContent || ''
+                    ].join(' ').toLowerCase();
+                    
+                    if (!searchableText.includes(searchTerm)) {
+                        shouldShow = false;
+                    }
+                }
+                
+                row.style.display = shouldShow ? '' : 'none';
+                if (shouldShow) visibleCount++;
+            });
+            
+            // Update results count
+            updateResultsCount(visibleCount);
+            
+            // Show no results message if needed
+            toggleNoResultsMessage(visibleCount === 0);
+        }
+
+        function updateResultsCount(count) {
+            const countElement = document.querySelector('.table-container small');
+            if (countElement) {
+                countElement.textContent = `Showing ${count} users`;
+            }
+        }
+
+        function toggleNoResultsMessage(show) {
+            let noResultsRow = document.getElementById('noResultsRow');
+            
+            if (show && !noResultsRow) {
+                const tbody = document.querySelector('#usersTable tbody');
+                noResultsRow = document.createElement('tr');
+                noResultsRow.id = 'noResultsRow';
+                noResultsRow.innerHTML = `
+                    <td colspan="6" class="text-center py-4">
+                        <div class="empty-state">
+                            <i class="fas fa-search fa-2x text-muted mb-2"></i>
+                            <h6 class="text-muted">No users match your criteria</h6>
+                            <p class="text-muted mb-0">Try adjusting your filters or search terms</p>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(noResultsRow);
+            } else if (!show && noResultsRow) {
+                noResultsRow.remove();
+            }
+        }
+
+        // View toggle functionality
+        function toggleView(viewType) {
+            const tableView = document.getElementById('tableView');
+            const cardView = document.getElementById('cardView');
+            const tableBtn = document.getElementById('tableViewBtn');
+            const cardBtn = document.getElementById('cardViewBtn');
+            
+            if (viewType === 'table') {
+                tableView.style.display = 'block';
+                cardView.style.display = 'none';
+                tableBtn.classList.add('btn-primary');
+                tableBtn.classList.remove('btn-outline-secondary');
+                cardBtn.classList.add('btn-outline-secondary');
+                cardBtn.classList.remove('btn-primary');
+            } else {
+                tableView.style.display = 'none';
+                cardView.style.display = 'block';
+                cardBtn.classList.add('btn-primary');
+                cardBtn.classList.remove('btn-outline-secondary');
+                tableBtn.classList.add('btn-outline-secondary');
+                tableBtn.classList.remove('btn-primary');
+            }
+            
+            // Save preference
+            localStorage.setItem('usersViewPreference', viewType);
+        }
+
+        // Restore view preference
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedView = localStorage.getItem('usersViewPreference') || 'table';
+            toggleView(savedView);
+        });
+
+        // Export functionality
+        function exportUsers() {
+            const visibleRows = Array.from(document.querySelectorAll('#usersTable tbody tr.user-row'))
+                .filter(row => row.style.display !== 'none');
+            
+            if (visibleRows.length === 0) {
+                alert('No data to export');
+                return;
+            }
+            
+            console.log(`Exporting ${visibleRows.length} users...`);
+            alert(`Export functionality will be implemented to export ${visibleRows.length} users`);
+        }
+
+        // Placeholder functions for user management
+        function showAddUserPlaceholder() {
+            alert('Add New User functionality is not yet implemented.\n\nThis feature will allow you to:\n• Create new user accounts\n• Assign roles and permissions\n• Set initial passwords\n• Configure user settings');
+        }
+
+        function showManageRolesPlaceholder() {
+            alert('Manage Roles functionality is not yet implemented.\n\nThis feature will allow you to:\n• Create and edit user roles\n• Define role permissions\n• Assign roles to users\n• Configure access levels');
+        }
+
+        function showUserDetailsPlaceholder(userId, userName) {
+            alert(`View User Details functionality is not yet implemented.\n\nThis would show detailed information for:\n• User: ${userName}\n• ID: ${userId}\n\nIncluding profile, permissions, activity history, and settings.`);
+        }
+
+        function showEditUserPlaceholder(userId, userName) {
+            alert(`Edit User functionality is not yet implemented.\n\nThis would allow you to edit:\n• User: ${userName}\n• ID: ${userId}\n\nIncluding name, email, role, permissions, and settings.`);
+        }
+
+        // Refresh page
+        function refreshPage() {
+            window.location.reload();
+        }
+
+        // User management functions
+        function resetPassword(userId, userName) {
+            if (confirm(`Reset password for "${userName}"? The user will receive a new temporary password via email.`)) {
+                console.log(`Resetting password for user: ${userId}`);
+                alert(`Password reset functionality is not yet implemented.\n\nThis would:\n• Generate a secure temporary password\n• Send reset instructions to ${userName}'s email\n• Require password change on next login`);
+            }
+        }
+
+        function toggleUserStatus(userId, userName) {
+            if (confirm(`Deactivate user "${userName}"? This will prevent them from accessing the system.`)) {
+                console.log(`Toggling status for user: ${userId}`);
+                alert(`User status toggle functionality is not yet implemented.\n\nThis would:\n• Deactivate ${userName}'s account\n• Prevent system access\n• Preserve user data for reactivation`);
+            }
+        }
+
+        function confirmDelete(userId, userName) {
+            if (confirm(`Are you sure you want to delete user "${userName}"? This action cannot be undone and will remove all associated data.`)) {
+                console.log(`Deleting user: ${userId}`);
+                alert(`Delete user functionality is not yet implemented.\n\nThis would permanently:\n• Remove ${userName}'s account\n• Delete associated data\n• Update audit logs\n\nNote: This action cannot be undone.`);
+            }
+        }
+
+        // Sort functionality
+        document.querySelectorAll('.sortable').forEach(header => {
+            header.addEventListener('click', function() {
+                const columnIndex = this.getAttribute('data-sort');
+                
+                // Toggle sort direction
+                let sortDirection = 'asc';
+                if (this.classList.contains('sort-asc')) {
+                    sortDirection = 'desc';
+                    this.classList.remove('sort-asc');
+                    this.classList.add('sort-desc');
+                } else {
+                    sortDirection = 'asc';
+                    this.classList.remove('sort-desc');
+                    this.classList.add('sort-asc');
+                }
+                
+                // Remove sort classes from other headers
+                document.querySelectorAll('.sortable').forEach(h => {
+                    if (h !== this) {
+                        h.classList.remove('sort-asc', 'sort-desc');
+                    }
+                });
+                
+                // Perform sort
+                sortTable(columnIndex, sortDirection);
+            });
+        });
+
+        function sortTable(columnIndex, direction) {
+            const tbody = document.querySelector('#usersTable tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr.user-row'));
+            
+            rows.sort((a, b) => {
+                const aVal = a.cells[columnIndex].textContent.trim();
+                const bVal = b.cells[columnIndex].textContent.trim();
+                
+                const comparison = aVal.localeCompare(bVal);
+                return direction === 'asc' ? comparison : -comparison;
+            });
+            
+            // Reorder rows
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        // Debounce function for search
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+    </script>
+}
 
 

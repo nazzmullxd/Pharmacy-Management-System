@@ -11,15 +11,14 @@ namespace Database.Model
         public Guid PurchaseID { get; set; } = Guid.NewGuid();
 
         // Foreign Keys
-        [Required]
         [ForeignKey(nameof(Supplier))]
-        public Guid SupplierID { get; set; } = Guid.Empty;
+        public Guid? SupplierID { get; set; }
 
         [ForeignKey(nameof(User))]
-        public Guid UserID { get; set; } = Guid.Empty;
+        public Guid? UserID { get; set; }
 
         [ForeignKey(nameof(ProductBatch))]
-        public Guid ProductBatchID { get; set; } = Guid.Empty;
+        public Guid? ProductBatchID { get; set; }
 
         // Navigation Properties
         public Supplier? Supplier { get; set; }

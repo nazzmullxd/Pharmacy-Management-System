@@ -173,7 +173,7 @@
         </div>
         <div class="mt-2">
             <small class="text-muted">
-                Avg: ${{(Model.TotalOrders > 0 ? (Model.MonthlySales / Math.Max(Model.TotalOrders, 1)) : 0).ToString("F0")}} per order
+                Avg: $@((Model.TotalOrders > 0 ? (Model.MonthlySales / Math.Max(Model.TotalOrders, 1)) : 0).ToString("F0")) per order
             </small>
         </div>
     </div>

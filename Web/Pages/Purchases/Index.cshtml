@@ -1,52 +1,1103 @@
 @page
 @model Web.Pages.Purchases.IndexModel
 @{
-    ViewData["Title"] = "Purchase Orders";
+    ViewData["Title"] = "Purchase Orders Management";
 }
 
+<!-- Enhanced Page Header -->
 <div class="page-header">
-    <h1><i class="fas fa-truck"></i> Purchase Orders</h1>
-    <a class="btn btn-primary" href="/Purchases/Create">New Purchase</a>
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-truck text-primary"></i> Purchase Orders Management</h1>
+            <p class="mb-0">Track and manage all purchase orders for inventory restocking</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/Purchases/Create" class="btn btn-primary">
+                <i class="fas fa-plus"></i> New Purchase Order
+            </a>
+            <button type="button" class="btn btn-outline-secondary" onclick="exportOrders()">
+                <i class="fas fa-download"></i> Export
+            </button>
+            <button type="button" class="btn btn-outline-info" onclick="printReport()">
+                <i class="fas fa-print"></i> Print Report
+            </button>
+        </div>
+    </div>
 </div>
 
-<div class="table-responsive card p-3">
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Order #</th>
-                <th>Supplier</th>
-                <th>Status</th>
-                <th>Total</th>
-                <th>Paid</th>
-                <th>Due</th>
-                <th>Date</th>
-            </tr>
-        </thead>
-        <tbody>
-            @if (Model.Orders != null && Model.Orders.Any())
-            {
-                foreach (var o in Model.Orders)
+<!-- Success/Error Messages -->
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle"></i> @TempData["Message"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle"></i> @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<!-- Quick Filters & Search -->
+<div class="dashboard-card mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-4">
+            <h6 class="mb-2 text-muted">Quick Actions</h6>
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="/Purchases/Create" class="btn btn-sm btn-success">
+                    <i class="fas fa-plus-circle"></i> New Order
+                </a>
+                <button class="btn btn-sm btn-outline-secondary" onclick="refreshPage()">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Filter by Status</label>
+                    <select class="form-select form-select-sm" id="statusFilter">
+                        <option value="">All Orders</option>
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="processed">Processed</option>
+                        <option value="delivered">Delivered</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Date Range</label>
+                    <select class="form-select form-select-sm" id="dateFilter">
+                        <option value="">All Time</option>
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Sort By</label>
+                    <select class="form-select form-select-sm" id="sortFilter">
+                        <option value="date">Recent Orders</option>
+                        <option value="amount">Total Amount</option>
+                        <option value="supplier">Supplier Name</option>
+                        <option value="status">Status</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Search Orders</label>
+                    <div class="input-group input-group-sm">
+                        <input type="text" class="form-control" id="searchInput" placeholder="Order #, supplier...">
+                        <button class="btn btn-outline-secondary" type="button" id="searchBtn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Purchase Orders Summary KPI Cards -->
+<div class="kpi-grid mb-4">
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Total Orders</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #3498db, #5dade2);">
+                <i class="fas fa-shopping-cart"></i>
+            </div>
+        </div>
+        <div class="kpi-value">@(Model.Orders?.Count() ?? 0)</div>
+        <div class="kpi-change positive">
+            <i class="fas fa-chart-line"></i> All time
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Total Value</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #27ae60, #2ecc71);">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+        </div>
+        <div class="kpi-value">
+            @(Model.Orders?.Sum(o => o.TotalAmount).ToString("C") ?? "$0.00")
+        </div>
+        <div class="kpi-change positive">
+            <i class="fas fa-arrow-up"></i> Total spent
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Pending Orders</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #f39c12, #f7dc6f);">
+                <i class="fas fa-clock"></i>
+            </div>
+        </div>
+        <div class="kpi-value">
+            @(Model.Orders?.Count(o => o.Status == "Pending") ?? 0)
+        </div>
+        <div class="kpi-change neutral">
+            <i class="fas fa-hourglass-half"></i> Awaiting
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Processed Orders</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #27ae60, #2ecc71);">
+                <i class="fas fa-check-circle"></i>
+            </div>
+        </div>
+        <div class="kpi-value">
+            @(Model.Orders?.Count(o => o.Status == "Processed") ?? 0)
+        </div>
+        <div class="kpi-change positive">
+            <i class="fas fa-arrow-up"></i> Completed
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Outstanding</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #e74c3c, #f1948a);">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+        </div>
+        <div class="kpi-value">
+            @(Model.Orders?.Sum(o => o.DueAmount).ToString("C") ?? "$0.00")
+        </div>
+        <div class="kpi-change negative">
+            <i class="fas fa-arrow-down"></i> Amount due
+        </div>
+    </div>
+</div>
+
+<!-- Purchase Orders Table -->
+<div class="table-container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0"><i class="fas fa-list text-primary"></i> All Purchase Orders</h5>
+        <div class="d-flex align-items-center gap-3">
+            <small class="text-muted">
+                Showing @(Model.Orders?.Count() ?? 0) orders
+            </small>
+            <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-secondary" onclick="toggleView('table')" id="tableViewBtn">
+                    <i class="fas fa-table"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="toggleView('card')" id="cardViewBtn">
+                    <i class="fas fa-th-large"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table View -->
+    <div id="tableView" class="table-responsive">
+        <table class="table table-hover" id="ordersTable">
+            <thead class="table-light">
+                <tr>
+                    <th class="sortable" data-sort="0">
+                        <i class="fas fa-hashtag text-muted me-1"></i>Order #
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="sortable" data-sort="1">
+                        <i class="fas fa-truck text-muted me-1"></i>Supplier
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="sortable" data-sort="2">
+                        <i class="fas fa-info-circle text-muted me-1"></i>Status
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="sortable" data-sort="3">
+                        <i class="fas fa-dollar-sign text-muted me-1"></i>Total Amount
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="sortable" data-sort="4">
+                        <i class="fas fa-check-circle text-muted me-1"></i>Paid
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="sortable" data-sort="5">
+                        <i class="fas fa-exclamation-circle text-muted me-1"></i>Due Amount
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="sortable" data-sort="6">
+                        <i class="fas fa-calendar text-muted me-1"></i>Order Date
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="text-center" style="width: 150px;">
+                        <i class="fas fa-cogs text-muted me-1"></i>Actions
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Orders != null && Model.Orders.Any())
+                {
+                    @foreach (var order in Model.Orders)
+                    {
+                        <tr class="order-row" data-order-id="@order.OrderNumber">
+                            <td>
+                                <div class="order-info">
+                                    <div class="order-number">@order.OrderNumber</div>
+                                    <small class="order-id text-muted">
+                                        <i class="fas fa-tag me-1"></i>ID: @order.OrderNumber
+                                    </small>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="supplier-info">
+                                    <div class="supplier-name">@order.SupplierName</div>
+                                    <small class="text-muted">
+                                        <i class="fas fa-building me-1"></i>Vendor
+                                    </small>
+                                </div>
+                            </td>
+                            <td>
+                                @{
+                                    var statusClass = order.Status?.ToLower() switch
+                                    {
+                                        "pending" => "bg-warning",
+                                        "approved" => "bg-info",
+                                        "processed" => "bg-success",
+                                        "delivered" => "bg-success",
+                                        "cancelled" => "bg-danger",
+                                        _ => "bg-secondary"
+                                    };
+                                    var statusIcon = order.Status?.ToLower() switch
+                                    {
+                                        "pending" => "fas fa-clock",
+                                        "approved" => "fas fa-thumbs-up",
+                                        "processed" => "fas fa-check-circle",
+                                        "delivered" => "fas fa-truck",
+                                        "cancelled" => "fas fa-times",
+                                        _ => "fas fa-question"
+                                    };
+                                }
+                                <span class="badge @statusClass status-badge">
+                                    <i class="@statusIcon me-1"></i>@(order.Status ?? "Unknown")
+                                </span>
+                            </td>
+                            <td>
+                                <div class="amount-info">
+                                    <div class="total-amount">@order.TotalAmount.ToString("C")</div>
+                                    <small class="text-muted">Total</small>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="paid-info">
+                                    <div class="paid-amount text-success">@order.PaidAmount.ToString("C")</div>
+                                    <small class="text-muted">
+                                        <i class="fas fa-percentage me-1"></i>
+                                        @{
+                                            var paidPercentage = order.TotalAmount > 0 ? (order.PaidAmount / order.TotalAmount * 100) : 0;
+                                        }
+                                        @paidPercentage.ToString("F0")%
+                                    </small>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="due-info">
+                                    @if (order.DueAmount > 0)
+                                    {
+                                        <div class="due-amount text-danger">@order.DueAmount.ToString("C")</div>
+                                        <small class="text-muted">Outstanding</small>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-success">
+                                            <i class="fas fa-check-circle me-1"></i>Paid in Full
+                                        </span>
+                                    }
+                                </div>
+                            </td>
+                            <td>
+                                <div class="date-info">
+                                    <div class="order-date">@order.OrderDate.ToString("MMM dd, yyyy")</div>
+                                    <small class="text-muted">@order.OrderDate.ToString("dddd")</small>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="action-buttons d-flex gap-1 justify-content-center">
+                                    <button class="btn btn-sm btn-outline-info" 
+                                            title="View Details"
+                                            data-bs-toggle="tooltip"
+                                            onclick="viewOrder('@order.OrderNumber')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-primary" 
+                                            title="Edit Order"
+                                            data-bs-toggle="tooltip"
+                                            onclick="editOrder('@order.OrderNumber')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                                                type="button" 
+                                                data-bs-toggle="dropdown" 
+                                                aria-expanded="false"
+                                                title="More Actions">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li><button class="dropdown-item" onclick="viewOrder('@order.OrderNumber')">
+                                                <i class="fas fa-eye me-2"></i>View Details
+                                            </button></li>
+                                            <li><button class="dropdown-item" onclick="editOrder('@order.OrderNumber')">
+                                                <i class="fas fa-edit me-2"></i>Edit Order
+                                            </button></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            @if (order.Status?.ToLower() == "pending")
+                                            {
+                                                <li>
+                                                    <form method="post" style="display: inline;">
+                                                        <input type="hidden" name="orderId" value="@order.PurchaseOrderID" />
+                                                        <button type="submit" asp-page-handler="ProcessOrder" class="dropdown-item text-success" onclick="return confirm('Are you sure you want to process this order? This will update the inventory.')">
+                                                            <i class="fas fa-check-circle me-2"></i>Process Order
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                                <li>
+                                                    <form method="post" style="display: inline;">
+                                                        <input type="hidden" name="orderId" value="@order.PurchaseOrderID" />
+                                                        <button type="submit" asp-page-handler="ApproveOrder" class="dropdown-item text-info" onclick="return confirm('Are you sure you want to approve this order?')">
+                                                            <i class="fas fa-thumbs-up me-2"></i>Approve Order
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                            }
+                                            <li><button class="dropdown-item" onclick="duplicateOrder('@order.OrderNumber')">
+                                                <i class="fas fa-copy me-2"></i>Duplicate Order
+                                            </button></li>
+                                            <li><button class="dropdown-item" onclick="printOrder('@order.OrderNumber')">
+                                                <i class="fas fa-print me-2"></i>Print Order
+                                            </button></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            @if (order.Status?.ToLower() == "pending")
+                                            {
+                                                <li><button class="dropdown-item text-danger" onclick="showCancelModal('@order.PurchaseOrderID', '@order.OrderNumber')">
+                                                    <i class="fas fa-times me-2"></i>Cancel Order
+                                                </button></li>
+                                            }
+                                        </ul>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
                 {
                     <tr>
-                        <td>@o.OrderNumber</td>
-                        <td>@o.SupplierName</td>
-                        <td>@o.Status</td>
-                        <td>@o.TotalAmount.ToString("C")</td>
-                        <td>@o.PaidAmount.ToString("C")</td>
-                        <td>@o.DueAmount.ToString("C")</td>
-                        <td>@o.OrderDate.ToString("yyyy-MM-dd")</td>
+                        <td colspan="8" class="text-center py-5">
+                            <div class="empty-state">
+                                <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+                                <h6 class="text-muted">No purchase orders found</h6>
+                                <p class="text-muted mb-3">Start by creating your first purchase order</p>
+                                <a href="/Purchases/Create" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i> Create First Order
+                                </a>
+                            </div>
+                        </td>
                     </tr>
                 }
-            }
-            else
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Card View (Alternative View) -->
+    <div id="cardView" style="display: none;" class="row">
+        @if (Model.Orders != null && Model.Orders.Any())
+        {
+            @foreach (var order in Model.Orders)
             {
-                <tr><td colspan="7" class="text-center">No purchase orders yet.</td></tr>
+                var statusClass = order.Status?.ToLower() switch
+                {
+                    "pending" => "bg-warning",
+                    "approved" => "bg-info",
+                    "processed" => "bg-success",
+                    "delivered" => "bg-success",
+                    "cancelled" => "bg-danger",
+                    _ => "bg-secondary"
+                };
+
+                <div class="col-lg-6 col-xl-4 mb-3">
+                    <div class="card order-card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">Order #@order.OrderNumber</h6>
+                            <span class="badge @statusClass">@(order.Status ?? "Unknown")</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <p class="mb-1"><i class="fas fa-truck me-2 text-muted"></i><strong>@order.SupplierName</strong></p>
+                                <p class="mb-1"><i class="fas fa-calendar me-2 text-muted"></i>@order.OrderDate.ToString("MMM dd, yyyy")</p>
+                            </div>
+                            <div class="order-amounts">
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <div class="amount-card">
+                                            <div class="amount-label">Total</div>
+                                            <div class="amount-value">@order.TotalAmount.ToString("C")</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="amount-card">
+                                            <div class="amount-label">Paid</div>
+                                            <div class="amount-value text-success">@order.PaidAmount.ToString("C")</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                @if (order.DueAmount > 0)
+                                {
+                                    <div class="mt-2">
+                                        <div class="amount-card">
+                                            <div class="amount-label">Outstanding</div>
+                                            <div class="amount-value text-danger">@order.DueAmount.ToString("C")</div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <div class="d-flex gap-1">
+                                <button class="btn btn-sm btn-outline-info flex-fill" onclick="viewOrder('@order.OrderNumber')">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                                <button class="btn btn-sm btn-outline-primary flex-fill" onclick="editOrder('@order.OrderNumber')">
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             }
-        </tbody>
-    </table>
-    <small class="text-muted">Data will appear here once orders are created.</small>
-    @if (Model.Orders != null)
-    {
-        <div>Order count: @Model.Orders.Count()</div>
-    }
+        }
+    </div>
 </div>
+
+@section Styles {
+    <style>
+        .order-row {
+            transition: all 0.3s ease;
+        }
+        
+        .order-row:hover {
+            background-color: #f8f9fa;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .order-info .order-number {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1rem;
+        }
+        
+        .order-info .order-id {
+            font-size: 0.75rem;
+            color: #6c757d;
+        }
+        
+        .supplier-info .supplier-name {
+            font-weight: 500;
+            color: #495057;
+        }
+        
+        .amount-info .total-amount {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1rem;
+        }
+        
+        .paid-info .paid-amount {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        
+        .due-info .due-amount {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        
+        .date-info .order-date {
+            font-weight: 500;
+            color: #495057;
+        }
+        
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .action-buttons .btn {
+            transition: all 0.2s ease;
+            border-radius: 0.5rem;
+        }
+        
+        .action-buttons .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .sortable {
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.2s ease;
+            position: relative;
+        }
+        
+        .sortable:hover {
+            background-color: #e9ecef;
+        }
+        
+        .sortable.sort-asc::after {
+            content: '↑';
+            position: absolute;
+            right: 5px;
+            color: #0d6efd;
+            font-weight: bold;
+        }
+        
+        .sortable.sort-desc::after {
+            content: '↓';
+            position: absolute;
+            right: 5px;
+            color: #0d6efd;
+            font-weight: bold;
+        }
+        
+        .table-responsive {
+            border-radius: 0.5rem;
+            border: 1px solid #dee2e6;
+        }
+        
+        .table {
+            margin-bottom: 0;
+        }
+        
+        .table th {
+            border-top: none;
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 1rem 0.75rem;
+        }
+        
+        .table td {
+            padding: 1rem 0.75rem;
+            vertical-align: middle;
+            border-top: 1px solid #f8f9fa;
+        }
+        
+        .order-card {
+            transition: all 0.3s ease;
+            border: 1px solid #e9ecef;
+            border-radius: 0.75rem;
+        }
+        
+        .order-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-color: #0d6efd;
+        }
+        
+        .order-card .card-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-bottom: 1px solid #dee2e6;
+            border-radius: 0.75rem 0.75rem 0 0;
+        }
+        
+        .order-card .card-footer {
+            background: transparent;
+            border-top: 1px solid #f8f9fa;
+        }
+        
+        .amount-card {
+            background: #f8f9fa;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            text-align: center;
+        }
+        
+        .amount-label {
+            font-size: 0.75rem;
+            color: #6c757d;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        
+        .amount-value {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-top: 0.25rem;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+        }
+        
+        .empty-state .fa-3x {
+            font-size: 3rem;
+            opacity: 0.5;
+        }
+        
+        /* Enhanced dropdown styling */
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-radius: 0.5rem;
+            padding: 0.5rem 0;
+        }
+        
+        .dropdown-item {
+            padding: 0.5rem 1rem;
+            transition: all 0.2s ease;
+        }
+        
+        .dropdown-item:hover {
+            background-color: #f8f9fa;
+            transform: translateX(5px);
+        }
+        
+        .dropdown-item.text-danger:hover {
+            background-color: #fff5f5;
+            color: #dc3545;
+        }
+        
+        .dropdown-item.text-success:hover {
+            background-color: #f0fff4;
+            color: #198754;
+        }
+        
+        /* Loading animation */
+        .loading {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: loading 1.5s infinite;
+        }
+        
+        @@keyframes loading {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        /* KPI specific styling */
+        .kpi-change.positive {
+            color: #198754;
+        }
+        
+        .kpi-change.negative {
+            color: #dc3545;
+        }
+        
+        .kpi-change.neutral {
+            color: #6c757d;
+        }
+        
+        /* Responsive improvements */
+        @@media (max-width: 768px) {
+            .action-buttons {
+                flex-direction: column;
+                gap: 0.25rem;
+            }
+            
+            .order-card .card-footer .d-flex {
+                flex-direction: column;
+            }
+            
+            .order-card .card-footer .btn {
+                margin-bottom: 0.5rem;
+            }
+            
+            .table th, .table td {
+                padding: 0.5rem;
+                font-size: 0.875rem;
+            }
+            
+            .kpi-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .amount-card {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+}
+
+<!-- Cancel Order Modal -->
+<div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-labelledby="cancelOrderModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cancelOrderModalLabel">
+                    <i class="fas fa-times-circle text-danger me-2"></i>Cancel Purchase Order
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" id="cancelOrderForm">
+                <div class="modal-body">
+                    <input type="hidden" name="orderId" id="cancelOrderId" />
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Warning:</strong> You are about to cancel order <span id="cancelOrderNumber" class="fw-bold"></span>. This action cannot be undone.
+                    </div>
+                    <div class="mb-3">
+                        <label for="cancelReason" class="form-label">
+                            <i class="fas fa-comment me-1"></i>Reason for cancellation *
+                        </label>
+                        <textarea class="form-control" id="cancelReason" name="reason" rows="3" 
+                                  placeholder="Please provide a reason for cancelling this order..." required></textarea>
+                        <div class="form-text">This reason will be logged for audit purposes.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-arrow-left me-1"></i>Keep Order
+                    </button>
+                    <button type="submit" asp-page-handler="CancelOrder" class="btn btn-danger">
+                        <i class="fas fa-times me-1"></i>Cancel Order
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+
+        // Enhanced filtering functionality
+        document.getElementById('statusFilter').addEventListener('change', function() {
+            filterOrders();
+        });
+
+        document.getElementById('dateFilter').addEventListener('change', function() {
+            filterOrders();
+        });
+
+        document.getElementById('sortFilter').addEventListener('change', function() {
+            sortOrders();
+        });
+
+        // Enhanced Search functionality
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+
+        searchInput.addEventListener('input', debounce(filterOrders, 300));
+        searchBtn.addEventListener('click', filterOrders);
+
+        function filterOrders() {
+            const statusFilter = document.getElementById('statusFilter').value.toLowerCase();
+            const dateFilter = document.getElementById('dateFilter').value;
+            const searchTerm = searchInput.value.toLowerCase();
+            const rows = document.querySelectorAll('#ordersTable tbody tr.order-row');
+            
+            let visibleCount = 0;
+            
+            rows.forEach(row => {
+                const orderNumber = row.querySelector('.order-number');
+                const supplierName = row.querySelector('.supplier-name');
+                const statusBadge = row.querySelector('.status-badge');
+                
+                let shouldShow = true;
+                
+                // Status filter
+                if (statusFilter && statusBadge) {
+                    const status = statusBadge.textContent.toLowerCase().trim();
+                    if (!status.includes(statusFilter)) {
+                        shouldShow = false;
+                    }
+                }
+                
+                // Search filter
+                if (searchTerm) {
+                    const searchableText = [
+                        orderNumber?.textContent || '',
+                        supplierName?.textContent || ''
+                    ].join(' ').toLowerCase();
+                    
+                    if (!searchableText.includes(searchTerm)) {
+                        shouldShow = false;
+                    }
+                }
+                
+                row.style.display = shouldShow ? '' : 'none';
+                if (shouldShow) visibleCount++;
+            });
+            
+            // Update results count
+            updateResultsCount(visibleCount);
+            
+            // Show no results message if needed
+            toggleNoResultsMessage(visibleCount === 0);
+        }
+
+        function updateResultsCount(count) {
+            const countElement = document.querySelector('.table-container small');
+            if (countElement) {
+                countElement.textContent = `Showing ${count} orders`;
+            }
+        }
+
+        function toggleNoResultsMessage(show) {
+            let noResultsRow = document.getElementById('noResultsRow');
+            
+            if (show && !noResultsRow) {
+                const tbody = document.querySelector('#ordersTable tbody');
+                noResultsRow = document.createElement('tr');
+                noResultsRow.id = 'noResultsRow';
+                noResultsRow.innerHTML = `
+                    <td colspan="8" class="text-center py-4">
+                        <div class="empty-state">
+                            <i class="fas fa-search fa-2x text-muted mb-2"></i>
+                            <h6 class="text-muted">No orders match your criteria</h6>
+                            <p class="text-muted mb-0">Try adjusting your search terms or filters</p>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(noResultsRow);
+            } else if (!show && noResultsRow) {
+                noResultsRow.remove();
+            }
+        }
+
+        // View toggle functionality
+        function toggleView(viewType) {
+            const tableView = document.getElementById('tableView');
+            const cardView = document.getElementById('cardView');
+            const tableBtn = document.getElementById('tableViewBtn');
+            const cardBtn = document.getElementById('cardViewBtn');
+            
+            if (viewType === 'table') {
+                tableView.style.display = 'block';
+                cardView.style.display = 'none';
+                tableBtn.classList.add('btn-primary');
+                tableBtn.classList.remove('btn-outline-secondary');
+                cardBtn.classList.add('btn-outline-secondary');
+                cardBtn.classList.remove('btn-primary');
+            } else {
+                tableView.style.display = 'none';
+                cardView.style.display = 'block';
+                cardBtn.classList.add('btn-primary');
+                cardBtn.classList.remove('btn-outline-secondary');
+                tableBtn.classList.add('btn-outline-secondary');
+                tableBtn.classList.remove('btn-primary');
+            }
+            
+            // Save preference
+            localStorage.setItem('ordersViewPreference', viewType);
+        }
+
+        // Restore view preference
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedView = localStorage.getItem('ordersViewPreference') || 'table';
+            toggleView(savedView);
+        });
+
+        // Export functionality
+        function exportOrders() {
+            const visibleRows = Array.from(document.querySelectorAll('#ordersTable tbody tr.order-row'))
+                .filter(row => row.style.display !== 'none');
+            
+            if (visibleRows.length === 0) {
+                alert('No data to export');
+                return;
+            }
+            
+            console.log(`Exporting ${visibleRows.length} orders...`);
+            alert(`Export functionality will be implemented to export ${visibleRows.length} orders`);
+        }
+
+        // Print report
+        function printReport() {
+            console.log('Printing orders report...');
+            alert('Print report functionality will be implemented');
+        }
+
+        // Refresh page
+        function refreshPage() {
+            window.location.reload();
+        }
+
+        // Order action functions
+        function viewOrder(orderNumber) {
+            console.log(`Viewing order: ${orderNumber}`);
+            alert(`View order functionality will be implemented for order ${orderNumber}`);
+        }
+
+        function editOrder(orderNumber) {
+            console.log(`Editing order: ${orderNumber}`);
+            alert(`Edit order functionality will be implemented for order ${orderNumber}`);
+        }
+
+        function duplicateOrder(orderNumber) {
+            console.log(`Duplicating order: ${orderNumber}`);
+            alert(`Duplicate order functionality will be implemented for order ${orderNumber}`);
+        }
+
+        function printOrder(orderNumber) {
+            console.log(`Printing order: ${orderNumber}`);
+            alert(`Print order functionality will be implemented for order ${orderNumber}`);
+        }
+
+        function confirmOrder(orderNumber) {
+            if (confirm(`Are you sure you want to confirm order ${orderNumber}?`)) {
+                console.log(`Confirming order: ${orderNumber}`);
+                alert(`Confirm order functionality will be implemented for order ${orderNumber}`);
+            }
+        }
+
+        function showCancelModal(orderId, orderNumber) {
+            document.getElementById('cancelOrderId').value = orderId;
+            document.getElementById('cancelOrderNumber').textContent = orderNumber;
+            document.getElementById('cancelReason').value = '';
+            
+            var modal = new bootstrap.Modal(document.getElementById('cancelOrderModal'));
+            modal.show();
+        }
+
+        function cancelOrder(orderNumber) {
+            if (confirm(`Are you sure you want to cancel order ${orderNumber}? This action cannot be undone.`)) {
+                console.log(`Cancelling order: ${orderNumber}`);
+                alert(`Cancel order functionality will be implemented for order ${orderNumber}`);
+            }
+        }
+
+        // Sort functionality
+        function sortOrders() {
+            const sortValue = document.getElementById('sortFilter').value;
+            const tbody = document.querySelector('#ordersTable tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr.order-row'));
+            
+            rows.sort((a, b) => {
+                let aVal, bVal;
+                
+                switch(sortValue) {
+                    case 'date':
+                        // For demo purposes, reverse order by order number (assuming higher number = more recent)
+                        return b.getAttribute('data-order-id').localeCompare(a.getAttribute('data-order-id'));
+                    case 'amount':
+                        aVal = parseFloat(a.querySelector('.total-amount').textContent.replace(/[^0-9.-]+/g, ''));
+                        bVal = parseFloat(b.querySelector('.total-amount').textContent.replace(/[^0-9.-]+/g, ''));
+                        return bVal - aVal; // Descending order
+                    case 'supplier':
+                        aVal = a.querySelector('.supplier-name').textContent.trim();
+                        bVal = b.querySelector('.supplier-name').textContent.trim();
+                        return aVal.localeCompare(bVal);
+                    case 'status':
+                        aVal = a.querySelector('.status-badge').textContent.trim();
+                        bVal = b.querySelector('.status-badge').textContent.trim();
+                        return aVal.localeCompare(bVal);
+                    default:
+                        return 0;
+                }
+            });
+            
+            // Reorder rows
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        // Debounce function for search
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Sort table functionality
+        document.querySelectorAll('.sortable').forEach(header => {
+            header.addEventListener('click', function() {
+                const columnIndex = this.getAttribute('data-sort');
+                
+                // Toggle sort direction
+                let sortDirection = 'asc';
+                if (this.classList.contains('sort-asc')) {
+                    sortDirection = 'desc';
+                    this.classList.remove('sort-asc');
+                    this.classList.add('sort-desc');
+                } else {
+                    sortDirection = 'asc';
+                    this.classList.remove('sort-desc');
+                    this.classList.add('sort-asc');
+                }
+                
+                // Remove sort classes from other headers
+                document.querySelectorAll('.sortable').forEach(h => {
+                    if (h !== this) {
+                        h.classList.remove('sort-asc', 'sort-desc');
+                    }
+                });
+                
+                // Perform sort
+                sortTableByColumn(columnIndex, sortDirection);
+            });
+        });
+
+        function sortTableByColumn(columnIndex, direction) {
+            const tbody = document.querySelector('#ordersTable tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr.order-row'));
+            
+            rows.sort((a, b) => {
+                let aVal = a.cells[columnIndex].textContent.trim();
+                let bVal = b.cells[columnIndex].textContent.trim();
+                
+                // Handle currency values
+                if (aVal.includes('$')) {
+                    aVal = parseFloat(aVal.replace(/[^0-9.-]+/g, ''));
+                    bVal = parseFloat(bVal.replace(/[^0-9.-]+/g, ''));
+                    const numComparison = aVal - bVal;
+                    return direction === 'asc' ? numComparison : -numComparison;
+                }
+                
+                // Handle dates
+                if (aVal.includes(',')) {
+                    aVal = new Date(aVal);
+                    bVal = new Date(bVal);
+                    const dateComparison = aVal - bVal;
+                    return direction === 'asc' ? dateComparison : -dateComparison;
+                }
+                
+                // Handle text
+                const comparison = aVal.localeCompare(bVal);
+                return direction === 'asc' ? comparison : -comparison;
+            });
+            
+            // Reorder rows
+            rows.forEach(row => tbody.appendChild(row));
+        }
+    </script>
+}
