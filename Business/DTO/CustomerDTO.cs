@@ -13,5 +13,7 @@ namespace Business.DTO
         public DateTime? LastPurchaseDate { get; set; }
         public decimal? TotalPurchases { get; set; }
         public decimal? TotalAmount { get; set; }
+        public Guid CreatedBy { get; set; } // <-- Add this line
+
     }
 }

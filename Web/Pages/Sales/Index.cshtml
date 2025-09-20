@@ -6,36 +6,94 @@
 
 <!-- Page Header -->
 <div class="page-header">
-    <h1><i class="fas fa-shopping-cart"></i> Sales Orders</h1>
-    <p>Manage your pharmacy's sales transactions and customer orders.</p>
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-shopping-cart text-primary"></i> Sales Orders</h1>
+            <p class="mb-0">Manage your pharmacy's sales transactions and customer orders</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/Sales/Create" class="btn btn-primary">
+                <i class="fas fa-plus"></i> New Sale Order
+            </a>
+            <a href="/Sales/Invoices" class="btn btn-outline-info">
+                <i class="fas fa-file-invoice"></i> View Invoices
+            </a>
+        </div>
+    </div>
 </div>
 
-<!-- Action Buttons -->
-<div class="row mb-4">
-    <div class="col-md-6">
-        <a href="/Sales/Create" class="btn btn-primary">
-            <i class="fas fa-plus"></i> New Sale Order
-        </a>
-        <a href="/Sales/Invoices" class="btn btn-outline-info">
-            <i class="fas fa-file-invoice"></i> View Invoices
-        </a>
-    </div>
-    <div class="col-md-6">
-        <div class="row">
-            <div class="col-md-6">
-                <select class="form-select" id="statusFilter">
-                    <option value="">All Status</option>
-                    <option value="Paid">Paid</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Cancelled">Cancelled</option>
-                </select>
+<!-- Success Message Alert -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-check-circle me-2 text-success"></i>
+            <div class="flex-grow-1">
+                <strong>Success!</strong> @TempData["SuccessMessage"]
+                @if (TempData["ShowInvoiceLink"] != null && TempData["SaleID"] != null)
+                {
+                    <div class="mt-2">
+                        <a href="/Sales/Invoice/@TempData["SaleID"]" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-file-invoice"></i> View Invoice
+                        </a>
+                        <a href="/Sales/Create" class="btn btn-sm btn-success ms-2">
+                            <i class="fas fa-plus"></i> Create Another Sale
+                        </a>
+                    </div>
+                }
             </div>
-            <div class="col-md-6">
-                <div class="input-group">
-                    <input type="text" class="form-control search-input" placeholder="Search sales...">
-                    <button class="btn btn-outline-secondary" type="button">
-                        <i class="fas fa-search"></i>
-                    </button>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<!-- Quick Actions & Filters -->
+<div class="dashboard-card mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-4">
+            <h6 class="mb-2 text-muted">Quick Actions</h6>
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="/Sales/Create" class="btn btn-sm btn-success">
+                    <i class="fas fa-cash-register"></i> Quick Sale
+                </a>
+                <button class="btn btn-sm btn-outline-primary" onclick="exportToExcel()">
+                    <i class="fas fa-download"></i> Export
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="refreshPage()">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Filter by Status</label>
+                    <select class="form-select form-select-sm" id="statusFilter">
+                        <option value="">All Status</option>
+                        <option value="Paid">Paid</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Partial">Partial</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Date Range</label>
+                    <select class="form-select form-select-sm" id="dateFilter">
+                        <option value="">All Time</option>
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                        <option value="custom">Custom Range</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Search Sales</label>
+                    <div class="input-group input-group-sm">
+                        <input type="text" class="form-control" id="searchInput" placeholder="Sale ID, Customer, Cashier...">
+                        <button class="btn btn-outline-secondary" type="button" id="searchBtn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -43,80 +101,137 @@
 </div>
 
 <!-- Sales Summary Cards -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="kpi-card">
-            <div class="kpi-header">
-                <div class="kpi-title">Today's Sales</div>
-                <div class="kpi-icon" style="background: #27ae60;">
-                    <i class="fas fa-dollar-sign"></i>
-                </div>
+<div class="kpi-grid mb-4">
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Today's Sales</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #27ae60, #2ecc71);">
+                <i class="fas fa-dollar-sign"></i>
             </div>
-            <div class="kpi-value">$@Model.TodaySales.ToString("N0")</div>
-            <div class="kpi-change positive">
-                <i class="fas fa-arrow-up"></i> +@Model.TodaySalesCount sales
+        </div>
+        <div class="kpi-value">$@Model.TodaySales.ToString("N0")</div>
+        <div class="kpi-change positive">
+            <i class="fas fa-arrow-up"></i> @Model.TodaySalesCount transactions today
+        </div>
+        <div class="kpi-progress mt-2">
+            <div class="progress" style="height: 4px;">
+                <div class="progress-bar bg-success" role="progressbar" style="width: 75%" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="kpi-card">
-            <div class="kpi-header">
-                <div class="kpi-title">This Month</div>
-                <div class="kpi-icon" style="background: #3498db;">
-                    <i class="fas fa-chart-line"></i>
-                </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Monthly Sales</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #3498db, #5dade2);">
+                <i class="fas fa-chart-line"></i>
             </div>
-            <div class="kpi-value">$@Model.MonthlySales.ToString("N0")</div>
-            <div class="kpi-change positive">
-                <i class="fas fa-arrow-up"></i> +@Model.MonthlySalesCount sales
+        </div>
+        <div class="kpi-value">$@Model.MonthlySales.ToString("N0")</div>
+        <div class="kpi-change positive">
+            <i class="fas fa-arrow-up"></i> @Model.MonthlySalesCount orders this month
+        </div>
+        <div class="kpi-progress mt-2">
+            <div class="progress" style="height: 4px;">
+                <div class="progress-bar bg-info" role="progressbar" style="width: 65%" aria-valuenow="65" aria-valuemin="0" aria-valuemax="100"></div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="kpi-card">
-            <div class="kpi-header">
-                <div class="kpi-title">Pending Orders</div>
-                <div class="kpi-icon" style="background: #f39c12;">
-                    <i class="fas fa-clock"></i>
-                </div>
-            </div>
-            <div class="kpi-value">@Model.PendingOrders</div>
-            <div class="kpi-change">
-                <i class="fas fa-exclamation-triangle"></i> Requires attention
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Pending Orders</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #f39c12, #f7dc6f);">
+                <i class="fas fa-clock"></i>
             </div>
         </div>
+        <div class="kpi-value">@Model.PendingOrders</div>
+        <div class="kpi-change @(Model.PendingOrders > 5 ? "negative" : "")">
+            <i class="fas @(Model.PendingOrders > 5 ? "fa-exclamation-triangle" : "fa-check-circle")"></i> 
+            @(Model.PendingOrders > 5 ? "Needs attention" : "Under control")
+        </div>
+        @if (Model.PendingOrders > 0)
+        {
+            <div class="mt-2">
+                <a href="/Sales/Create" class="btn btn-sm btn-warning">
+                    <i class="fas fa-plus-circle"></i> Process Orders
+                </a>
+            </div>
+        }
     </div>
-    <div class="col-md-3">
-        <div class="kpi-card">
-            <div class="kpi-header">
-                <div class="kpi-title">Total Orders</div>
-                <div class="kpi-icon" style="background: #9b59b6;">
-                    <i class="fas fa-receipt"></i>
-                </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Total Orders</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #9b59b6, #bb8fce);">
+                <i class="fas fa-receipt"></i>
             </div>
-            <div class="kpi-value">@Model.TotalOrders</div>
-            <div class="kpi-change positive">
-                <i class="fas fa-arrow-up"></i> All time
-            </div>
+        </div>
+        <div class="kpi-value">@Model.TotalOrders.ToString("N0")</div>
+        <div class="kpi-change positive">
+            <i class="fas fa-chart-bar"></i> Lifetime performance
+        </div>
+        <div class="mt-2">
+            <small class="text-muted">
+                Avg: ${{(Model.TotalOrders > 0 ? (Model.MonthlySales / Math.Max(Model.TotalOrders, 1)) : 0).ToString("F0")}} per order
+            </small>
         </div>
     </div>
 </div>
 
 <!-- Sales Table -->
 <div class="table-container">
-    <h5><i class="fas fa-list"></i> Recent Sales Orders</h5>
-    <div class="table-responsive">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0"><i class="fas fa-list text-primary"></i> Recent Sales Orders</h5>
+        <div class="d-flex align-items-center gap-3">
+            <small class="text-muted">
+                Showing @(Model.Sales?.Count() ?? 0) of @Model.TotalOrders total orders
+            </small>
+            <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-secondary" onclick="toggleView('table')" id="tableViewBtn">
+                    <i class="fas fa-table"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="toggleView('card')" id="cardViewBtn">
+                    <i class="fas fa-th-large"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table View -->
+    <div id="tableView" class="table-responsive">
         <table class="table table-hover" id="salesTable">
-            <thead>
+            <thead class="table-light">
                 <tr>
-                    <th data-sort="0">Sale ID</th>
-                    <th data-sort="1">Customer</th>
-                    <th data-sort="2">Date</th>
-                    <th data-sort="3">Items</th>
-                    <th data-sort="4">Total Amount</th>
-                    <th data-sort="5">Status</th>
-                    <th data-sort="6">Cashier</th>
-                    <th>Actions</th>
+                    <th class="sortable" data-sort="0">
+                        <i class="fas fa-hashtag text-muted me-1"></i>Sale ID
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="sortable" data-sort="1">
+                        <i class="fas fa-user text-muted me-1"></i>Customer
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="sortable" data-sort="2">
+                        <i class="fas fa-calendar text-muted me-1"></i>Date & Time
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="text-center">
+                        <i class="fas fa-shopping-basket text-muted me-1"></i>Items
+                    </th>
+                    <th class="text-end sortable" data-sort="4">
+                        <i class="fas fa-dollar-sign text-muted me-1"></i>Total Amount
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="text-center">
+                        <i class="fas fa-check-circle text-muted me-1"></i>Status
+                    </th>
+                    <th class="sortable" data-sort="6">
+                        <i class="fas fa-user-tie text-muted me-1"></i>Cashier
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="text-center" style="width: 150px;">
+                        <i class="fas fa-cogs text-muted me-1"></i>Actions
+                    </th>
                 </tr>
             </thead>
             <tbody>
@@ -124,62 +239,129 @@
                 {
                     @foreach (var sale in Model.Sales)
                     {
-                        <tr>
+                        <tr class="sale-row" data-sale-id="@sale.SaleID">
                             <td>
-                                <strong>#@sale.SaleID.ToString().Substring(0, 8)</strong>
+                                <div class="d-flex align-items-center">
+                                    <div class="sale-id-badge">
+                                        #@sale.SaleID.ToString().Substring(0, 8).ToUpper()
+                                    </div>
+                                </div>
                             </td>
                             <td>
-                                @sale.CustomerName
-                                @if (!string.IsNullOrEmpty(sale.CustomerName) && sale.CustomerName != "Walk-in Customer")
-                                {
-                                    <br><small class="text-muted">Customer</small>
-                                }
-                                else
-                                {
-                                    <br><small class="text-muted">Walk-in</small>
-                                }
+                                <div class="customer-info">
+                                    <div class="customer-name">@sale.CustomerName</div>
+                                    <small class="customer-type text-muted">
+                                        @if (!string.IsNullOrEmpty(sale.CustomerName) && sale.CustomerName != "Walk-in Customer")
+                                        {
+                                            <text><i class="fas fa-user me-1"></i>Registered Customer</text>
+                                        }
+                                        else
+                                        {
+                                            <text><i class="fas fa-walking me-1"></i>Walk-in Customer</text>
+                                        }
+                                    </small>
+                                </div>
                             </td>
                             <td>
-                                @sale.SaleDate.ToString("MMM dd, yyyy")
-                                <br><small class="text-muted">@sale.SaleDate.ToString("hh:mm tt")</small>
+                                <div class="date-info">
+                                    <div class="sale-date">@sale.SaleDate.ToString("MMM dd, yyyy")</div>
+                                    <small class="sale-time text-muted">
+                                        <i class="fas fa-clock me-1"></i>@sale.SaleDate.ToString("hh:mm tt")
+                                    </small>
+                                </div>
                             </td>
-                            <td>
-                                <span class="badge badge-info">@sale.SaleItems.Count items</span>
+                            <td class="text-center">
+                                <span class="badge bg-info items-badge">
+                                    @sale.SaleItems.Count <small>items</small>
+                                </span>
                             </td>
-                            <td>
-                                <strong>$@sale.TotalAmount.ToString("F2")</strong>
+                            <td class="text-end">
+                                <div class="amount-info">
+                                    <strong class="sale-amount">$@sale.TotalAmount.ToString("F2")</strong>
+                                </div>
                             </td>
-                            <td>
+                            <td class="text-center">
                                 @if (sale.PaymentStatus == "Paid")
                                 {
-                                    <span class="badge badge-success">@sale.PaymentStatus</span>
+                                    <span class="badge bg-success status-badge">
+                                        <i class="fas fa-check-circle me-1"></i>Paid
+                                    </span>
                                 }
                                 else if (sale.PaymentStatus == "Pending")
                                 {
-                                    <span class="badge badge-warning">@sale.PaymentStatus</span>
+                                    <span class="badge bg-warning status-badge">
+                                        <i class="fas fa-clock me-1"></i>Pending
+                                    </span>
+                                }
+                                else if (sale.PaymentStatus == "Partial")
+                                {
+                                    <span class="badge bg-info status-badge">
+                                        <i class="fas fa-hourglass-half me-1"></i>Partial
+                                    </span>
                                 }
                                 else
                                 {
-                                    <span class="badge badge-danger">@sale.PaymentStatus</span>
+                                    <span class="badge bg-danger status-badge">
+                                        <i class="fas fa-times-circle me-1"></i>@sale.PaymentStatus
+                                    </span>
                                 }
                             </td>
                             <td>
-                                @sale.UserName
+                                <div class="cashier-info">
+                                    <div class="cashier-name">@sale.UserName</div>
+                                    <small class="text-muted">
+                                        <i class="fas fa-user-shield me-1"></i>Staff
+                                    </small>
+                                </div>
                             </td>
                             <td>
-                                <div class="btn-group" role="group">
-                                    <a href="/Sales/Details/@sale.SaleID" class="btn btn-sm btn-outline-info" title="View Details">
+                                <div class="action-buttons d-flex gap-1 justify-content-center">
+                                    <a href="/Sales/Details/@sale.SaleID" 
+                                       class="btn btn-sm btn-outline-info" 
+                                       title="View Details"
+                                       data-bs-toggle="tooltip">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <a href="/Sales/Invoice/@sale.SaleID" class="btn btn-sm btn-outline-primary" title="Print Invoice">
+                                    <a href="/Sales/Invoice/@sale.SaleID" 
+                                       class="btn btn-sm btn-outline-primary" 
+                                       title="Print Invoice"
+                                       data-bs-toggle="tooltip">
                                         <i class="fas fa-print"></i>
                                     </a>
                                     @if (sale.PaymentStatus == "Pending")
                                     {
-                                        <button type="button" class="btn btn-sm btn-outline-success" title="Mark as Paid" onclick="markAsPaid('@sale.SaleID')">
-                                            <i class="fas fa-check"></i>
-                                        </button>
+                                        <form method="post" asp-page-handler="MarkAsPaid" class="d-inline">
+                                            <input type="hidden" name="saleId" value="@sale.SaleID" />
+                                            <button type="submit" 
+                                                    class="btn btn-sm btn-outline-success" 
+                                                    title="Mark as Paid"
+                                                    data-bs-toggle="tooltip"
+                                                    onclick="return confirm('Mark this sale as paid?')">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        </form>
                                     }
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                                                type="button" 
+                                                data-bs-toggle="dropdown" 
+                                                aria-expanded="false"
+                                                title="More Actions">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li><a class="dropdown-item" href="/Sales/Details/@sale.SaleID">
+                                                <i class="fas fa-eye me-2"></i>View Details
+                                            </a></li>
+                                            <li><a class="dropdown-item" href="/Sales/Invoice/@sale.SaleID">
+                                                <i class="fas fa-print me-2"></i>Print Invoice
+                                            </a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><a class="dropdown-item text-muted" href="#">
+                                                <i class="fas fa-edit me-2"></i>Edit (Coming Soon)
+                                            </a></li>
+                                        </ul>
+                                    </div>
                                 </div>
                             </td>
                         </tr>
@@ -188,63 +370,378 @@
                 else
                 {
                     <tr>
-                        <td colspan="8" class="text-center text-muted py-4">
-                            <i class="fas fa-shopping-cart fa-3x mb-3"></i>
-                            <br>No sales found. <a href="/Sales/Create">Create your first sale</a>
+                        <td colspan="8" class="text-center py-5">
+                            <div class="empty-state">
+                                <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+                                <h6 class="text-muted">No sales found</h6>
+                                <p class="text-muted mb-3">Get started by creating your first sale order</p>
+                                <a href="/Sales/Create" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i> Create First Sale
+                                </a>
+                            </div>
                         </td>
                     </tr>
                 }
             </tbody>
         </table>
     </div>
+
+    <!-- Card View (Alternative View) -->
+    <div id="cardView" style="display: none;" class="row">
+        @if (Model.Sales != null && Model.Sales.Any())
+        {
+            @foreach (var sale in Model.Sales)
+            {
+                <div class="col-lg-6 col-xl-4 mb-3">
+                    <div class="card sale-card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">#@sale.SaleID.ToString().Substring(0, 8).ToUpper()</h6>
+                            @if (sale.PaymentStatus == "Paid")
+                            {
+                                <span class="badge bg-success">Paid</span>
+                            }
+                            else if (sale.PaymentStatus == "Pending")
+                            {
+                                <span class="badge bg-warning">Pending</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">@sale.PaymentStatus</span>
+                            }
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <p class="mb-1"><strong>@sale.CustomerName</strong></p>
+                                    <small class="text-muted">@sale.SaleDate.ToString("MMM dd, yyyy hh:mm tt")</small>
+                                </div>
+                                <h5 class="text-primary mb-0">$@sale.TotalAmount.ToString("F2")</h5>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="badge bg-info">@sale.SaleItems.Count items</span>
+                                <small class="text-muted">by @sale.UserName</small>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <div class="d-flex gap-1">
+                                <a href="/Sales/Details/@sale.SaleID" class="btn btn-sm btn-outline-info flex-fill">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                                <a href="/Sales/Invoice/@sale.SaleID" class="btn btn-sm btn-outline-primary flex-fill">
+                                    <i class="fas fa-print"></i> Print
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
 </div>
 
-<!-- Pagination -->
+<!-- Enhanced Pagination -->
 @if (Model.Sales != null && Model.Sales.Count() > 10)
 {
-    <nav aria-label="Sales pagination">
-        <ul class="pagination justify-content-center">
-            <li class="page-item disabled">
-                <a class="page-link" href="#" tabindex="-1">Previous</a>
-            </li>
-            <li class="page-item active"><a class="page-link" href="#">1</a></li>
-            <li class="page-item"><a class="page-link" href="#">2</a></li>
-            <li class="page-item"><a class="page-link" href="#">3</a></li>
-            <li class="page-item">
-                <a class="page-link" href="#">Next</a>
-            </li>
-        </ul>
+    <nav aria-label="Sales pagination" class="mt-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="pagination-info">
+                <small class="text-muted">
+                    Showing <strong>1-@Math.Min(50, Model.Sales.Count())</strong> of <strong>@Model.TotalOrders</strong> results
+                </small>
+            </div>
+            <ul class="pagination justify-content-center mb-0">
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </a>
+                </li>
+                <li class="page-item active">
+                    <a class="page-link" href="#">1</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="#">2</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="#">3</a>
+                </li>
+                <li class="page-item">
+                    <span class="page-link">...</span>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="#">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+            <div class="page-size-selector">
+                <select class="form-select form-select-sm" style="width: auto;">
+                    <option value="25">25 per page</option>
+                    <option value="50" selected>50 per page</option>
+                    <option value="100">100 per page</option>
+                </select>
+            </div>
+        </div>
     </nav>
 }
 
 @section Scripts {
     <script>
-        function markAsPaid(saleId) {
-            if (confirm('Are you sure you want to mark this sale as paid?')) {
-                // In a real implementation, this would make an API call
-                showAlert('Sale marked as paid successfully', 'success');
-                // Update the status in the table
-                const row = event.target.closest('tr');
-                const statusCell = row.querySelector('td:nth-child(6)');
-                statusCell.innerHTML = '<span class="badge badge-success">Paid</span>';
-            }
-        }
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
 
-        // Status filter functionality
+        // Enhanced Status filter functionality
         document.getElementById('statusFilter').addEventListener('change', function() {
-            const filterValue = this.value.toLowerCase();
-            const rows = document.querySelectorAll('#salesTable tbody tr');
+            filterSales();
+        });
+
+        // Date filter functionality
+        document.getElementById('dateFilter').addEventListener('change', function() {
+            const selectedValue = this.value;
+            if (selectedValue === 'custom') {
+                // Show date range picker (implement as needed)
+                console.log('Custom date range selected');
+            }
+            filterSales();
+        });
+
+        // Enhanced Search functionality
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+
+        searchInput.addEventListener('input', debounce(filterSales, 300));
+        searchBtn.addEventListener('click', filterSales);
+
+        function filterSales() {
+            const statusFilter = document.getElementById('statusFilter').value.toLowerCase();
+            const dateFilter = document.getElementById('dateFilter').value;
+            const searchTerm = searchInput.value.toLowerCase();
+            const rows = document.querySelectorAll('#salesTable tbody tr.sale-row');
+            
+            let visibleCount = 0;
             
             rows.forEach(row => {
                 const statusCell = row.querySelector('td:nth-child(6)');
-                const status = statusCell.textContent.toLowerCase();
+                const customerCell = row.querySelector('.customer-name');
+                const saleIdCell = row.querySelector('.sale-id-badge');
+                const cashierCell = row.querySelector('.cashier-name');
+                const dateCell = row.querySelector('.sale-date');
                 
-                if (filterValue === '' || status.includes(filterValue)) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
+                let shouldShow = true;
+                
+                // Status filter
+                if (statusFilter && statusCell) {
+                    const status = statusCell.textContent.toLowerCase();
+                    if (!status.includes(statusFilter)) {
+                        shouldShow = false;
+                    }
                 }
+                
+                // Search filter
+                if (searchTerm && shouldShow) {
+                    const searchableText = [
+                        saleIdCell?.textContent || '',
+                        customerCell?.textContent || '',
+                        cashierCell?.textContent || ''
+                    ].join(' ').toLowerCase();
+                    
+                    if (!searchableText.includes(searchTerm)) {
+                        shouldShow = false;
+                    }
+                }
+                
+                // Date filter (basic implementation)
+                if (dateFilter === 'today' && shouldShow) {
+                    const today = new Date().toDateString();
+                    const saleDate = new Date(dateCell?.textContent || '').toDateString();
+                    if (today !== saleDate) {
+                        shouldShow = false;
+                    }
+                }
+                
+                row.style.display = shouldShow ? '' : 'none';
+                if (shouldShow) visibleCount++;
+            });
+            
+            // Update results count
+            updateResultsCount(visibleCount);
+            
+            // Show no results message if needed
+            toggleNoResultsMessage(visibleCount === 0);
+        }
+
+        function updateResultsCount(count) {
+            const countElement = document.querySelector('.table-container small');
+            if (countElement) {
+                countElement.textContent = `Showing ${count} of @Model.TotalOrders total orders`;
+            }
+        }
+
+        function toggleNoResultsMessage(show) {
+            let noResultsRow = document.getElementById('noResultsRow');
+            
+            if (show && !noResultsRow) {
+                const tbody = document.querySelector('#salesTable tbody');
+                noResultsRow = document.createElement('tr');
+                noResultsRow.id = 'noResultsRow';
+                noResultsRow.innerHTML = `
+                    <td colspan="8" class="text-center py-4">
+                        <div class="empty-state">
+                            <i class="fas fa-search fa-2x text-muted mb-2"></i>
+                            <h6 class="text-muted">No sales match your criteria</h6>
+                            <p class="text-muted mb-0">Try adjusting your filters or search terms</p>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(noResultsRow);
+            } else if (!show && noResultsRow) {
+                noResultsRow.remove();
+            }
+        }
+
+        // View toggle functionality
+        function toggleView(viewType) {
+            const tableView = document.getElementById('tableView');
+            const cardView = document.getElementById('cardView');
+            const tableBtn = document.getElementById('tableViewBtn');
+            const cardBtn = document.getElementById('cardViewBtn');
+            
+            if (viewType === 'table') {
+                tableView.style.display = 'block';
+                cardView.style.display = 'none';
+                tableBtn.classList.add('btn-primary');
+                tableBtn.classList.remove('btn-outline-secondary');
+                cardBtn.classList.add('btn-outline-secondary');
+                cardBtn.classList.remove('btn-primary');
+            } else {
+                tableView.style.display = 'none';
+                cardView.style.display = 'block';
+                cardBtn.classList.add('btn-primary');
+                cardBtn.classList.remove('btn-outline-secondary');
+                tableBtn.classList.add('btn-outline-secondary');
+                tableBtn.classList.remove('btn-primary');
+            }
+            
+            // Save preference
+            localStorage.setItem('salesViewPreference', viewType);
+        }
+
+        // Restore view preference
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedView = localStorage.getItem('salesViewPreference') || 'table';
+            toggleView(savedView);
+        });
+
+        // Export functionality
+        function exportToExcel() {
+            // Basic implementation - can be enhanced with actual Excel export
+            const visibleRows = Array.from(document.querySelectorAll('#salesTable tbody tr.sale-row'))
+                .filter(row => row.style.display !== 'none');
+            
+            if (visibleRows.length === 0) {
+                alert('No data to export');
+                return;
+            }
+            
+            console.log(`Exporting ${visibleRows.length} sales records...`);
+            // Implement actual Excel export logic here
+            alert(`Export functionality will be implemented to export ${visibleRows.length} records`);
+        }
+
+        // Refresh page
+        function refreshPage() {
+            window.location.reload();
+        }
+
+        // Sort functionality
+        document.querySelectorAll('.sortable').forEach(header => {
+            header.addEventListener('click', function() {
+                const sortIcon = this.querySelector('.fa-sort');
+                const columnIndex = this.getAttribute('data-sort');
+                
+                // Toggle sort direction
+                let sortDirection = 'asc';
+                if (this.classList.contains('sort-asc')) {
+                    sortDirection = 'desc';
+                    this.classList.remove('sort-asc');
+                    this.classList.add('sort-desc');
+                } else {
+                    sortDirection = 'asc';
+                    this.classList.remove('sort-desc');
+                    this.classList.add('sort-asc');
+                }
+                
+                // Remove sort classes from other headers
+                document.querySelectorAll('.sortable').forEach(h => {
+                    if (h !== this) {
+                        h.classList.remove('sort-asc', 'sort-desc');
+                    }
+                });
+                
+                // Perform sort
+                sortTable(columnIndex, sortDirection);
             });
         });
+
+        function sortTable(columnIndex, direction) {
+            const tbody = document.querySelector('#salesTable tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr.sale-row'));
+            
+            rows.sort((a, b) => {
+                const aVal = a.cells[columnIndex].textContent.trim();
+                const bVal = b.cells[columnIndex].textContent.trim();
+                
+                // Handle numeric values
+                if (columnIndex === '4') { // Amount column
+                    const aNum = parseFloat(aVal.replace(/[$,]/g, ''));
+                    const bNum = parseFloat(bVal.replace(/[$,]/g, ''));
+                    return direction === 'asc' ? aNum - bNum : bNum - aNum;
+                }
+                
+                // Handle date values
+                if (columnIndex === '2') { // Date column
+                    const aDate = new Date(aVal);
+                    const bDate = new Date(bVal);
+                    return direction === 'asc' ? aDate - bDate : bDate - aDate;
+                }
+                
+                // Handle text values
+                const comparison = aVal.localeCompare(bVal);
+                return direction === 'asc' ? comparison : -comparison;
+            });
+            
+            // Reorder rows
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        // Debounce function for search
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Auto-refresh every 5 minutes
+        setInterval(function() {
+            if (document.visibilityState === 'visible') {
+                // Only refresh if page is visible and no filters are applied
+                const hasFilters = document.getElementById('statusFilter').value || 
+                                 document.getElementById('searchInput').value ||
+                                 document.getElementById('dateFilter').value;
+                
+                if (!hasFilters) {
+                    console.log('Auto-refreshing sales data...');
+                    window.location.reload();
+                }
+            }
+        }, 300000); // 5 minutes
     </script>
 }

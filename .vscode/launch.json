@@ -4,12 +4,12 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-        {
-            "name": "Launch Edge",
+         {
+            "type": "chrome",
             "request": "launch",
-            "type": "msedge",
+            "name": "Launch Chrome against localhost",
             "url": "http://localhost:5067",
-            "webRoot": "${workspaceFolder}"
+            "webRoot": "${workspaceFolder}/Web"
         },
         {
             "name": "Launch Pharmacy Management System",
@@ -29,13 +29,7 @@
                 "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
                 "uriFormat": "%s"
             }
-        },
-        {
-            "type": "chrome",
-            "request": "launch",
-            "name": "Launch Chrome against localhost",
-            "url": "http://localhost:5067",
-            "webRoot": "${workspaceFolder}/Web"
         }
+       
     ]
 }

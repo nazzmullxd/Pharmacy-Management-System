@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Business.DTO;
 using Business.Interfaces;
 using Database.Interfaces;
@@ -37,6 +33,7 @@ namespace Business.Services
         public async Task<IEnumerable<PurchaseOrderDTO>> GetAllPurchaseOrdersAsync()
         {
             var orders = await _purchaseRepository.GetAllAsync();
+            Console.WriteLine("Purchase count from repo: " + orders.Count());
             return orders.Select(MapToDTO);
         }
 
@@ -57,12 +54,14 @@ namespace Business.Services
             order.PurchaseID = Guid.NewGuid();
             order.OrderNumber = await GenerateOrderNumberAsync();
             order.OrderDate = DateTime.UtcNow;
+            // Keep PurchaseDate in sync with OrderDate for reporting consistency
+            order.PurchaseDate = order.OrderDate;
             order.Status = "Pending";
             order.PaymentStatus = "Pending";
             order.DueAmount = order.TotalAmount - order.PaidAmount;
 
             await _purchaseRepository.AddAsync(order);
-            await LogPurchaseOrderCreation(orderDto);
+         //   await LogPurchaseOrderCreation(orderDto);
 
             return MapToDTO(order);
         }
@@ -85,7 +84,7 @@ namespace Business.Services
             order.PaymentStatus = orderDto.PaymentStatus;
 
             await _purchaseRepository.UpdateAsync(order);
-            await LogPurchaseOrderUpdate(orderDto);
+         //   await LogPurchaseOrderUpdate(orderDto);
 
             return MapToDTO(order);
         }
@@ -99,7 +98,7 @@ namespace Business.Services
                     return false;
 
                 await _purchaseRepository.DeleteAsync(orderId);
-                await LogAudit("DELETE", "PurchaseOrder", orderId, "Purchase order deleted");
+              //  await LogAudit("DELETE", "PurchaseOrder", orderId, "Purchase order deleted");
                 return true;
             }
             catch
@@ -140,7 +139,7 @@ namespace Business.Services
 
                 order.Status = "Approved";
                 await _purchaseRepository.UpdateAsync(order);
-                await LogAudit("APPROVE", "PurchaseOrder", orderId, $"Purchase order approved by {approvedBy}");
+               // await LogAudit("APPROVE", "PurchaseOrder", orderId, $"Purchase order approved by {approvedBy}");
                 return true;
             }
             catch
@@ -181,7 +180,7 @@ namespace Business.Services
 
                 order.Status = "Delivered";
                 await _purchaseRepository.UpdateAsync(order);
-                await LogAudit("RECEIVE", "PurchaseOrder", orderId, $"Purchase order received with {receivedItems.Count} items");
+               // await LogAudit("RECEIVE", "PurchaseOrder", orderId, $"Purchase order received with {receivedItems.Count} items");
                 return true;
             }
             catch
@@ -203,7 +202,7 @@ namespace Business.Services
 
                 order.Status = "Cancelled";
                 await _purchaseRepository.UpdateAsync(order);
-                await LogAudit("CANCEL", "PurchaseOrder", orderId, $"Purchase order cancelled: {reason}");
+            //    await LogAudit("CANCEL", "PurchaseOrder", orderId, $"Purchase order cancelled: {reason}");
                 return true;
             }
             catch
@@ -242,8 +241,8 @@ namespace Business.Services
             if (orderDto.SupplierID == Guid.Empty)
                 throw new ArgumentException("Supplier ID is required", nameof(orderDto.SupplierID));
 
-            if (orderDto.CreatedBy == Guid.Empty)
-                throw new ArgumentException("Created by user ID is required", nameof(orderDto.CreatedBy));
+           // if (orderDto.CreatedBy == Guid.Empty)
+             //   throw new ArgumentException("Created by user ID is required", nameof(orderDto.CreatedBy));
 
             if (orderDto.TotalAmount <= 0)
                 throw new ArgumentException("Total amount must be greater than zero", nameof(orderDto.TotalAmount));
@@ -258,32 +257,32 @@ namespace Business.Services
                 throw new ArgumentException("Purchase order must have at least one item", nameof(orderDto.OrderItems));
         }
 
-        private async Task LogPurchaseOrderCreation(PurchaseOrderDTO orderDto)
-        {
-            var details = $"Purchase order created: {orderDto.OrderNumber}, Total: {orderDto.TotalAmount:C}";
-            await LogAudit("CREATE", "PurchaseOrder", orderDto.PurchaseOrderID, details);
-        }
+        /* 
+          private async Task LogPurchaseOrderCreation(PurchaseOrderDTO orderDto)
+          {
+              var details = $"Purchase order created: {orderDto.OrderNumber}, Total: {orderDto.TotalAmount:C}";
+              await LogAudit("CREATE", "PurchaseOrder", orderDto.PurchaseOrderID, details);
+          }
 
-        private async Task LogPurchaseOrderUpdate(PurchaseOrderDTO orderDto)
-        {
-            var details = $"Purchase order updated: {orderDto.OrderNumber}, Status: {orderDto.Status}";
-            await LogAudit("UPDATE", "PurchaseOrder", orderDto.PurchaseOrderID, details);
-        }
+          private async Task LogPurchaseOrderUpdate(PurchaseOrderDTO orderDto)
+          {
+              var details = $"Purchase order updated: {orderDto.OrderNumber}, Status: {orderDto.Status}";
+              await LogAudit("UPDATE", "PurchaseOrder", orderDto.PurchaseOrderID, details);
+          }
+   private async Task LogAudit(string action, string entityType, Guid entityId, string details)
+          {
+              var auditLog = new AuditLog
+              {
+                  AuditLogID = Guid.NewGuid(),
+                  UserID = Guid.Empty, // Replace with actual user ID
+                  Action = action,
+                  ActionDate = DateTime.UtcNow
+              };
 
-        private async Task LogAudit(string action, string entityType, Guid entityId, string details)
-        {
-            var auditLog = new AuditLog
-            {
-                AuditLogID = Guid.NewGuid(),
-                UserID = Guid.Empty, // Replace with actual user ID
-                Action = action,
-                ActionDate = DateTime.UtcNow
-            };
-
-            await _auditLogRepository.AddAsync(auditLog);
-            Console.WriteLine($"AUDIT: {action} on {entityType} {entityId}: {details}");
-        }
-
+              await _auditLogRepository.AddAsync(auditLog);
+              Console.WriteLine($"AUDIT: {action} on {entityType} {entityId}: {details}");
+          }
+        */
         private PurchaseOrderDTO MapToDTO(Purchase order)
         {
             return new PurchaseOrderDTO
@@ -291,12 +290,16 @@ namespace Business.Services
                 PurchaseOrderID = order.PurchaseID,
                 OrderNumber = order.OrderNumber,
                 SupplierID = order.SupplierID,
-                OrderDate = order.PurchaseDate,
+                SupplierName = order.Supplier != null ? order.Supplier.SupplierName : string.Empty,
+                CreatedByName = order.User != null ? $"{order.User.FirstName} {order.User.LastName}" : string.Empty, // Map if navigation property exists
+                // Prefer OrderDate if available; fall back to PurchaseDate
+                OrderDate = order.OrderDate != default ? order.OrderDate : order.PurchaseDate,
                 TotalAmount = order.TotalAmount,
                 PaidAmount = order.PaidAmount,
                 DueAmount = order.TotalAmount - order.PaidAmount,
                 Status = order.Status,
-                PaymentStatus = order.PaymentStatus
+                PaymentStatus = order.PaymentStatus,
+                Notes = order.Notes
             };
         }
 
@@ -310,7 +313,8 @@ namespace Business.Services
                 TotalAmount = orderDto.TotalAmount,
                 PaidAmount = orderDto.PaidAmount,
                 Status = orderDto.Status,
-                PaymentStatus = orderDto.PaymentStatus
+                PaymentStatus = orderDto.PaymentStatus,
+                Notes = orderDto.Notes
             };
         }
     }

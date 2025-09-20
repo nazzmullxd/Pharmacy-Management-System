@@ -10,11 +10,11 @@ namespace Database.Model
         [Key]
         public Guid AuditLogID { get; set; } = Guid.NewGuid();
 
-        // Foreign Key
+       /* // Foreign Key
         [Required]
         [ForeignKey(nameof(UserInfo))]
         public Guid UserID { get; set; } = Guid.Empty;
-
+       */
         // Navigation Property
         public UserInfo? User { get; set; }
 
@@ -24,7 +24,6 @@ namespace Database.Model
 
         public string Details { get; set; } = string.Empty;
 
-        public string IPAddress { get; set; } = string.Empty;
 
         // Metadata
         [Required]

@@ -7,6 +7,7 @@ namespace Business.DTO
         public Guid SaleItemID { get; set; }
         public Guid SaleID { get; set; }
         public Guid ProductID { get; set; }
+        public Guid? ProductBatchID { get; set; } = null;
         public string ProductName { get; set; } = string.Empty;
 
         public int Quantity { get; set; }

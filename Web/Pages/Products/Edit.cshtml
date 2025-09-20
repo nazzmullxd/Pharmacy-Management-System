@@ -4,43 +4,472 @@
     ViewData["Title"] = "Edit Product";
 }
 
+<!-- Enhanced Page Header -->
 <div class="page-header">
-    <h1><i class="fas fa-edit"></i> Edit Product</h1>
-    <a class="btn btn-secondary" href="/Products">Back to Products</a>
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-edit text-primary"></i> Edit Product</h1>
+            <p class="mb-0">Update product information and settings for <strong>@Model.Product?.ProductName</strong></p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/Products" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Products
+            </a>
+            <a href="/Products/Details/@Model.Product?.ProductID" class="btn btn-outline-info">
+                <i class="fas fa-eye"></i> View Details
+            </a>
+            <button type="button" class="btn btn-outline-danger" onclick="confirmDelete()">
+                <i class="fas fa-trash"></i> Delete Product
+            </button>
+        </div>
+    </div>
 </div>
-<form method="post" class="card p-3">
-    <div class="row g-3">
-        <div class="col-md-6">
-            <label class="form-label">Name</label>
-            <input asp-for="Product.ProductName" class="form-control" />
-        </div>
-        <div class="col-md-6">
-            <label class="form-label">Generic</label>
-            <input asp-for="Product.GenericName" class="form-control" />
-        </div>
-        <div class="col-md-6">
-            <label class="form-label">Manufacturer</label>
-            <input asp-for="Product.Manufacturer" class="form-control" />
-        </div>
-        <div class="col-md-6">
-            <label class="form-label">Category</label>
-            <input asp-for="Product.Category" class="form-control" />
-        </div>
-        <div class="col-md-4">
-            <label class="form-label">Unit Price</label>
-            <input asp-for="Product.UnitPrice" type="number" step="0.01" class="form-control" />
-        </div>
-        <div class="col-md-4">
-            <label class="form-label">Barcode</label>
-            <input asp-for="Product.Barcode" class="form-control" />
-        </div>
-        <div class="col-md-4 form-check mt-4">
-            <input asp-for="Product.IsActive" class="form-check-input" />
-            <label class="form-check-label" for="Product_IsActive">Active</label>
-        </div>
+
+<div class="row">
+    <!-- Main Edit Form -->
+    <div class="col-lg-8">
+        <form method="post" class="product-edit-form">
+            <!-- Basic Information Card -->
+            <div class="dashboard-card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle text-primary me-2"></i>Basic Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="Product.ProductName" class="form-label required">Product Name</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-pills text-muted"></i>
+                                </span>
+                                <input asp-for="Product.ProductName" class="form-control" required />
+                            </div>
+                            <span asp-validation-for="Product.ProductName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Product.GenericName" class="form-label required">Generic Name</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-flask text-muted"></i>
+                                </span>
+                                <input asp-for="Product.GenericName" class="form-control" required />
+                            </div>
+                            <span asp-validation-for="Product.GenericName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Product.Manufacturer" class="form-label required">Manufacturer</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-industry text-muted"></i>
+                                </span>
+                                <input asp-for="Product.Manufacturer" class="form-control" required />
+                            </div>
+                            <span asp-validation-for="Product.Manufacturer" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Product.Category" class="form-label required">Category</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-tags text-muted"></i>
+                                </span>
+                                <select asp-for="Product.Category" class="form-select" required>
+                                    <option value="">Select Category</option>
+                                    <option value="Pain Relief">Pain Relief</option>
+                                    <option value="Antibiotic">Antibiotic</option>
+                                    <option value="Supplements">Supplements</option>
+                                    <option value="Digestive">Digestive</option>
+                                    <option value="Diabetes">Diabetes</option>
+                                    <option value="Cardiovascular">Cardiovascular</option>
+                                    <option value="Respiratory">Respiratory</option>
+                                    <option value="Dermatology">Dermatology</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <span asp-validation-for="Product.Category" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Product.Barcode" class="form-label">Barcode</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-barcode text-muted"></i>
+                                </span>
+                                <input asp-for="Product.Barcode" class="form-control" />
+                                <button type="button" class="btn btn-outline-secondary" onclick="generateBarcode()">
+                                    <i class="fas fa-magic"></i> Generate
+                                </button>
+                            </div>
+                            <span asp-validation-for="Product.Barcode" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check mt-4 pt-2">
+                                <input asp-for="Product.IsActive" class="form-check-input" type="checkbox" />
+                                <label class="form-check-label" asp-for="Product.IsActive">
+                                    <i class="fas fa-toggle-on text-success me-1"></i>Active Product
+                                </label>
+                                <small class="form-text text-muted d-block">Inactive products won't appear in sales or stock management</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pricing Information Card -->
+            <div class="dashboard-card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-dollar-sign text-success me-2"></i>Pricing Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label asp-for="Product.UnitPrice" class="form-label required">Unit Price</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-dollar-sign text-muted"></i>
+                                </span>
+                                <input asp-for="Product.UnitPrice" 
+                                       class="form-control" 
+                                       type="number" 
+                                       step="0.01" 
+                                       min="0" 
+                                       required />
+                            </div>
+                            <span asp-validation-for="Product.UnitPrice" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Current Stock</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-cubes text-muted"></i>
+                                </span>
+                                <input type="text" 
+                                       class="form-control" 
+                                       value="@(Model.Product?.TotalStock ?? 0)" 
+                                       readonly />
+                            </div>
+                            <small class="form-text text-muted">Managed through Stock section</small>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Stock Status</label>
+                            <div class="input-group">
+                                @{
+                                    var stockStatus = "Unknown";
+                                    var statusClass = "secondary";
+                                    if (Model.Product != null)
+                                    {
+                                        if (Model.Product.TotalStock == 0)
+                                        {
+                                            stockStatus = "Out of Stock";
+                                            statusClass = "danger";
+                                        }
+                                        else if (Model.Product.IsLowStock)
+                                        {
+                                            stockStatus = "Low Stock";
+                                            statusClass = "warning";
+                                        }
+                                        else
+                                        {
+                                            stockStatus = "In Stock";
+                                            statusClass = "success";
+                                        }
+                                    }
+                                }
+                                <span class="badge bg-@statusClass w-100 p-2">
+                                    <i class="fas fa-info-circle me-1"></i>@stockStatus
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="dashboard-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="form-actions-info">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Changes will be saved immediately. Product ID: @Model.Product?.ProductID
+                            </small>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-outline-secondary" onclick="resetChanges()">
+                                <i class="fas fa-undo"></i> Reset Changes
+                            </button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
     </div>
-    <div class="mt-3">
-        <button type="submit" class="btn btn-success">Save</button>
+
+    <!-- Enhanced Sidebar -->
+    <div class="col-lg-4">
+        <!-- Quick Actions Card -->
+        <div class="dashboard-card mb-4 sticky-sidebar">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-bolt text-warning me-2"></i>Quick Actions
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="/Products/Details/@Model.Product?.ProductID" class="btn btn-outline-info btn-sm">
+                        <i class="fas fa-eye"></i> View Details
+                    </a>
+                    <a href="/Stock/Batches?productId=@Model.Product?.ProductID" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-boxes"></i> Manage Stock
+                    </a>
+                    <button type="button" class="btn btn-outline-warning btn-sm" onclick="duplicateProduct()">
+                        <i class="fas fa-copy"></i> Duplicate Product
+                    </button>
+                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="confirmDelete()">
+                        <i class="fas fa-trash"></i> Delete Product
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Status Card -->
+        <div class="dashboard-card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-chart-line text-info me-2"></i>Product Status
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="status-metrics">
+                    <div class="status-metric">
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Total Stock:</span>
+                            <strong>@(Model.Product?.TotalStock ?? 0) units</strong>
+                        </div>
+                    </div>
+                    <div class="status-metric">
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Status:</span>
+                            <span class="badge bg-@(Model.Product?.IsActive == true ? "success" : "secondary")">
+                                @(Model.Product?.IsActive == true ? "Active" : "Inactive")
+                            </span>
+                        </div>
+                    </div>
+                    <div class="status-metric">
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Created:</span>
+                            <small>Product Entry</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Validation Summary -->
+        <div asp-validation-summary="All" class="alert alert-danger" style="display: none;"></div>
     </div>
-    <div asp-validation-summary="All" class="text-danger mt-2"></div>
-</form>
+</div>
+
+@section Styles {
+    <style>
+        .required::after {
+            content: " *";
+            color: #e74c3c;
+        }
+
+        .sticky-sidebar {
+            position: sticky;
+            top: 20px;
+        }
+
+        .status-metric {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f8f9fa;
+        }
+
+        .status-metric:last-child {
+            border-bottom: none;
+        }
+
+        .input-group-text {
+            background: #f8f9fa;
+            border-color: #ced4da;
+        }
+
+        .dashboard-card .card-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .form-actions-info {
+            flex-grow: 1;
+        }
+
+        /* Mobile responsive styles */
+        @@media (max-width: 768px) {
+            .page-header .d-flex {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .page-header .btn {
+                width: 100%;
+            }
+
+            .sticky-sidebar {
+                position: relative;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        // Generate barcode function
+        function generateBarcode() {
+            const timestamp = Date.now().toString();
+            const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+            const barcode = timestamp.slice(-5) + randomNum;
+            
+            document.getElementById('Product_Barcode').value = barcode;
+            
+            // Show feedback
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> Generated';
+            btn.classList.add('btn-success');
+            btn.classList.remove('btn-outline-secondary');
+            
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-outline-secondary');
+            }, 2000);
+        }
+
+        // Reset changes function
+        function resetChanges() {
+            if (confirm('Are you sure you want to reset all changes? This will revert to the last saved version.')) {
+                window.location.reload();
+            }
+        }
+
+        // Duplicate product function
+        function duplicateProduct() {
+            if (confirm('Create a duplicate of this product? You will be redirected to the create page with pre-filled data.')) {
+                const form = document.querySelector('.product-edit-form');
+                const formData = new FormData(form);
+                
+                // Store form data in session storage
+                const productData = {};
+                for (let [key, value] of formData.entries()) {
+                    if (key !== 'Product.ProductID') { // Exclude ID for duplication
+                        productData[key] = value;
+                    }
+                }
+                
+                // Modify product name to indicate it's a copy
+                if (productData['Product.ProductName']) {
+                    productData['Product.ProductName'] += ' (Copy)';
+                }
+                
+                sessionStorage.setItem('duplicateProductData', JSON.stringify(productData));
+                window.location.href = '/Products/Create';
+            }
+        }
+
+        // Delete confirmation function
+        function confirmDelete() {
+            const productName = '@Model.Product?.ProductName';
+            if (confirm(`Are you sure you want to delete "${productName}"?\n\nThis action cannot be undone and will remove all associated stock records.`)) {
+                console.log('Delete functionality will be implemented');
+                alert('Delete functionality will be implemented');
+            }
+        }
+
+        // Form validation enhancement
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('.product-edit-form');
+            
+            // Enhanced form validation
+            form.addEventListener('submit', function(e) {
+                const requiredFields = form.querySelectorAll('[required]');
+                let isValid = true;
+                
+                requiredFields.forEach(field => {
+                    if (!field.value.trim()) {
+                        field.classList.add('is-invalid');
+                        isValid = false;
+                    } else {
+                        field.classList.remove('is-invalid');
+                    }
+                });
+                
+                if (!isValid) {
+                    e.preventDefault();
+                    alert('Please fill in all required fields');
+                    return false;
+                }
+            });
+
+            // Remove validation styling on input
+            form.querySelectorAll('input, select, textarea').forEach(field => {
+                field.addEventListener('input', function() {
+                    this.classList.remove('is-invalid');
+                });
+            });
+
+            // Show validation summary if there are errors
+            const validationSummary = document.querySelector('[asp-validation-summary]');
+            if (validationSummary && validationSummary.children.length > 0) {
+                validationSummary.style.display = 'block';
+            }
+        });
+
+        // Auto-save draft functionality
+        let autoSaveTimer;
+        function startAutoSave() {
+            const form = document.querySelector('.product-edit-form');
+            
+            form.addEventListener('input', function() {
+                clearTimeout(autoSaveTimer);
+                autoSaveTimer = setTimeout(() => {
+                    const formData = new FormData(form);
+                    const draftData = {};
+                    
+                    for (let [key, value] of formData.entries()) {
+                        draftData[key] = value;
+                    }
+                    
+                    localStorage.setItem('productEditDraft_@Model.Product?.ProductID', JSON.stringify(draftData));
+                    
+                    // Show subtle feedback
+                    const saveIndicator = document.getElementById('saveIndicator');
+                    if (!saveIndicator) {
+                        const indicator = document.createElement('small');
+                        indicator.id = 'saveIndicator';
+                        indicator.className = 'text-muted ms-2';
+                        indicator.innerHTML = '<i class="fas fa-save"></i> Draft saved';
+                        document.querySelector('.form-actions-info').appendChild(indicator);
+                        
+                        setTimeout(() => {
+                            if (indicator.parentNode) {
+                                indicator.remove();
+                            }
+                        }, 2000);
+                    }
+                }, 1000); // Auto-save after 1 second of inactivity
+            });
+        }
+
+        // Initialize auto-save
+        startAutoSave();
+    </script>
+}

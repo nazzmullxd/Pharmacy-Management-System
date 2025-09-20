@@ -4,38 +4,410 @@
     ViewData["Title"] = "Stock Batches";
 }
 
+<!-- Page Header -->
 <div class="page-header">
-    <h1><i class="fas fa-layer-group"></i> Stock Batches</h1>
-    <a class="btn btn-secondary" href="/Stock">Back to Stock</a>
-    <a class="btn btn-primary ms-2" href="/Stock/AddBatch"><i class="fas fa-plus"></i> Add Batch</a>
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-layer-group text-primary"></i> Stock Batches</h1>
+            <p class="mb-0">Monitor and manage product batches, expiry dates, and batch-specific inventory at Rabiul Pharmacy</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/Stock" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Stock
+            </a>
+            <a href="/Stock/AddBatch" class="btn btn-success">
+                <i class="fas fa-plus"></i> Add New Batch
+            </a>
+            <button class="btn btn-outline-primary" onclick="exportBatches()">
+                <i class="fas fa-download"></i> Export Report
+            </button>
+        </div>
+    </div>
 </div>
-<div class="table-responsive card p-3">
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Product</th>
-                <th>Batch</th>
-                <th>Expiry</th>
-                <th>Qty</th>
-            </tr>
-        </thead>
-        <tbody>
-            @if (Model.Batches != null && Model.Batches.Any())
-            {
-                foreach (var b in Model.Batches)
+
+<!-- Batch Statistics -->
+<div class="kpi-grid mb-4">
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Total Batches</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #3498db, #5dade2);">
+                <i class="fas fa-layer-group"></i>
+            </div>
+        </div>
+        <div class="kpi-value">@(Model.Batches?.Count() ?? 0)</div>
+        <div class="kpi-change positive">
+            <i class="fas fa-boxes"></i> Active batches
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Expiring Soon</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #f39c12, #f7dc6f);">
+                <i class="fas fa-clock"></i>
+            </div>
+        </div>
+        <div class="kpi-value">@(Model.Batches?.Count(b => (b.ExpiryDate - DateTime.Now).TotalDays <= 30) ?? 0)</div>
+        <div class="kpi-change negative">
+            <i class="fas fa-exclamation-triangle"></i> Next 30 days
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Low Stock Batches</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #e74c3c, #ec7063);">
+                <i class="fas fa-exclamation-circle"></i>
+            </div>
+        </div>
+        <div class="kpi-value">@(Model.Batches?.Count(b => b.QuantityInStock <= 10) ?? 0)</div>
+        <div class="kpi-change negative">
+            <i class="fas fa-arrow-down"></i> Need attention
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Total Units</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #27ae60, #58d68d);">
+                <i class="fas fa-warehouse"></i>
+            </div>
+        </div>
+        <div class="kpi-value">@(Model.Batches?.Sum(b => b.QuantityInStock) ?? 0)</div>
+        <div class="kpi-change positive">
+            <i class="fas fa-chart-line"></i> All batches
+        </div>
+    </div>
+</div>
+
+<!-- Filters and Search -->
+<div class="dashboard-card mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-3">
+            <h6 class="mb-2 text-muted">Batch Controls</h6>
+            <div class="d-flex gap-2 flex-wrap">
+                <button class="btn btn-sm btn-outline-warning" onclick="filterExpiring()">
+                    <i class="fas fa-clock"></i> Expiring
+                </button>
+                <button class="btn btn-sm btn-outline-danger" onclick="filterLowStock()">
+                    <i class="fas fa-exclamation-triangle"></i> Low Stock
+                </button>
+                <button class="btn btn-sm btn-success" onclick="refreshData()">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Product Filter</label>
+                    <select class="form-select form-select-sm" id="productFilter">
+                        <option value="">All Products</option>
+                        @if (Model.Batches != null)
+                        {
+                            @foreach (var product in Model.Batches.Select(b => b.ProductName).Distinct().OrderBy(p => p))
+                            {
+                                <option value="@product">@product</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Expiry Status</label>
+                    <select class="form-select form-select-sm" id="expiryFilter">
+                        <option value="">All Batches</option>
+                        <option value="expired">Expired</option>
+                        <option value="expiring">Expiring (30 days)</option>
+                        <option value="fresh">Fresh (>30 days)</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Stock Status</label>
+                    <select class="form-select form-select-sm" id="stockFilter">
+                        <option value="">All Stock Levels</option>
+                        <option value="empty">Out of Stock</option>
+                        <option value="low">Low Stock (≤10)</option>
+                        <option value="normal">Normal Stock</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Search Batches</label>
+                    <div class="input-group input-group-sm">
+                        <input type="text" class="form-control search-input" id="searchInput" placeholder="Batch number, product...">
+                        <button class="btn btn-outline-secondary" type="button" id="searchBtn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Batches Table -->
+<div class="table-container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0"><i class="fas fa-list text-primary"></i> Batch Inventory</h5>
+        <div class="d-flex align-items-center gap-3">
+            <small class="text-muted">
+                Showing @(Model.Batches?.Count() ?? 0) batches
+            </small>
+            <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-secondary active" onclick="toggleView('table')" id="tableViewBtn">
+                    <i class="fas fa-table"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="toggleView('card')" id="cardViewBtn">
+                    <i class="fas fa-th-large"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table View -->
+    <div id="tableView" class="table-responsive">
+        <table class="table table-hover" id="batchesTable">
+            <thead class="table-light">
+                <tr>
+                    <th class="sortable" data-sort="0">
+                        <i class="fas fa-pills text-muted me-1"></i>Product
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="sortable" data-sort="1">
+                        <i class="fas fa-barcode text-muted me-1"></i>Batch Number
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="text-center sortable" data-sort="2">
+                        <i class="fas fa-calendar-alt text-muted me-1"></i>Expiry Date
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="text-center sortable" data-sort="3">
+                        <i class="fas fa-warehouse text-muted me-1"></i>Quantity
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="text-center">
+                        <i class="fas fa-check-circle text-muted me-1"></i>Status
+                    </th>
+                    <th class="text-center">
+                        <i class="fas fa-clock text-muted me-1"></i>Days Left
+                    </th>
+                    <th class="text-center" style="width: 120px;">
+                        <i class="fas fa-cogs text-muted me-1"></i>Actions
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Batches != null && Model.Batches.Any())
+                {
+                    @foreach (var batch in Model.Batches)
+                    {
+                        var daysToExpiry = (batch.ExpiryDate - DateTime.Now).TotalDays;
+                        var isExpired = daysToExpiry < 0;
+                        var isExpiring = daysToExpiry <= 30 && daysToExpiry >= 0;
+                        var isLowStock = batch.QuantityInStock <= 10;
+                        var isOutOfStock = batch.QuantityInStock == 0;
+
+                        <tr class="batch-row @(isExpired ? "table-danger" : isExpiring ? "table-warning" : "")">
+                            <td>
+                                <div class="product-info">
+                                    <div class="product-name">@batch.ProductName</div>
+                                    <small class="text-muted">
+                                        <i class="fas fa-tag me-1"></i>Batch Management
+                                    </small>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="batch-info">
+                                    <span class="badge bg-secondary batch-number">@batch.BatchNumber</span>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <div class="expiry-info">
+                                    <div class="expiry-date">@batch.ExpiryDate.ToString("MMM dd, yyyy")</div>
+                                    <small class="text-muted">@batch.ExpiryDate.ToString("ddd")</small>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                @if (isOutOfStock)
+                                {
+                                    <span class="badge bg-danger stock-badge">
+                                        <i class="fas fa-times-circle me-1"></i>Out of Stock
+                                    </span>
+                                }
+                                else if (isLowStock)
+                                {
+                                    <span class="badge bg-warning stock-badge">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>@batch.QuantityInStock units
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success stock-badge">
+                                        <i class="fas fa-check-circle me-1"></i>@batch.QuantityInStock units
+                                    </span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                @if (isExpired)
+                                {
+                                    <span class="badge bg-danger status-badge">
+                                        <i class="fas fa-times-circle me-1"></i>Expired
+                                    </span>
+                                }
+                                else if (isExpiring)
+                                {
+                                    <span class="badge bg-warning status-badge">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>Expiring Soon
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success status-badge">
+                                        <i class="fas fa-check-circle me-1"></i>Good
+                                    </span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                @if (isExpired)
+                                {
+                                    <span class="badge bg-danger">
+                                        <i class="fas fa-exclamation-circle me-1"></i>@Math.Abs(Math.Round(daysToExpiry)) days ago
+                                    </span>
+                                }
+                                else if (isExpiring)
+                                {
+                                    <span class="badge bg-warning">
+                                        <i class="fas fa-clock me-1"></i>@Math.Round(daysToExpiry) days
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-calendar-check me-1"></i>@Math.Round(daysToExpiry) days
+                                    </span>
+                                }
+                            </td>
+                            <td>
+                                <div class="action-buttons d-flex gap-1 justify-content-center">
+                                    <a href="/Stock/Details/@batch.ProductBatchID" 
+                                       class="btn btn-sm btn-outline-info" 
+                                       title="View Details"
+                                       data-bs-toggle="tooltip">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="/Stock/Adjustments?batchId=@batch.ProductBatchID" 
+                                       class="btn btn-sm btn-outline-primary" 
+                                       title="Adjust Stock"
+                                       data-bs-toggle="tooltip">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                                                type="button" 
+                                                data-bs-toggle="dropdown" 
+                                                aria-expanded="false"
+                                                title="More Actions">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li><a class="dropdown-item" href="/Stock/Details/@batch.ProductBatchID">
+                                                <i class="fas fa-eye me-2"></i>View Details
+                                            </a></li>
+                                            @if (isExpiring || isExpired)
+                                            {
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><a class="dropdown-item text-warning" href="#">
+                                                    <i class="fas fa-exclamation-triangle me-2"></i>Mark for Review
+                                                </a></li>
+                                            }
+                                            @if (isExpired)
+                                            {
+                                                <li><a class="dropdown-item text-danger" href="#">
+                                                    <i class="fas fa-trash me-2"></i>Remove Expired
+                                                </a></li>
+                                            }
+                                        </ul>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
                 {
                     <tr>
-                        <td>@b.ProductName</td>
-                        <td>@b.BatchNumber</td>
-                        <td>@b.ExpiryDate.ToString("yyyy-MM-dd")</td>
-                        <td>@b.QuantityInStock</td>
+                        <td colspan="7" class="text-center py-5">
+                            <div class="empty-state">
+                                <i class="fas fa-layer-group fa-3x text-muted mb-3"></i>
+                                <h6 class="text-muted">No batches found</h6>
+                                <p class="text-muted mb-3">Start by adding your first batch to track inventory</p>
+                                <a href="/Stock/AddBatch" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i> Add First Batch
+                                </a>
+                            </div>
+                        </td>
                     </tr>
                 }
-            }
-            else
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Card View -->
+    <div id="cardView" style="display: none;" class="row">
+        @if (Model.Batches != null && Model.Batches.Any())
+        {
+            @foreach (var batch in Model.Batches)
             {
-                <tr><td colspan="4" class="text-center">No batches found.</td></tr>
+                var daysToExpiry = (batch.ExpiryDate - DateTime.Now).TotalDays;
+                var isExpired = daysToExpiry < 0;
+                var isExpiring = daysToExpiry <= 30 && daysToExpiry >= 0;
+
+                <div class="col-lg-4 col-xl-3 mb-3">
+                    <div class="card batch-card h-100 @(isExpired ? "border-danger" : isExpiring ? "border-warning" : "")">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">@batch.BatchNumber</h6>
+                            @if (isExpired)
+                            {
+                                <span class="badge bg-danger">Expired</span>
+                            }
+                            else if (isExpiring)
+                            {
+                                <span class="badge bg-warning">Expiring</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">Good</span>
+                            }
+                        </div>
+                        <div class="card-body">
+                            <h6 class="card-title">@batch.ProductName</h6>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted">Quantity:</span>
+                                <span class="badge bg-primary">@batch.QuantityInStock units</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted">Expires:</span>
+                                <small>@batch.ExpiryDate.ToString("MMM dd, yyyy")</small>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted">Days left:</span>
+                                <span class="badge @(isExpired ? "bg-danger" : isExpiring ? "bg-warning" : "bg-success")">
+                                    @(isExpired ? Math.Abs(Math.Round(daysToExpiry)) + " days ago" : Math.Round(daysToExpiry) + " days")
+                                </span>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <div class="d-flex gap-1">
+                                <a href="/Stock/Details/@batch.ProductBatchID" class="btn btn-sm btn-outline-info flex-fill">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                                <a href="/Stock/Adjustments?batchId=@batch.ProductBatchID" class="btn btn-sm btn-outline-primary flex-fill">
+                                    <i class="fas fa-edit"></i> Adjust
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             }
-        </tbody>
-    </table>
+        }
+    </div>
 </div>

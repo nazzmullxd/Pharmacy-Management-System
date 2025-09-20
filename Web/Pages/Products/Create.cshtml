@@ -4,178 +4,437 @@
     ViewData["Title"] = "Add New Product";
 }
 
-<!-- Page Header -->
+<!-- Enhanced Page Header -->
 <div class="page-header">
-    <h1><i class="fas fa-plus-circle"></i> Add New Product</h1>
-    <p>Add a new product to your pharmacy's inventory.</p>
-</div>
-
-<!-- Product Form -->
-<div class="row">
-    <div class="col-md-8">
-        <div class="dashboard-card">
-            <form method="post">
-                @Html.AntiForgeryToken()
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label asp-for="Product.ProductName" class="form-label">Product Name *</label>
-                            <input asp-for="Product.ProductName" class="form-control" placeholder="Enter product name" required>
-                            <span asp-validation-for="Product.ProductName" class="text-danger"></span>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label asp-for="Product.GenericName" class="form-label">Generic Name *</label>
-                            <input asp-for="Product.GenericName" class="form-control" placeholder="Enter generic name" required>
-                            <span asp-validation-for="Product.GenericName" class="text-danger"></span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label asp-for="Product.Manufacturer" class="form-label">Manufacturer *</label>
-                            <input asp-for="Product.Manufacturer" class="form-control" placeholder="Enter manufacturer" required>
-                            <span asp-validation-for="Product.Manufacturer" class="text-danger"></span>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label asp-for="Product.Category" class="form-label">Category *</label>
-                            <select asp-for="Product.Category" class="form-control" required>
-                                <option value="">Select Category</option>
-                                <option value="Pain Relief">Pain Relief</option>
-                                <option value="Antibiotic">Antibiotic</option>
-                                <option value="Supplements">Supplements</option>
-                                <option value="Digestive">Digestive</option>
-                                <option value="Diabetes">Diabetes</option>
-                                <option value="Cardiovascular">Cardiovascular</option>
-                                <option value="Respiratory">Respiratory</option>
-                                <option value="Dermatology">Dermatology</option>
-                                <option value="Other">Other</option>
-                            </select>
-                            <span asp-validation-for="Product.Category" class="text-danger"></span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label asp-for="Product.Barcode" class="form-label">Barcode</label>
-                            <input asp-for="Product.Barcode" class="form-control" placeholder="Enter barcode (optional)">
-                            <span asp-validation-for="Product.Barcode" class="text-danger"></span>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label asp-for="Product.LowStockThreshold" class="form-label">Low Stock Threshold</label>
-                            <input asp-for="Product.LowStockThreshold" class="form-control" type="number" min="0" value="10">
-                            <span asp-validation-for="Product.LowStockThreshold" class="text-danger"></span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="mb-3">
-                            <label asp-for="Product.UnitPrice" class="form-label">Unit Price *</label>
-                            <div class="input-group">
-                                <span class="input-group-text">$</span>
-                                <input asp-for="Product.UnitPrice" class="form-control" type="number" step="0.01" min="0" placeholder="0.00" required>
-                            </div>
-                            <span asp-validation-for="Product.UnitPrice" class="text-danger"></span>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="mb-3">
-                            <label asp-for="Product.DefaultRetailPrice" class="form-label">Retail Price *</label>
-                            <div class="input-group">
-                                <span class="input-group-text">$</span>
-                                <input asp-for="Product.DefaultRetailPrice" class="form-control" type="number" step="0.01" min="0" placeholder="0.00" required>
-                            </div>
-                            <span asp-validation-for="Product.DefaultRetailPrice" class="text-danger"></span>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="mb-3">
-                            <label asp-for="Product.DefaultWholeSalePrice" class="form-label">Wholesale Price *</label>
-                            <div class="input-group">
-                                <span class="input-group-text">$</span>
-                                <input asp-for="Product.DefaultWholeSalePrice" class="form-control" type="number" step="0.01" min="0" placeholder="0.00" required>
-                            </div>
-                            <span asp-validation-for="Product.DefaultWholeSalePrice" class="text-danger"></span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <label asp-for="Product.Description" class="form-label">Description</label>
-                    <textarea asp-for="Product.Description" class="form-control" rows="3" placeholder="Enter product description (optional)"></textarea>
-                    <span asp-validation-for="Product.Description" class="text-danger"></span>
-                </div>
-
-                <div class="mb-3">
-                    <div class="form-check">
-                        <input asp-for="Product.IsActive" class="form-check-input" type="checkbox" checked>
-                        <label asp-for="Product.IsActive" class="form-check-label">
-                            Active Product
-                        </label>
-                    </div>
-                </div>
-
-                <div class="d-flex justify-content-between">
-                    <a href="/Products" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left"></i> Back to Products
-                    </a>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Create Product
-                    </button>
-                </div>
-            </form>
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-plus-circle text-success"></i> Add New Product</h1>
+            <p class="mb-0">Create a new product entry for your pharmacy inventory system</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/Products" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Products
+            </a>
+            <a href="/Products/Categories" class="btn btn-outline-info">
+                <i class="fas fa-tags"></i> Manage Categories
+            </a>
+            <button type="button" class="btn btn-outline-success" onclick="saveDraft()">
+                <i class="fas fa-save"></i> Save Draft
+            </button>
         </div>
     </div>
+</div>
 
-    <div class="col-md-4">
-        <div class="dashboard-card">
-            <h5><i class="fas fa-info-circle"></i> Product Information</h5>
-            <div class="alert alert-info">
-                <strong>Required Fields:</strong>
-                <ul class="mb-0 mt-2">
-                    <li>Product Name</li>
-                    <li>Generic Name</li>
-                    <li>Manufacturer</li>
-                    <li>Category</li>
-                    <li>Unit Price</li>
-                    <li>Retail Price</li>
-                    <li>Wholesale Price</li>
-                </ul>
+<div class="row">
+    <!-- Main Form Section -->
+    <div class="col-lg-8">
+        <form method="post" class="product-form">
+            @Html.AntiForgeryToken()
+            
+            <!-- Basic Information Card -->
+            <div class="dashboard-card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle text-primary me-2"></i>Basic Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="Product.ProductName" class="form-label required">Product Name</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-pills text-muted"></i>
+                                </span>
+                                <input asp-for="Product.ProductName" 
+                                       class="form-control" 
+                                       placeholder="Enter product name"
+                                       required />
+                            </div>
+                            <span asp-validation-for="Product.ProductName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Product.GenericName" class="form-label required">Generic Name</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-flask text-muted"></i>
+                                </span>
+                                <input asp-for="Product.GenericName" 
+                                       class="form-control" 
+                                       placeholder="Enter generic name"
+                                       required />
+                            </div>
+                            <span asp-validation-for="Product.GenericName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Product.Manufacturer" class="form-label required">Manufacturer</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-industry text-muted"></i>
+                                </span>
+                                <input asp-for="Product.Manufacturer" 
+                                       class="form-control" 
+                                       placeholder="Enter manufacturer name"
+                                       required />
+                            </div>
+                            <span asp-validation-for="Product.Manufacturer" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Product.Category" class="form-label required">Category</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-tags text-muted"></i>
+                                </span>
+                                <select asp-for="Product.Category" class="form-select" required>
+                                    <option value="">Select Category</option>
+                                    <option value="Pain Relief">Pain Relief</option>
+                                    <option value="Antibiotic">Antibiotic</option>
+                                    <option value="Supplements">Supplements</option>
+                                    <option value="Digestive">Digestive</option>
+                                    <option value="Diabetes">Diabetes</option>
+                                    <option value="Cardiovascular">Cardiovascular</option>
+                                    <option value="Respiratory">Respiratory</option>
+                                    <option value="Dermatology">Dermatology</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <span asp-validation-for="Product.Category" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Product.Barcode" class="form-label">Barcode</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-barcode text-muted"></i>
+                                </span>
+                                <input asp-for="Product.Barcode" 
+                                       class="form-control" 
+                                       placeholder="Scan or enter barcode" />
+                                <button type="button" class="btn btn-outline-secondary" onclick="generateBarcode()">
+                                    <i class="fas fa-magic"></i> Generate
+                                </button>
+                            </div>
+                            <span asp-validation-for="Product.Barcode" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Product.LowStockThreshold" class="form-label">Low Stock Threshold</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-exclamation-triangle text-warning"></i>
+                                </span>
+                                <input asp-for="Product.LowStockThreshold" 
+                                       class="form-control" 
+                                       type="number" 
+                                       min="0"
+                                       value="10" />
+                            </div>
+                            <span asp-validation-for="Product.LowStockThreshold" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <h6 class="mt-3">Pricing Guidelines:</h6>
-            <ul class="small text-muted">
-                <li><strong>Unit Price:</strong> Cost price from supplier</li>
-                <li><strong>Retail Price:</strong> Selling price to customers</li>
-                <li><strong>Wholesale Price:</strong> Bulk selling price</li>
-            </ul>
+            <!-- Pricing Information Card -->
+            <div class="dashboard-card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-dollar-sign text-success me-2"></i>Pricing Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label asp-for="Product.UnitPrice" class="form-label required">Unit Price</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-dollar-sign text-muted"></i>
+                                </span>
+                                <input asp-for="Product.UnitPrice" 
+                                       class="form-control" 
+                                       type="number" 
+                                       step="0.01" 
+                                       min="0"
+                                       placeholder="0.00"
+                                       required />
+                            </div>
+                            <small class="form-text text-muted">Cost price from supplier</small>
+                            <span asp-validation-for="Product.UnitPrice" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Product.DefaultRetailPrice" class="form-label required">Retail Price</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-receipt text-muted"></i>
+                                </span>
+                                <input asp-for="Product.DefaultRetailPrice" 
+                                       class="form-control" 
+                                       type="number" 
+                                       step="0.01" 
+                                       min="0"
+                                       placeholder="0.00"
+                                       required />
+                            </div>
+                            <small class="form-text text-muted">Selling price to customers</small>
+                            <span asp-validation-for="Product.DefaultRetailPrice" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Product.DefaultWholeSalePrice" class="form-label required">Wholesale Price</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-warehouse text-muted"></i>
+                                </span>
+                                <input asp-for="Product.DefaultWholeSalePrice" 
+                                       class="form-control" 
+                                       type="number" 
+                                       step="0.01" 
+                                       min="0"
+                                       placeholder="0.00"
+                                       required />
+                            </div>
+                            <small class="form-text text-muted">Bulk selling price</small>
+                            <span asp-validation-for="Product.DefaultWholeSalePrice" class="text-danger small"></span>
+                        </div>
+                        <div class="col-12">
+                            <div class="pricing-preview p-3 bg-light rounded">
+                                <h6 class="mb-2"><i class="fas fa-calculator me-2 text-primary"></i>Pricing Preview</h6>
+                                <div class="row text-center">
+                                    <div class="col-md-4">
+                                        <div class="pricing-metric">
+                                            <small class="text-muted">Retail Margin</small>
+                                            <div class="h6 text-success" id="retailMargin">--</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="pricing-metric">
+                                            <small class="text-muted">Wholesale Margin</small>
+                                            <div class="h6 text-info" id="wholesaleMargin">--</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="pricing-metric">
+                                            <small class="text-muted">Profit Potential</small>
+                                            <div class="h6 text-warning" id="profitPotential">--</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-            <h6 class="mt-3">Stock Management:</h6>
-            <ul class="small text-muted">
-                <li>Low stock threshold triggers alerts</li>
-                <li>Default threshold is 10 units</li>
-                <li>You can adjust this per product</li>
-            </ul>
+            <!-- Additional Details Card -->
+            <div class="dashboard-card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clipboard-list text-info me-2"></i>Additional Details
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label asp-for="Product.Description" class="form-label">Description</label>
+                            <textarea asp-for="Product.Description" 
+                                      class="form-control" 
+                                      rows="3" 
+                                      placeholder="Enter product description, usage instructions, or additional notes..."></textarea>
+                            <span asp-validation-for="Product.Description" class="text-danger small"></span>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input asp-for="Product.IsActive" class="form-check-input" type="checkbox" checked />
+                                <label class="form-check-label" asp-for="Product.IsActive">
+                                    <i class="fas fa-toggle-on text-success me-1"></i>Active Product
+                                </label>
+                                <small class="form-text text-muted d-block">Active products are available for sale and inventory management</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="dashboard-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="form-actions-info">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                All required fields must be completed before saving
+                            </small>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-outline-secondary" onclick="resetForm()">
+                                <i class="fas fa-undo"></i> Reset Form
+                            </button>
+                            <button type="button" class="btn btn-outline-info" onclick="previewProduct()">
+                                <i class="fas fa-eye"></i> Preview
+                            </button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-plus-circle"></i> Create Product
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Enhanced Sidebar -->
+    <div class="col-lg-4">
+        <!-- Quick Actions Card -->
+        <div class="dashboard-card mb-4 sticky-sidebar">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-bolt text-warning me-2"></i>Quick Actions
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="/Products/Categories" class="btn btn-outline-info btn-sm">
+                        <i class="fas fa-tags"></i> Manage Categories
+                    </a>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="loadTemplate()">
+                        <i class="fas fa-file-import"></i> Load Template
+                    </button>
+                    <button type="button" class="btn btn-outline-warning btn-sm" onclick="saveDraft()">
+                        <i class="fas fa-save"></i> Save as Draft
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Required Fields Info -->
+        <div class="dashboard-card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-exclamation-circle text-danger me-2"></i>Required Fields
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <strong>Required Fields:</strong>
+                    <ul class="mb-0 mt-2">
+                        <li>Product Name</li>
+                        <li>Generic Name</li>
+                        <li>Manufacturer</li>
+                        <li>Category</li>
+                        <li>Unit Price</li>
+                        <li>Retail Price</li>
+                        <li>Wholesale Price</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Guidelines Card -->
+        <div class="dashboard-card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-lightbulb text-info me-2"></i>Pricing Guidelines
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="small text-muted">
+                    <li><strong>Unit Price:</strong> Cost price from supplier</li>
+                    <li><strong>Retail Price:</strong> Selling price to customers</li>
+                    <li><strong>Wholesale Price:</strong> Bulk selling price</li>
+                </ul>
+
+                <h6 class="mt-3 text-muted">Stock Management:</h6>
+                <ul class="small text-muted">
+                    <li>Low stock threshold triggers alerts</li>
+                    <li>Default threshold is 10 units</li>
+                    <li>You can adjust this per product</li>
+                </ul>
+            </div>
         </div>
     </div>
 </div>
+
+@section Styles {
+    <style>
+        .required::after {
+            content: " *";
+            color: #e74c3c;
+        }
+
+        .sticky-sidebar {
+            position: sticky;
+            top: 20px;
+        }
+
+        .pricing-preview {
+            border-left: 4px solid #007bff;
+        }
+
+        .pricing-metric {
+            padding: 0.5rem;
+            background: white;
+            border-radius: 4px;
+            margin: 0.25rem 0;
+        }
+
+        .input-group-text {
+            background: #f8f9fa;
+            border-color: #ced4da;
+        }
+
+        .dashboard-card .card-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .form-actions-info {
+            flex-grow: 1;
+        }
+
+        /* Mobile responsive styles */
+        @@media (max-width: 768px) {
+            .page-header .d-flex {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .page-header .btn {
+                width: 100%;
+            }
+
+            .sticky-sidebar {
+                position: relative;
+            }
+        }
+    </style>
+}
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 
     <script>
-        // Auto-calculate retail price based on unit price
+        // Auto-calculate pricing and margins
+        function updatePricingPreview() {
+            const unitPrice = parseFloat(document.getElementById('Product_UnitPrice').value) || 0;
+            const retailPrice = parseFloat(document.getElementById('Product_DefaultRetailPrice').value) || 0;
+            const wholesalePrice = parseFloat(document.getElementById('Product_DefaultWholeSalePrice').value) || 0;
+
+            // Calculate margins
+            const retailMargin = unitPrice > 0 ? ((retailPrice - unitPrice) / unitPrice * 100) : 0;
+            const wholesaleMargin = unitPrice > 0 ? ((wholesalePrice - unitPrice) / unitPrice * 100) : 0;
+            const profitPotential = retailPrice - unitPrice;
+
+            // Update display
+            document.getElementById('retailMargin').textContent = retailMargin.toFixed(1) + '%';
+            document.getElementById('wholesaleMargin').textContent = wholesaleMargin.toFixed(1) + '%';
+            document.getElementById('profitPotential').textContent = '$' + profitPotential.toFixed(2);
+
+            // Color coding
+            const retailElement = document.getElementById('retailMargin');
+            const wholesaleElement = document.getElementById('wholesaleMargin');
+            
+            retailElement.className = retailMargin >= 30 ? 'h6 text-success' : retailMargin >= 15 ? 'h6 text-warning' : 'h6 text-danger';
+            wholesaleElement.className = wholesaleMargin >= 20 ? 'h6 text-success' : wholesaleMargin >= 10 ? 'h6 text-warning' : 'h6 text-danger';
+        }
+
+        // Auto-calculate retail and wholesale prices based on unit price
         document.getElementById('Product_UnitPrice').addEventListener('input', function() {
             const unitPrice = parseFloat(this.value) || 0;
             const retailPrice = unitPrice * 1.5; // 50% markup
@@ -183,9 +442,15 @@
 
             document.getElementById('Product_DefaultRetailPrice').value = retailPrice.toFixed(2);
             document.getElementById('Product_DefaultWholeSalePrice').value = wholesalePrice.toFixed(2);
+            
+            updatePricingPreview();
         });
 
-        // Barcode validation
+        // Update pricing preview when prices change
+        document.getElementById('Product_DefaultRetailPrice').addEventListener('input', updatePricingPreview);
+        document.getElementById('Product_DefaultWholeSalePrice').addEventListener('input', updatePricingPreview);
+
+        // Barcode validation and generation
         document.getElementById('Product_Barcode').addEventListener('input', function() {
             const barcode = this.value;
             if (barcode && barcode.length < 8) {
@@ -194,5 +459,180 @@
                 this.setCustomValidity('');
             }
         });
+
+        function generateBarcode() {
+            const timestamp = Date.now().toString();
+            const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+            const barcode = timestamp.slice(-5) + randomNum;
+            
+            document.getElementById('Product_Barcode').value = barcode;
+            
+            // Show feedback
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> Generated';
+            btn.classList.add('btn-success');
+            btn.classList.remove('btn-outline-secondary');
+            
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-outline-secondary');
+            }, 2000);
+        }
+
+        // Form validation and enhancement
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('.product-form');
+            
+            // Enhanced form validation
+            form.addEventListener('submit', function(e) {
+                const requiredFields = form.querySelectorAll('[required]');
+                let isValid = true;
+                
+                requiredFields.forEach(field => {
+                    if (!field.value.trim()) {
+                        field.classList.add('is-invalid');
+                        isValid = false;
+                    } else {
+                        field.classList.remove('is-invalid');
+                    }
+                });
+                
+                if (!isValid) {
+                    e.preventDefault();
+                    alert('Please fill in all required fields');
+                    return false;
+                }
+            });
+
+            // Remove validation styling on input
+            form.querySelectorAll('input, select, textarea').forEach(field => {
+                field.addEventListener('input', function() {
+                    this.classList.remove('is-invalid');
+                });
+            });
+        });
+
+        // Reset form function
+        function resetForm() {
+            if (confirm('Are you sure you want to reset the form? All entered data will be lost.')) {
+                document.querySelector('.product-form').reset();
+                updatePricingPreview();
+                
+                // Clear validation styling
+                document.querySelectorAll('.is-invalid').forEach(el => {
+                    el.classList.remove('is-invalid');
+                });
+            }
+        }
+
+        // Preview product function
+        function previewProduct() {
+            const form = document.querySelector('.product-form');
+            const formData = new FormData(form);
+            const productData = {};
+            
+            for (let [key, value] of formData.entries()) {
+                productData[key] = value;
+            }
+            
+            // Create preview modal or window
+            const previewWindow = window.open('', 'preview', 'width=600,height=800,scrollbars=yes');
+            previewWindow.document.write(`
+                <html>
+                    <head>
+                        <title>Product Preview</title>
+                        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+                        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+                    </head>
+                    <body class="bg-light">
+                        <div class="container py-4">
+                            <h4><i class="fas fa-eye me-2"></i>Product Preview</h4>
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5>${productData['Product.ProductName'] || 'N/A'}</h5>
+                                    <p class="text-muted">${productData['Product.GenericName'] || 'N/A'}</p>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <strong>Category:</strong> ${productData['Product.Category'] || 'N/A'}<br>
+                                            <strong>Manufacturer:</strong> ${productData['Product.Manufacturer'] || 'N/A'}<br>
+                                            <strong>Barcode:</strong> ${productData['Product.Barcode'] || 'N/A'}
+                                        </div>
+                                        <div class="col-md-6">
+                                            <strong>Unit Price:</strong> $${productData['Product.UnitPrice'] || '0.00'}<br>
+                                            <strong>Retail Price:</strong> $${productData['Product.DefaultRetailPrice'] || '0.00'}<br>
+                                            <strong>Wholesale Price:</strong> $${productData['Product.DefaultWholeSalePrice'] || '0.00'}
+                                        </div>
+                                    </div>
+                                    ${productData['Product.Description'] ? `<div class="mt-3"><strong>Description:</strong><br>${productData['Product.Description']}</div>` : ''}
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <button class="btn btn-secondary" onclick="window.close()">Close Preview</button>
+                            </div>
+                        </div>
+                    </body>
+                </html>
+            `);
+        }
+
+        // Save draft function
+        function saveDraft() {
+            const form = document.querySelector('.product-form');
+            const formData = new FormData(form);
+            const draftData = {};
+            
+            for (let [key, value] of formData.entries()) {
+                draftData[key] = value;
+            }
+            
+            localStorage.setItem('productDraft', JSON.stringify(draftData));
+            
+            // Show feedback
+            const toast = document.createElement('div');
+            toast.className = 'alert alert-success alert-dismissible fade show position-fixed';
+            toast.style.cssText = 'top: 20px; right: 20px; z-index: 1050; min-width: 250px;';
+            toast.innerHTML = `
+                <i class="fas fa-save me-2"></i>Draft saved successfully
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.remove();
+                }
+            }, 3000);
+        }
+
+        // Load template function
+        function loadTemplate() {
+            const savedDraft = localStorage.getItem('productDraft');
+            if (savedDraft) {
+                if (confirm('Load saved draft? This will overwrite current form data.')) {
+                    const draftData = JSON.parse(savedDraft);
+                    const form = document.querySelector('.product-form');
+                    
+                    Object.keys(draftData).forEach(key => {
+                        const field = form.querySelector(`[name="${key}"]`);
+                        if (field) {
+                            if (field.type === 'checkbox') {
+                                field.checked = draftData[key] === 'true';
+                            } else {
+                                field.value = draftData[key];
+                            }
+                        }
+                    });
+                    
+                    updatePricingPreview();
+                }
+            } else {
+                alert('No saved draft found');
+            }
+        }
+
+        // Initialize pricing preview on page load
+        updatePricingPreview();
     </script>
 }

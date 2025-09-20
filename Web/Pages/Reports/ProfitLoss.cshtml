@@ -1,68 +1,497 @@
 @page
 @model Web.Pages.Reports.ProfitLossModel
 @{
-    ViewData["Title"] = "Profit & Loss";
+    ViewData["Title"] = "Profit & Loss Statement";
 }
 
+<!-- Page Header -->
 <div class="page-header">
-    <h1><i class="fas fa-calculator"></i> Profit & Loss</h1>
-    <a class="btn btn-secondary" href="/">Back to Dashboard</a>
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-calculator text-primary"></i> Profit & Loss Statement</h1>
+            <p class="mb-0">Financial performance analysis and profitability insights for Rabiul Pharmacy</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+            <button class="btn btn-outline-primary" onclick="exportToExcel()">
+                <i class="fas fa-download"></i> Export P&L
+            </button>
+            <button class="btn btn-primary" onclick="window.print()">
+                <i class="fas fa-print"></i> Print Statement
+            </button>
+        </div>
+    </div>
 </div>
 
+<!-- Quick Actions & Filters -->
+<div class="dashboard-card mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-4">
+            <h6 class="mb-2 text-muted">Financial Controls</h6>
+            <div class="d-flex gap-2 flex-wrap">
+                <button class="btn btn-sm btn-success" onclick="refreshData()">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+                <button class="btn btn-sm btn-outline-info" onclick="compareYearOverYear()">
+                    <i class="fas fa-chart-line"></i> YoY Comparison
+                </button>
+                <button class="btn btn-sm btn-outline-warning" onclick="generateForecast()">
+                    <i class="fas fa-crystal-ball"></i> Forecast
+                </button>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Financial Period</label>
+                    <select class="form-select form-select-sm" id="periodFilter">
+                        <option value="current">Current Period</option>
+                        <option value="month" selected>This Month</option>
+                        <option value="quarter">This Quarter</option>
+                        <option value="year">This Year</option>
+                        <option value="custom">Custom Period</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Report Type</label>
+                    <select class="form-select form-select-sm" id="reportTypeFilter">
+                        <option value="summary" selected>Summary</option>
+                        <option value="detailed">Detailed</option>
+                        <option value="comparative">Comparative</option>
+                        <option value="trend">Trend Analysis</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Export Format</label>
+                    <div class="input-group input-group-sm">
+                        <select class="form-select" id="exportFormat">
+                            <option value="pdf">PDF Report</option>
+                            <option value="excel">Excel Sheet</option>
+                            <option value="csv">CSV Data</option>
+                        </select>
+                        <button class="btn btn-outline-secondary" type="button" onclick="generateExport()">
+                            <i class="fas fa-download"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Enhanced Financial KPI Cards -->
+<div class="kpi-grid mb-4">
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Total Revenue</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #27ae60, #58d68d);">
+                <i class="fas fa-chart-line"></i>
+            </div>
+        </div>
+        <div class="kpi-value">@Model.TotalRevenue.ToString("C")</div>
+        <div class="kpi-change positive">
+            <i class="fas fa-arrow-up"></i> Revenue stream
+        </div>
+        <div class="kpi-progress mt-2">
+            <div class="progress" style="height: 4px;">
+                <div class="progress-bar bg-success" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Total Expenses</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #e74c3c, #ec7063);">
+                <i class="fas fa-chart-line-down"></i>
+            </div>
+        </div>
+        <div class="kpi-value">@Model.TotalCost.ToString("C")</div>
+        <div class="kpi-change">
+            <i class="fas fa-minus-circle"></i> Cost of goods sold
+        </div>
+        <div class="kpi-progress mt-2">
+            <div class="progress" style="height: 4px;">
+                @{
+                    var costPercentage = Model.TotalRevenue > 0 ? (Model.TotalCost / Model.TotalRevenue * 100) : 0;
+                }
+                <div class="progress-bar bg-danger" role="progressbar" style="width: @costPercentage%" aria-valuenow="@costPercentage" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Gross Profit</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, @(Model.GrossProfit >= 0 ? "#f39c12, #f7dc6f" : "#e74c3c, #ec7063"));">
+                <i class="fas @(Model.GrossProfit >= 0 ? "fa-trophy" : "fa-exclamation-triangle")"></i>
+            </div>
+        </div>
+        <div class="kpi-value">@Model.GrossProfit.ToString("C")</div>
+        <div class="kpi-change @(Model.GrossProfit >= 0 ? "positive" : "negative")">
+            <i class="fas @(Model.GrossProfit >= 0 ? "fa-thumbs-up" : "fa-thumbs-down")"></i> 
+            @(Model.GrossProfit >= 0 ? "Profitable operation" : "Loss situation")
+        </div>
+        <div class="kpi-progress mt-2">
+            <div class="progress" style="height: 4px;">
+                <div class="progress-bar @(Model.GrossProfit >= 0 ? "bg-warning" : "bg-danger")" 
+                     role="progressbar" style="width: @Math.Abs(Model.ProfitMargin)%" 
+                     aria-valuenow="@Math.Abs(Model.ProfitMargin)" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Profit Margin</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, @(Model.ProfitMargin >= 20 ? "#27ae60, #58d68d" : Model.ProfitMargin >= 10 ? "#f39c12, #f7dc6f" : "#e74c3c, #ec7063"));">
+                <i class="fas fa-percentage"></i>
+            </div>
+        </div>
+        <div class="kpi-value">@Model.ProfitMargin.ToString("F1")%</div>
+        <div class="kpi-change @(Model.ProfitMargin >= 20 ? "positive" : Model.ProfitMargin >= 10 ? "" : "negative")">
+            <i class="fas @(Model.ProfitMargin >= 20 ? "fa-star" : Model.ProfitMargin >= 10 ? "fa-check" : "fa-exclamation")"></i> 
+            @(Model.ProfitMargin >= 20 ? "Excellent margin" : Model.ProfitMargin >= 10 ? "Good margin" : "Needs improvement")
+        </div>
+        <div class="kpi-progress mt-2">
+            <div class="progress" style="height: 4px;">
+                <div class="progress-bar @(Model.ProfitMargin >= 20 ? "bg-success" : Model.ProfitMargin >= 10 ? "bg-warning" : "bg-danger")" 
+                     role="progressbar" style="width: @Math.Max(Math.Min(Math.Abs(Model.ProfitMargin), 100), 5)%" 
+                     aria-valuenow="@Math.Abs(Model.ProfitMargin)" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Financial Summary and Analysis -->
 <div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h5 class="card-title">Total Revenue</h5>
-                <h3 class="text-success">@Model.TotalRevenue.ToString("C")</h3>
+    <div class="col-md-8">
+        <div class="dashboard-card">
+            <h5 class="mb-3"><i class="fas fa-chart-area text-primary"></i> Financial Performance Trends</h5>
+            <div class="chart-container" style="height: 300px; display: flex; align-items: center; justify-content: center; background: linear-gradient(45deg, #f8f9fa, #e9ecef); border-radius: 8px;">
+                <div class="text-center">
+                    <i class="fas fa-chart-area fa-3x text-muted mb-3"></i>
+                    <h6 class="text-muted">Profit & Loss Trend Chart</h6>
+                    <p class="text-muted mb-0">Revenue vs Expenses visualization will be implemented here</p>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h5 class="card-title">Total Cost</h5>
-                <h3 class="text-danger">@Model.TotalCost.ToString("C")</h3>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h5 class="card-title">Gross Profit</h5>
-                <h3 class="@(Model.GrossProfit >= 0 ? "text-success" : "text-danger")">@Model.GrossProfit.ToString("C")</h3>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h5 class="card-title">Profit Margin</h5>
-                <h3 class="@(Model.ProfitMargin >= 0 ? "text-success" : "text-danger")">@Model.ProfitMargin.ToString("F1")%</h3>
+    <div class="col-md-4">
+        <div class="dashboard-card h-100">
+            <h5 class="mb-3"><i class="fas fa-pie-chart text-primary"></i> Cost Breakdown</h5>
+            <div class="cost-breakdown">
+                <div class="breakdown-item mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="small">Cost of Goods Sold</span>
+                        <span class="small fw-bold">@((Model.TotalRevenue > 0 ? (Model.TotalCost / Model.TotalRevenue * 100) : 0).ToString("F0"))%</span>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar bg-danger" style="width: @((Model.TotalRevenue > 0 ? (Model.TotalCost / Model.TotalRevenue * 100) : 0).ToString("F0"))%"></div>
+                    </div>
+                </div>
+                <div class="breakdown-item mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="small">Operating Expenses</span>
+                        <span class="small fw-bold">15%</span>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar bg-warning" style="width: 15%"></div>
+                    </div>
+                </div>
+                <div class="breakdown-item mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="small">Administrative Costs</span>
+                        <span class="small fw-bold">10%</span>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar bg-info" style="width: 10%"></div>
+                    </div>
+                </div>
+                <div class="breakdown-item">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="small">Net Profit</span>
+                        <span class="small fw-bold text-success">@Math.Max(Model.ProfitMargin, 0).ToString("F0")%</span>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar bg-success" style="width: @Math.Max(Model.ProfitMargin, 0).ToString("F0")%"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="card">
-    <div class="card-header">
-        <h5>Financial Summary</h5>
+<!-- Detailed Financial Statement -->
+<div class="table-container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0"><i class="fas fa-file-invoice-dollar text-primary"></i> Detailed Financial Statement</h5>
+        <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-primary" onclick="toggleStatementView('summary')" id="summaryViewBtn">
+                Summary
+            </button>
+            <button class="btn btn-sm btn-outline-primary active" onclick="toggleStatementView('detailed')" id="detailedViewBtn">
+                Detailed
+            </button>
+        </div>
     </div>
-    <div class="card-body">
-        <div class="row">
-            <div class="col-md-6">
-                <h6>Revenue Breakdown</h6>
-                <p>Total Sales: <strong>@Model.TotalRevenue.ToString("C")</strong></p>
-                <p>Number of Transactions: <strong>@Model.Sales.Count()</strong></p>
-                <p>Average Sale: <strong>@(Model.Sales.Any() ? (Model.TotalRevenue / Model.Sales.Count()).ToString("C") : "$0.00")</strong></p>
+
+    <!-- Summary View -->
+    <div id="summaryView" style="display: none;" class="table-responsive">
+        <table class="table table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Category</th>
+                    <th class="text-end">Amount</th>
+                    <th class="text-end">Percentage</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="table-success">
+                    <td><strong><i class="fas fa-plus-circle me-2"></i>Total Revenue</strong></td>
+                    <td class="text-end"><strong>@Model.TotalRevenue.ToString("C")</strong></td>
+                    <td class="text-end"><strong>100.0%</strong></td>
+                </tr>
+                <tr class="table-danger">
+                    <td><strong><i class="fas fa-minus-circle me-2"></i>Total Expenses</strong></td>
+                    <td class="text-end"><strong>@Model.TotalCost.ToString("C")</strong></td>
+                    <td class="text-end"><strong>@((Model.TotalRevenue > 0 ? (Model.TotalCost / Model.TotalRevenue * 100) : 0).ToString("F1"))%</strong></td>
+                </tr>
+                <tr class="table-@(Model.GrossProfit >= 0 ? "success" : "danger")">
+                    <td><strong><i class="fas fa-equals me-2"></i>Net Profit/Loss</strong></td>
+                    <td class="text-end"><strong>@Model.GrossProfit.ToString("C")</strong></td>
+                    <td class="text-end"><strong>@Model.ProfitMargin.ToString("F1")%</strong></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Detailed View -->
+    <div id="detailedView" class="table-responsive">
+        <table class="table table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Financial Item</th>
+                    <th class="text-end">Amount</th>
+                    <th class="text-end">% of Revenue</th>
+                    <th class="text-center">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Revenue Section -->
+                <tr class="table-success">
+                    <td><strong><i class="fas fa-chart-line me-2"></i>REVENUE</strong></td>
+                    <td class="text-end"><strong>@Model.TotalRevenue.ToString("C")</strong></td>
+                    <td class="text-end"><strong>100.0%</strong></td>
+                    <td class="text-center">
+                        <span class="badge bg-success">
+                            <i class="fas fa-arrow-up"></i> Income
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="ps-4">Sales Revenue</td>
+                    <td class="text-end">@Model.TotalRevenue.ToString("C")</td>
+                    <td class="text-end">100.0%</td>
+                    <td class="text-center">
+                        <small class="text-muted">Primary source</small>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="ps-4">Number of Transactions</td>
+                    <td class="text-end">@Model.Sales.Count() transactions</td>
+                    <td class="text-end">-</td>
+                    <td class="text-center">
+                        <small class="text-muted">Volume</small>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="ps-4">Average Transaction Value</td>
+                    <td class="text-end">@(Model.Sales.Any() ? (Model.TotalRevenue / Model.Sales.Count()).ToString("C") : "$0.00")</td>
+                    <td class="text-end">-</td>
+                    <td class="text-center">
+                        <small class="text-muted">Per sale</small>
+                    </td>
+                </tr>
+
+                <!-- Expenses Section -->
+                <tr class="table-danger">
+                    <td><strong><i class="fas fa-chart-line-down me-2"></i>EXPENSES</strong></td>
+                    <td class="text-end"><strong>@Model.TotalCost.ToString("C")</strong></td>
+                    <td class="text-end"><strong>@((Model.TotalRevenue > 0 ? (Model.TotalCost / Model.TotalRevenue * 100) : 0).ToString("F1"))%</strong></td>
+                    <td class="text-center">
+                        <span class="badge bg-danger">
+                            <i class="fas fa-arrow-down"></i> Expense
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="ps-4">Cost of Goods Sold (COGS)</td>
+                    <td class="text-end">@Model.TotalCost.ToString("C")</td>
+                    <td class="text-end">@((Model.TotalRevenue > 0 ? (Model.TotalCost / Model.TotalRevenue * 100) : 0).ToString("F1"))%</td>
+                    <td class="text-center">
+                        <small class="text-muted">Direct costs</small>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="ps-4">Operating Expenses (Est.)</td>
+                    <td class="text-end">@((Model.TotalRevenue * 0.15m).ToString("C"))</td>
+                    <td class="text-end">15.0%</td>
+                    <td class="text-center">
+                        <small class="text-muted">Estimated</small>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="ps-4">Administrative Costs (Est.)</td>
+                    <td class="text-end">@((Model.TotalRevenue * 0.10m).ToString("C"))</td>
+                    <td class="text-end">10.0%</td>
+                    <td class="text-center">
+                        <small class="text-muted">Estimated</small>
+                    </td>
+                </tr>
+
+                <!-- Profit Section -->
+                <tr class="table-@(Model.GrossProfit >= 0 ? "success" : "danger")">
+                    <td><strong><i class="fas fa-@(Model.GrossProfit >= 0 ? "trophy" : "exclamation-triangle") me-2"></i>NET PROFIT/LOSS</strong></td>
+                    <td class="text-end"><strong>@Model.GrossProfit.ToString("C")</strong></td>
+                    <td class="text-end"><strong>@Model.ProfitMargin.ToString("F1")%</strong></td>
+                    <td class="text-center">
+                        <span class="badge bg-@(Model.GrossProfit >= 0 ? "success" : "danger")">
+                            <i class="fas fa-@(Model.GrossProfit >= 0 ? "check" : "times")"></i> 
+                            @(Model.GrossProfit >= 0 ? "Profit" : "Loss")
+                        </span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Financial Insights and Recommendations -->
+<div class="dashboard-card mt-4">
+    <h5 class="mb-3"><i class="fas fa-lightbulb text-warning"></i> Financial Insights & Recommendations</h5>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="insight-card bg-light p-3 rounded">
+                <h6 class="@(Model.ProfitMargin >= 20 ? "text-success" : Model.ProfitMargin >= 10 ? "text-warning" : "text-danger")">
+                    <i class="fas fa-@(Model.ProfitMargin >= 20 ? "thumbs-up" : Model.ProfitMargin >= 10 ? "balance-scale" : "exclamation-triangle") me-2"></i>
+                    Profitability Analysis
+                </h6>
+                <p class="mb-2 small">
+                    @if (Model.ProfitMargin >= 20)
+                    {
+                        <text>Excellent profit margin! Your pharmacy is performing very well financially.</text>
+                    }
+                    else if (Model.ProfitMargin >= 10)
+                    {
+                        <text>Good profit margin. Consider optimizing costs to improve profitability.</text>
+                    }
+                    else if (Model.ProfitMargin >= 0)
+                    {
+                        <text>Low profit margin. Review pricing strategy and cost management.</text>
+                    }
+                    else
+                    {
+                        <text>Operating at a loss. Immediate cost reduction and revenue improvement needed.</text>
+                    }
+                </p>
+                <button class="btn btn-sm btn-outline-@(Model.ProfitMargin >= 10 ? "success" : "warning")">View Strategies</button>
             </div>
-            <div class="col-md-6">
-                <h6>Cost Analysis</h6>
-                <p>Estimated Cost of Goods: <strong>@Model.TotalCost.ToString("C")</strong></p>
-                <p>Gross Profit: <strong class="@(Model.GrossProfit >= 0 ? "text-success" : "text-danger")">@Model.GrossProfit.ToString("C")</strong></p>
-                <p>Profit Margin: <strong class="@(Model.ProfitMargin >= 0 ? "text-success" : "text-danger")">@Model.ProfitMargin.ToString("F1")%</strong></p>
+        </div>
+        <div class="col-md-4">
+            <div class="insight-card bg-light p-3 rounded">
+                <h6 class="text-info"><i class="fas fa-chart-line me-2"></i>Revenue Optimization</h6>
+                <p class="mb-2 small">
+                    Average transaction value is @(Model.Sales.Any() ? (Model.TotalRevenue / Model.Sales.Count()).ToString("C") : "$0.00"). 
+                    Focus on cross-selling and upselling to increase this metric.
+                </p>
+                <button class="btn btn-sm btn-outline-info">Revenue Tips</button>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="insight-card bg-light p-3 rounded">
+                <h6 class="text-purple"><i class="fas fa-cut me-2"></i>Cost Management</h6>
+                <p class="mb-2 small">
+                    COGS represents @((Model.TotalRevenue > 0 ? (Model.TotalCost / Model.TotalRevenue * 100) : 0).ToString("F0"))% of revenue. 
+                    Negotiate better supplier terms and optimize inventory management.
+                </p>
+                <button class="btn btn-sm btn-outline-secondary">Cost Reduction</button>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        // Initialize page functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeFilters();
+            showDefaultView();
+        });
+
+        function initializeFilters() {
+            document.getElementById('periodFilter').addEventListener('change', updateFinancialData);
+            document.getElementById('reportTypeFilter').addEventListener('change', updateReportType);
+        }
+
+        function showDefaultView() {
+            toggleStatementView('detailed');
+        }
+
+        function toggleStatementView(viewType) {
+            const summaryView = document.getElementById('summaryView');
+            const detailedView = document.getElementById('detailedView');
+            const summaryBtn = document.getElementById('summaryViewBtn');
+            const detailedBtn = document.getElementById('detailedViewBtn');
+            
+            if (viewType === 'summary') {
+                summaryView.style.display = 'block';
+                detailedView.style.display = 'none';
+                summaryBtn.classList.add('active');
+                detailedBtn.classList.remove('active');
+            } else {
+                summaryView.style.display = 'none';
+                detailedView.style.display = 'block';
+                detailedBtn.classList.add('active');
+                summaryBtn.classList.remove('active');
+            }
+        }
+
+        function updateFinancialData() {
+            const period = document.getElementById('periodFilter').value;
+            console.log(`Updating financial data for period: ${period}`);
+            // Implementation would update the financial data based on selected period
+        }
+
+        function updateReportType() {
+            const reportType = document.getElementById('reportTypeFilter').value;
+            console.log(`Switching to report type: ${reportType}`);
+            // Implementation would change the report format
+        }
+
+        // Action functions
+        function refreshData() {
+            window.location.reload();
+        }
+
+        function compareYearOverYear() {
+            alert('Year-over-year comparison feature coming soon');
+        }
+
+        function generateForecast() {
+            alert('Financial forecast generation coming soon');
+        }
+
+        function exportToExcel() {
+            alert('Excel export functionality coming soon');
+        }
+
+        function generateExport() {
+            const format = document.getElementById('exportFormat').value;
+            alert(`Generating ${format.toUpperCase()} export...`);
+        }
+    </script>
+}
 

@@ -4,48 +4,275 @@
     ViewData["Title"] = "Stock Adjustments";
 }
 
+<!-- Page Header -->
 <div class="page-header">
-    <h1><i class="fas fa-edit"></i> Stock Adjustments</h1>
-    <a class="btn btn-secondary" href="/Stock">Back to Stock</a>
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-edit text-primary"></i> Stock Adjustments</h1>
+            <p class="mb-0">Make precise inventory adjustments to maintain accurate stock levels at Rabiul Pharmacy</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/Stock" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Stock
+            </a>
+            <a href="/Stock/Batches" class="btn btn-outline-info">
+                <i class="fas fa-layer-group"></i> View Batches
+            </a>
+            <button class="btn btn-outline-primary" onclick="exportAdjustments()">
+                <i class="fas fa-download"></i> Export History
+            </button>
+        </div>
+    </div>
 </div>
 
 @if (!string.IsNullOrEmpty(Model.Message))
 {
-    <div class="alert alert-info">@Model.Message</div>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>@Model.Message
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
 }
 
-<form method="post" class="card p-3">
-    <div class="row g-3">
-        <div class="col-md-4">
-            <label class="form-label">Batch</label>
-            <select asp-for="SelectedBatchId" class="form-select">
-                <option value="">-- Select Batch --</option>
-                @foreach (var b in Model.Batches)
-                {
-                    <option value="@b.ProductBatchID">@b.BatchNumber - @b.ProductName (@b.QuantityInStock)</option>
-                }
+<!-- Adjustment Form Section -->
+<div class="dashboard-card">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">
+            <i class="fas fa-plus-circle me-2"></i>Record Stock Adjustment
+        </h5>
+    </div>
+    <div class="card-body">
+        <form method="post" id="adjustmentForm">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="SelectedBatchId" class="form-label">
+                        <i class="fas fa-layer-group text-primary me-1"></i>Select Batch *
+                    </label>
+                    <select asp-for="SelectedBatchId" class="form-select search-select" required>
+                        <option value="">-- Select Batch to Adjust --</option>
+                        @foreach (var b in Model.Batches)
+                        {
+                            <option value="@b.ProductBatchID" 
+                                    data-product="@b.ProductName" 
+                                    data-stock="@b.QuantityInStock"
+                                    data-batch="@b.BatchNumber">
+                                @b.BatchNumber - @b.ProductName (@b.QuantityInStock units remaining)
+                            </option>
+                        }
+                    </select>
+                    <div class="form-text">
+                        <i class="fas fa-info-circle text-info me-1"></i>
+                        Choose the specific batch you want to adjust
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <label for="AdjustmentType" class="form-label">
+                        <i class="fas fa-exchange-alt text-primary me-1"></i>Adjustment Type *
+                    </label>
+                    <select asp-for="AdjustmentType" class="form-select" required>
+                        <option value="">Select type...</option>
+                        <option value="Increase">
+                            <i class="fas fa-plus"></i> Increase Stock
+                        </option>
+                        <option value="Decrease">
+                            <i class="fas fa-minus"></i> Decrease Stock
+                        </option>
+                        <option value="Correction" selected>
+                            <i class="fas fa-edit"></i> Stock Correction
+                        </option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label for="AdjustedQuantity" class="form-label">
+                        <i class="fas fa-sort-numeric-up text-primary me-1"></i>Quantity *
+                    </label>
+                    <input asp-for="AdjustedQuantity" type="number" class="form-control" 
+                           min="1" step="1" required placeholder="Enter quantity">
+                    <div class="form-text" id="stockPreview"></div>
+                </div>
+
+                <div class="col-md-12">
+                    <label for="Reason" class="form-label">
+                        <i class="fas fa-clipboard-list text-primary me-1"></i>Reason for Adjustment *
+                    </label>
+                    <input asp-for="Reason" class="form-control" required 
+                           placeholder="e.g., Expired products, Damaged items, Counting error, Found inventory">
+                    <div class="form-text">
+                        Provide a clear reason for this stock adjustment for audit purposes
+                    </div>
+                </div>
+            </div>
+
+            <!-- Batch Info Display -->
+            <div id="batchInfo" style="display: none;" class="mt-3">
+                <div class="alert alert-info">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <strong>Selected Batch:</strong>
+                            <span id="selectedBatch" class="badge bg-primary ms-1"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Product:</strong>
+                            <span id="selectedProduct" class="badge bg-info ms-1"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Current Stock:</strong>
+                            <span id="currentBatchStock" class="badge bg-success ms-1">0 units</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="fas fa-save me-2"></i>Apply Adjustment
+                </button>
+                <button type="reset" class="btn btn-outline-secondary">
+                    <i class="fas fa-undo me-2"></i>Reset Form
+                </button>
+                <a href="/Stock/Batches" class="btn btn-outline-info">
+                    <i class="fas fa-layer-group me-2"></i>View All Batches
+                </a>
+            </div>
+
+            <div asp-validation-summary="All" class="text-danger mt-3"></div>
+        </form>
+    </div>
+</div>
+
+<!-- Recent Adjustments History -->
+<div class="table-container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">
+            <i class="fas fa-history text-primary me-2"></i>Recent Adjustments
+        </h5>
+        <div class="d-flex gap-2">
+            <select class="form-select form-select-sm" id="filterPeriod" style="width: auto;">
+                <option value="today">Today</option>
+                <option value="week" selected>This Week</option>
+                <option value="month">This Month</option>
             </select>
-        </div>
-        <div class="col-md-3">
-            <label class="form-label">Adjustment Type</label>
-            <select asp-for="AdjustmentType" class="form-select">
-                <option>Increase</option>
-                <option>Decrease</option>
-                <option selected>Correction</option>
-            </select>
-        </div>
-        <div class="col-md-3">
-            <label class="form-label">Quantity</label>
-            <input asp-for="AdjustedQuantity" type="number" class="form-control" />
-        </div>
-        <div class="col-md-12">
-            <label class="form-label">Reason</label>
-            <input asp-for="Reason" class="form-control" />
+            <button class="btn btn-sm btn-outline-primary" onclick="refreshAdjustments()">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
         </div>
     </div>
-    <div class="mt-3">
-        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Apply Adjustment</button>
+
+    <div class="table-responsive">
+        <table class="table table-hover" id="adjustmentsTable">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 15%;">
+                        <i class="fas fa-calendar text-muted me-1"></i>Date & Time
+                    </th>
+                    <th style="width: 20%;">
+                        <i class="fas fa-layer-group text-muted me-1"></i>Batch
+                    </th>
+                    <th style="width: 25%;">
+                        <i class="fas fa-pills text-muted me-1"></i>Product
+                    </th>
+                    <th class="text-center" style="width: 15%;">
+                        <i class="fas fa-exchange-alt text-muted me-1"></i>Type
+                    </th>
+                    <th class="text-center" style="width: 10%;">
+                        <i class="fas fa-sort-numeric-up text-muted me-1"></i>Quantity
+                    </th>
+                    <th style="width: 15%;">
+                        <i class="fas fa-clipboard-list text-muted me-1"></i>Reason
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @* This would be populated with recent adjustments from the model *@
+                <tr>
+                    <td colspan="6" class="text-center py-5">
+                        <div class="empty-state">
+                            <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                            <h6 class="text-muted">No recent adjustments</h6>
+                            <p class="text-muted mb-0">Adjustment history will appear here once you start recording changes</p>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </div>
-    <div asp-validation-summary="All" class="text-danger mt-2"></div>
-</form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const batchSelect = document.getElementById('SelectedBatchId');
+    const batchInfo = document.getElementById('batchInfo');
+    const quantityInput = document.getElementById('AdjustedQuantity');
+    const typeSelect = document.getElementById('AdjustmentType');
+    const stockPreview = document.getElementById('stockPreview');
+
+    batchSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        if (selectedOption.value) {
+            document.getElementById('selectedBatch').textContent = selectedOption.dataset.batch;
+            document.getElementById('selectedProduct').textContent = selectedOption.dataset.product;
+            document.getElementById('currentBatchStock').textContent = selectedOption.dataset.stock + ' units';
+            batchInfo.style.display = 'block';
+            updateStockPreview();
+        } else {
+            batchInfo.style.display = 'none';
+        }
+    });
+
+    function updateStockPreview() {
+        const selectedOption = batchSelect.options[batchSelect.selectedIndex];
+        const currentStock = parseInt(selectedOption.dataset.stock) || 0;
+        const quantity = parseInt(quantityInput.value) || 0;
+        const type = typeSelect.value;
+
+        if (quantity > 0 && type) {
+            let newStock;
+            let changeText;
+            
+            switch(type) {
+                case 'Increase':
+                    newStock = currentStock + quantity;
+                    changeText = `After increase: ${newStock} units (+${quantity})`;
+                    stockPreview.className = 'form-text text-success';
+                    break;
+                case 'Decrease':
+                    newStock = Math.max(0, currentStock - quantity);
+                    changeText = `After decrease: ${newStock} units (-${quantity})`;
+                    stockPreview.className = 'form-text text-warning';
+                    if (newStock === 0) {
+                        changeText += ' ⚠️ Stock will be depleted';
+                        stockPreview.className = 'form-text text-danger';
+                    }
+                    break;
+                case 'Correction':
+                    newStock = quantity;
+                    const diff = quantity - currentStock;
+                    changeText = `Set to: ${newStock} units (${diff >= 0 ? '+' : ''}${diff})`;
+                    stockPreview.className = 'form-text text-info';
+                    break;
+                default:
+                    changeText = '';
+            }
+            
+            stockPreview.textContent = changeText;
+        } else {
+            stockPreview.textContent = '';
+        }
+    }
+
+    quantityInput.addEventListener('input', updateStockPreview);
+    typeSelect.addEventListener('change', updateStockPreview);
+});
+
+function exportAdjustments() {
+    // Implementation for exporting adjustments
+    console.log('Exporting adjustments...');
+}
+
+function refreshAdjustments() {
+    // Implementation for refreshing the adjustments table
+    location.reload();
+}
+</script>
 

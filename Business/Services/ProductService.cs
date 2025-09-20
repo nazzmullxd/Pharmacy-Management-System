@@ -26,10 +26,16 @@ namespace Business.Services
             var products = await _productRepository.GetAllAsync();
             var dtos = products.Select(MapToDTO).ToList();
 
-            // Populate TotalStock from batches for each product so UI reflects current batch quantities
+            // Get all product IDs
+            var productIds = dtos.Select(d => d.ProductID).ToList();
+            
+            // Get stock information for all products in one call to avoid N+1 query issue
+            var stockInfo = await _stockService.GetTotalStockForMultipleProductsAsync(productIds);
+
+            // Populate TotalStock from the batch information
             foreach (var dto in dtos)
             {
-                dto.TotalStock = await _stockService.GetTotalStockForProductAsync(dto.ProductID);
+                dto.TotalStock = stockInfo.TryGetValue(dto.ProductID, out var stock) ? stock : 0;
             }
 
             return dtos;

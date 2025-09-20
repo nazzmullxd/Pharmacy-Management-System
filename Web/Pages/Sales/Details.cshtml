@@ -4,30 +4,321 @@
     ViewData["Title"] = "Sale Details";
 }
 
+<!-- Page Header -->
 <div class="page-header">
-    <h1><i class="fas fa-eye"></i> Sale Details</h1>
-    <a class="btn btn-secondary" href="/Sales">Back to Sales</a>
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-receipt text-primary"></i> Sale Details</h1>
+            <p class="mb-0">Complete information about this sale transaction</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/Sales" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Sales
+            </a>
+            @if (Model.Sale != null)
+            {
+                <a href="/Sales/Invoice/@Model.Sale.SaleID" class="btn btn-primary">
+                    <i class="fas fa-print"></i> Print Invoice
+                </a>
+            }
+        </div>
+    </div>
 </div>
 
 @if (Model.Sale != null)
 {
-    <div class="dashboard-card">
-        <div class="row">
+    <!-- Sale Summary Card -->
+    <div class="dashboard-card mb-4">
+        <div class="row g-4">
             <div class="col-md-6">
-                <p><strong>Invoice:</strong> #@Model.Sale.SaleID.ToString().Substring(0,8)</p>
-                <p><strong>Date:</strong> @Model.Sale.SaleDate.ToString("yyyy-MM-dd HH:mm")</p>
-                <p><strong>Customer:</strong> @Model.Sale.CustomerName</p>
+                <h6 class="text-muted mb-3">
+                    <i class="fas fa-info-circle"></i> Sale Information
+                </h6>
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <div class="info-item">
+                            <label class="text-muted small">Sale ID</label>
+                            <div class="sale-id-badge d-inline-block">
+                                #@Model.Sale.SaleID.ToString().Substring(0, 8).ToUpper()
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="info-item">
+                            <label class="text-muted small">Sale Date</label>
+                            <div class="fw-semibold">@Model.Sale.SaleDate.ToString("MMM dd, yyyy")</div>
+                            <small class="text-muted">@Model.Sale.SaleDate.ToString("hh:mm tt")</small>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="info-item">
+                            <label class="text-muted small">Customer</label>
+                            <div class="fw-semibold">@Model.Sale.CustomerName</div>
+                            <small class="text-muted">
+                                @if (!string.IsNullOrEmpty(Model.Sale.CustomerName) && Model.Sale.CustomerName != "Walk-in Customer")
+                                {
+                                    <text><i class="fas fa-user me-1"></i>Registered Customer</text>
+                                }
+                                else
+                                {
+                                    <text><i class="fas fa-walking me-1"></i>Walk-in Customer</text>
+                                }
+                            </small>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="info-item">
+                            <label class="text-muted small">Cashier</label>
+                            <div class="fw-semibold">@Model.Sale.UserName</div>
+                            <small class="text-muted"><i class="fas fa-user-shield me-1"></i>Staff Member</small>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="col-md-6">
-                <p><strong>Total:</strong> $@Model.Sale.TotalAmount.ToString("F2")</p>
-                <p><strong>Status:</strong> @Model.Sale.PaymentStatus</p>
+                <h6 class="text-muted mb-3">
+                    <i class="fas fa-dollar-sign"></i> Payment Information
+                </h6>
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <div class="info-item">
+                            <label class="text-muted small">Payment Status</label>
+                            <div>
+                                @if (Model.Sale.PaymentStatus == "Paid")
+                                {
+                                    <span class="badge bg-success status-badge fs-6">
+                                        <i class="fas fa-check-circle me-1"></i>Paid
+                                    </span>
+                                }
+                                else if (Model.Sale.PaymentStatus == "Pending")
+                                {
+                                    <span class="badge bg-warning status-badge fs-6">
+                                        <i class="fas fa-clock me-1"></i>Pending
+                                    </span>
+                                }
+                                else if (Model.Sale.PaymentStatus == "Partial")
+                                {
+                                    <span class="badge bg-info status-badge fs-6">
+                                        <i class="fas fa-hourglass-half me-1"></i>Partial
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger status-badge fs-6">
+                                        <i class="fas fa-times-circle me-1"></i>@Model.Sale.PaymentStatus
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="info-item">
+                            <label class="text-muted small">Total Amount</label>
+                            <div class="h4 text-success mb-0">$@Model.Sale.TotalAmount.ToString("F2")</div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="info-item">
+                            <label class="text-muted small">Items Count</label>
+                            <div class="fw-semibold">
+                                <span class="badge bg-info">
+                                    @Model.Sale.SaleItems.Count items
+                                </span>
+                                <span class="text-muted ms-2">
+                                    Total Quantity: @Model.Sale.SaleItems.Sum(x => x.Quantity)
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sale Items -->
+    @if (Model.Sale.SaleItems != null && Model.Sale.SaleItems.Any())
+    {
+        <div class="dashboard-card mb-4">
+            <h6 class="mb-3">
+                <i class="fas fa-shopping-cart text-primary"></i> Items Purchased
+            </h6>
+            
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 35%;">
+                                <i class="fas fa-pills text-muted me-1"></i>Product
+                            </th>
+                            <th class="text-center" style="width: 12%;">
+                                <i class="fas fa-sort-numeric-up text-muted me-1"></i>Qty
+                            </th>
+                            <th class="text-end" style="width: 15%;">
+                                <i class="fas fa-dollar-sign text-muted me-1"></i>Unit Price
+                            </th>
+                            <th class="text-end" style="width: 15%;">
+                                <i class="fas fa-percentage text-muted me-1"></i>Discount
+                            </th>
+                            <th class="text-end" style="width: 15%;">
+                                <i class="fas fa-calculator text-muted me-1"></i>Total
+                            </th>
+                            <th style="width: 8%;">
+                                <i class="fas fa-tag text-muted me-1"></i>Batch
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Sale.SaleItems)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="product-info">
+                                        <div class="fw-semibold">@item.ProductName</div>
+                                        <small class="text-muted">
+                                            <i class="fas fa-barcode me-1"></i>ID: @item.ProductID.ToString().Substring(0, 8)
+                                        </small>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-light text-dark px-3 py-2">@item.Quantity</span>
+                                </td>
+                                <td class="text-end">
+                                    <span class="fw-semibold">$@item.UnitPrice.ToString("F2")</span>
+                                </td>
+                                <td class="text-end">
+                                    @if (item.Discount > 0)
+                                    {
+                                        <span class="text-danger">-$@item.Discount.ToString("F2")</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">$0.00</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <strong class="text-success">$@item.TotalPrice.ToString("F2")</strong>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">@item.BatchNumber</span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr class="fw-bold">
+                            <td colspan="4" class="text-end">
+                                <div class="d-flex justify-content-end align-items-center gap-3">
+                                    <span>Subtotal:</span>
+                                    <span>Total Discount:</span>
+                                    <span class="fs-5">Grand Total:</span>
+                                </div>
+                            </td>
+                            <td class="text-end">
+                                <div class="d-flex flex-column align-items-end gap-1">
+                                    <span>$@Model.Sale.SaleItems.Sum(x => x.Quantity * x.UnitPrice).ToString("F2")</span>
+                                    <span class="text-danger">-$@Model.Sale.SaleItems.Sum(x => x.Discount).ToString("F2")</span>
+                                    <span class="fs-5 text-success">$@Model.Sale.TotalAmount.ToString("F2")</span>
+                                </div>
+                            </td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    }
+
+    <!-- Additional Information -->
+    @if (!string.IsNullOrWhiteSpace(Model.Sale.Note))
+    {
+        <div class="dashboard-card mb-4">
+            <h6 class="mb-3">
+                <i class="fas fa-sticky-note text-primary"></i> Sale Notes
+            </h6>
+            <div class="alert alert-info mb-0">
+                <i class="fas fa-info-circle me-2"></i>@Model.Sale.Note
+            </div>
+        </div>
+    }
+
+    <!-- Actions -->
+    <div class="dashboard-card">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex gap-2">
+                <a href="/Sales" class="btn btn-outline-secondary">
+                    <i class="fas fa-list"></i> All Sales
+                </a>
+                <a href="/Sales/Create" class="btn btn-outline-success">
+                    <i class="fas fa-plus"></i> New Sale
+                </a>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="/Sales/Invoice/@Model.Sale.SaleID" class="btn btn-primary">
+                    <i class="fas fa-print"></i> Print Invoice
+                </a>
+                @if (Model.Sale.PaymentStatus == "Pending")
+                {
+                    <form method="post" asp-page="/Sales/Index" asp-page-handler="MarkAsPaid" class="d-inline">
+                        <input type="hidden" name="saleId" value="@Model.Sale.SaleID" />
+                        <button type="submit" class="btn btn-success" onclick="return confirm('Mark this sale as paid?')">
+                            <i class="fas fa-check-circle"></i> Mark as Paid
+                        </button>
+                    </form>
+                }
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-ellipsis-v"></i> More
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <a class="dropdown-item" href="/Sales/Invoice/@Model.Sale.SaleID">
+                                <i class="fas fa-download me-2"></i>Download PDF
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="mailto:?subject=Sale Invoice&body=Sale ID: @Model.Sale.SaleID">
+                                <i class="fas fa-envelope me-2"></i>Email Invoice
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item text-muted" href="#">
+                                <i class="fas fa-edit me-2"></i>Edit Sale (Coming Soon)
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
 }
 else
 {
-    <div class="alert alert-warning">Sale not found.</div>
+    <div class="dashboard-card text-center py-5">
+        <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+        <h5 class="text-muted">Sale Not Found</h5>
+        <p class="text-muted mb-4">The requested sale could not be found or may have been deleted.</p>
+        <div class="d-flex justify-content-center gap-2">
+            <a href="/Sales" class="btn btn-primary">
+                <i class="fas fa-list"></i> View All Sales
+            </a>
+            <a href="/Sales/Create" class="btn btn-outline-success">
+                <i class="fas fa-plus"></i> Create New Sale
+            </a>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        // Auto-print functionality
+        if (sessionStorage.getItem('printAfterLoad') === 'true') {
+            sessionStorage.removeItem('printAfterLoad');
+            setTimeout(function() {
+                window.print();
+            }, 1000);
+        }
+    </script>
 }
 
 

@@ -45,5 +45,8 @@
         </tbody>
     </table>
     <small class="text-muted">Data will appear here once orders are created.</small>
-    </div>
-
+    @if (Model.Orders != null)
+    {
+        <div>Order count: @Model.Orders.Count()</div>
+    }
+</div>

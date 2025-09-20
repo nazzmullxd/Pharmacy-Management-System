@@ -1,213 +1,1102 @@
 @page
 @model Web.Pages.Sales.CreateModel
 @{
-    ViewData["Title"] = "Create Sale";
+    ViewData["Title"] = "Create Sale Order";
 }
 
-<h2>Create Sale</h2>
+<!-- Page Header -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-plus-circle text-success"></i> Create Sale Order</h1>
+            <p class="mb-0">Process a new sale transaction for your pharmacy</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/Sales" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Sales
+            </a>
+            <button type="button" class="btn btn-outline-info" onclick="clearForm()">
+                <i class="fas fa-refresh"></i> Clear Form
+            </button>
+        </div>
+    </div>
+</div>
 
+<!-- Status Messages -->
 @if (TempData["SuccessMessage"] != null)
 {
-    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
 }
 @if (TempData["ErrorMessage"] != null)
 {
-    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
 }
 
-<form method="post" id="saleForm">
-    <!-- Customer Selection -->
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <label class="form-label">Select Existing Customer</label>
-            <select asp-for="SelectedCustomerID" class="form-select">
-                <option value="">-- Select Customer --</option>
-                @foreach (var c in Model.Customers)
-                {
-                    <option value="@c.CustomerID">@c.CustomerName</option>
-                }
-            </select>
-            <span asp-validation-for="SelectedCustomerID" class="text-danger"></span>
+<form method="post" id="saleForm" class="needs-validation" novalidate>
+    <!-- Hidden fields for proper model binding -->
+    <input type="hidden" asp-for="Sale.SaleID" />
+    <input type="hidden" asp-for="Sale.UserID" />
+    <input type="hidden" asp-for="Sale.TotalAmount" id="hiddenTotalAmount" />
+    <input type="hidden" asp-for="Sale.SaleDate" />
+    
+    <!-- Customer Selection Card -->
+    <div class="dashboard-card mb-4">
+        <h5 class="card-title mb-3">
+            <i class="fas fa-user-friends text-primary"></i> Customer Information
+        </h5>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">
+                    <i class="fas fa-users me-1"></i>Select Existing Customer
+                </label>
+                <select asp-for="SelectedCustomerID" class="form-select" id="customerSelect">
+                    <option value="">-- Choose a customer --</option>
+                    @foreach (var c in Model.Customers)
+                    {
+                        <option value="@c.CustomerID" data-info="@c.CustomerName">@c.CustomerName</option>
+                    }
+                </select>
+                <span asp-validation-for="SelectedCustomerID" class="text-danger"></span>
+                <div class="form-text">
+                    <i class="fas fa-info-circle"></i> Select from registered customers for better record keeping
+                </div>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">
+                    <i class="fas fa-user-plus me-1"></i>Or Enter New Customer Name
+                </label>
+                <div class="position-relative">
+                    <input asp-for="Sale.CustomerName" 
+                           class="form-control" 
+                           placeholder="Enter customer name for walk-in sales" 
+                           id="newCustomerInput" 
+                           autocomplete="off"
+                           data-val="false"
+                           data-val-required="" />
+                    <div id="customerDropdown" class="dropdown-menu position-absolute w-100" style="display: none; max-height: 200px; overflow-y: auto; z-index: 1000;">
+                        <!-- Customer search results will be populated here -->
+                    </div>
+                </div>
+                <!-- Remove validation span for CustomerName to prevent validation errors -->
+                <div class="form-text">
+                    <i class="fas fa-info-circle"></i> Type to search or leave blank for walk-in customer
+                </div>
+                <div id="selectedCustomerInfo" style="display: none;"></div>
+            </div>
         </div>
-        <div class="col-md-6">
-            <label class="form-label">Or Enter New Customer Name</label>
-            <input asp-for="Sale.CustomerName" class="form-control" placeholder="New customer name" />
-            <span asp-validation-for="Sale.CustomerName" class="text-danger"></span>
+
+        <!-- Real-time validation status -->
+        <div class="row mt-3">
+            <div class="col-12">
+                <div id="saleValidationStatus"></div>
+            </div>
         </div>
     </div>
 
-    <!-- Add Item Section -->
-    <fieldset class="border rounded p-3 mb-3">
-        <legend class="fs-6 mb-2">Add Item</legend>
-        <div class="row g-2 align-items-end">
+    <!-- Add Product Section -->
+    <div class="dashboard-card mb-4">
+        <h5 class="card-title mb-3">
+            <i class="fas fa-plus-square text-success"></i> Add Products to Sale
+        </h5>
+        <div class="row g-3">
             <div class="col-md-5">
-                <label class="form-label">Product</label>
-                <select asp-for="ProductIdToAdd" class="form-select">
-                    <option value="">-- Select Product --</option>
+                <label class="form-label fw-semibold">
+                    <i class="fas fa-pills me-1"></i>Select Product
+                </label>
+                <select asp-for="ProductIdToAdd" class="form-select" id="productSelect">
+                    <option value="">-- Choose a product --</option>
                     @foreach (var p in Model.Products)
                     {
-                        <option value="@p.ProductID">@p.ProductName (@p.UnitPrice.ToString("C"))</option>
+                        <option value="@p.ProductID" 
+                                data-price="@p.UnitPrice" 
+                                data-stock="@p.TotalStock"
+                                data-category="@p.Category">
+                            @p.ProductName (Stock: @p.TotalStock) - @p.UnitPrice.ToString("C")
+                        </option>
                     }
                 </select>
                 <span asp-validation-for="ProductIdToAdd" class="text-danger"></span>
+                <div class="form-text" id="productInfo" style="display: none;">
+                    <i class="fas fa-info-circle"></i> <span id="productDetails"></span>
+                </div>
             </div>
             <div class="col-md-3">
-                <label class="form-label">Quantity</label>
-                <input asp-for="QuantityToAdd" type="number" min="1" class="form-control" />
+                <label class="form-label fw-semibold">
+                    <i class="fas fa-sort-numeric-up me-1"></i>Quantity
+                </label>
+                <div class="input-group">
+                    <button class="btn btn-outline-secondary" type="button" onclick="adjustQuantity(-1)">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <input asp-for="QuantityToAdd" 
+                           type="number" 
+                           min="1" 
+                           class="form-control text-center" 
+                           value="1"
+                           id="quantityInput" />
+                    <button class="btn btn-outline-secondary" type="button" onclick="adjustQuantity(1)">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
                 <span asp-validation-for="QuantityToAdd" class="text-danger"></span>
+                <div class="form-text">
+                    <span id="stockWarning" class="text-warning" style="display: none;">
+                        <i class="fas fa-exclamation-triangle"></i> Limited stock available
+                    </span>
+                </div>
             </div>
             <div class="col-md-4">
-                <button type="submit" asp-page-handler="AddItem" class="btn btn-primary w-100 mt-md-0 mt-2">
-                    <i class="fas fa-plus"></i> Add Item
+                <label class="form-label fw-semibold">
+                    <i class="fas fa-shopping-cart me-1"></i>Action
+                </label>
+                <button type="submit" 
+                        asp-page-handler="AddItem" 
+                        class="btn btn-success w-100" 
+                        id="addItemBtn"
+                        disabled>
+                    <i class="fas fa-plus-circle"></i> Add to Cart
                 </button>
+                <div class="form-text mt-2" id="calculatedPrice" style="display: none;">
+                    <i class="fas fa-calculator"></i> Total: <strong id="itemTotal">$0.00</strong>
+                </div>
             </div>
         </div>
-    </fieldset>
+    </div>
 
     <!-- Sale Items Table -->
     @if (Model.Sale.SaleItems != null && Model.Sale.SaleItems.Any())
     {
-        <div class="table-responsive mb-3">
-            <table class="table table-sm table-bordered align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>Product</th>
-                        <th class="text-end">Qty</th>
-                        <th class="text-end">Unit Price</th>
-                        <th class="text-end">Discount</th>
-                        <th class="text-end">Total</th>
-                        <th>Batch</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @for (int i = 0; i < Model.Sale.SaleItems.Count; i++)
-                    {
+        <div class="dashboard-card mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-shopping-cart text-primary"></i> Items in Cart
+                    <span class="badge bg-info ms-2">@Model.Sale.SaleItems.Count items</span>
+                </h5>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearAllItems()" title="Clear all items">
+                    <i class="fas fa-trash"></i> Clear All
+                </button>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle">
+                    <thead class="table-light">
                         <tr>
-                            <td>
-                                @Model.Sale.SaleItems[i].ProductName
-                                <input type="hidden" asp-for="Sale.SaleItems[i].ProductID" />
-                                <input type="hidden" asp-for="Sale.SaleItems[i].ProductName" />
-                            </td>
-                            <td class="text-end">
-                                <input asp-for="Sale.SaleItems[i].Quantity" type="number" min="1" class="form-control form-control-sm" style="width: 70px;" />
-                                <span asp-validation-for="Sale.SaleItems[i].Quantity" class="text-danger"></span>
-                            </td>
-                            <td class="text-end">
-                                <input asp-for="Sale.SaleItems[i].UnitPrice" type="number" step="0.01" min="0" class="form-control form-control-sm" style="width: 100px;" />
-                                <span asp-validation-for="Sale.SaleItems[i].UnitPrice" class="text-danger"></span>
-                            </td>
-                            <td class="text-end">
-                                <input asp-for="Sale.SaleItems[i].Discount" type="number" step="0.01" min="0" class="form-control form-control-sm" style="width: 100px;" />
-                                <span asp-validation-for="Sale.SaleItems[i].Discount" class="text-danger"></span>
-                            </td>
-                            <td class="text-end">
-                                @Model.Sale.SaleItems[i].TotalPrice.ToString("C")
-                                <input type="hidden" asp-for="Sale.SaleItems[i].TotalPrice" />
-                            </td>
-                            <td>
-                                <input asp-for="Sale.SaleItems[i].BatchNumber" class="form-control form-control-sm" placeholder="Batch #" />
-                                <span asp-validation-for="Sale.SaleItems[i].BatchNumber" class="text-danger"></span>
-                            </td>
-                            <td class="text-center">
-                                <button type="submit" asp-page-handler="RemoveItem"
-                                        name="index" value="@i" class="btn btn-sm btn-outline-danger"
-                                        title="Remove item">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </td>
+                            <th style="width: 30%;">
+                                <i class="fas fa-pills text-muted me-1"></i>Product Details
+                            </th>
+                            <th class="text-center" style="width: 12%;">
+                                <i class="fas fa-sort-numeric-up text-muted me-1"></i>Qty
+                            </th>
+                            <th class="text-end" style="width: 15%;">
+                                <i class="fas fa-dollar-sign text-muted me-1"></i>Unit Price
+                            </th>
+                            <th class="text-end" style="width: 15%;">
+                                <i class="fas fa-percentage text-muted me-1"></i>Discount
+                            </th>
+                            <th class="text-end" style="width: 15%;">
+                                <i class="fas fa-calculator text-muted me-1"></i>Total
+                            </th>
+                            <th style="width: 8%;">
+                                <i class="fas fa-tag text-muted me-1"></i>Batch
+                            </th>
+                            <th class="text-center" style="width: 5%;">
+                                <i class="fas fa-cogs text-muted"></i>
+                            </th>
                         </tr>
-                        <input type="hidden" asp-for="Sale.SaleItems[i].SaleItemID" />
-                    }
-                </tbody>
-                <tfoot>
-                    <tr class="fw-semibold">
-                        <td colspan="4" class="text-end">Total:</td>
-                        <td class="text-end">@Model.Sale.TotalAmount.ToString("C")</td>
-                        <td colspan="2"></td>
-                    </tr>
-                </tfoot>
-            </table>
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < Model.Sale.SaleItems.Count; i++)
+                        {
+                            <tr class="sale-item-row">
+                                <td>
+                                    <div class="product-info">
+                                        <div class="product-name fw-semibold">@Model.Sale.SaleItems[i].ProductName</div>
+                                        <small class="text-muted">
+                                            <i class="fas fa-barcode me-1"></i>Product ID: @Model.Sale.SaleItems[i].ProductID.ToString().Substring(0, 8)
+                                        </small>
+                                    </div>
+                                    <input type="hidden" asp-for="Sale.SaleItems[i].ProductID" />
+                                    <input type="hidden" asp-for="Sale.SaleItems[i].ProductName" />
+                                </td>
+                                <td class="text-center">
+                                    <div class="quantity-control">
+                                        <div class="input-group input-group-sm" style="width: 100px; margin: 0 auto;">
+                                            <button class="btn btn-outline-secondary" type="button" onclick="updateItemQuantity(@i, -1)">
+                                                <i class="fas fa-minus"></i>
+                                            </button>
+                                            <input asp-for="Sale.SaleItems[i].Quantity" 
+                                                   type="number" 
+                                                   min="1" 
+                                                   class="form-control text-center item-quantity" 
+                                                   data-index="@i"
+                                                   onchange="recalculateItemTotal(@i)" />
+                                            <button class="btn btn-outline-secondary" type="button" onclick="updateItemQuantity(@i, 1)">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <span asp-validation-for="Sale.SaleItems[i].Quantity" class="text-danger small"></span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="price-control">
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text">$</span>
+                                            <input asp-for="Sale.SaleItems[i].UnitPrice" 
+                                                   type="number" 
+                                                   step="0.01" 
+                                                   min="0" 
+                                                   class="form-control text-end item-price" 
+                                                   data-index="@i"
+                                                   onchange="recalculateItemTotal(@i)" />
+                                        </div>
+                                    </div>
+                                    <span asp-validation-for="Sale.SaleItems[i].UnitPrice" class="text-danger small"></span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="discount-control">
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text">$</span>
+                                            <input asp-for="Sale.SaleItems[i].Discount" 
+                                                   type="number" 
+                                                   step="0.01" 
+                                                   min="0" 
+                                                   class="form-control text-end item-discount" 
+                                                   data-index="@i"
+                                                   onchange="recalculateItemTotal(@i)" />
+                                        </div>
+                                    </div>
+                                    <span asp-validation-for="Sale.SaleItems[i].Discount" class="text-danger small"></span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="item-total-display">
+                                        <strong class="text-success item-total" data-index="@i">
+                                            @Model.Sale.SaleItems[i].TotalPrice.ToString("C")
+                                        </strong>
+                                    </div>
+                                    <input type="hidden" asp-for="Sale.SaleItems[i].TotalPrice" class="hidden-total" data-index="@i" />
+                                </td>
+                                <td>
+                                    <input asp-for="Sale.SaleItems[i].BatchNumber" 
+                                           class="form-control form-control-sm" 
+                                           placeholder="Batch #" />
+                                    <span asp-validation-for="Sale.SaleItems[i].BatchNumber" class="text-danger small"></span>
+                                </td>
+                                <td class="text-center">
+                                    <button type="submit" 
+                                            asp-page-handler="RemoveItem"
+                                            name="index" 
+                                            value="@i" 
+                                            class="btn btn-sm btn-outline-danger remove-item-btn"
+                                            title="Remove item"
+                                            onclick="return confirm('Remove this item from the sale?')">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </td>
+                                <input type="hidden" asp-for="Sale.SaleItems[i].SaleItemID" />
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr class="fw-bold">
+                            <td colspan="4" class="text-end">
+                                <div class="d-flex justify-content-end align-items-center gap-3">
+                                    <span>Subtotal:</span>
+                                    <span>Discount:</span>
+                                    <span class="fs-5">Total:</span>
+                                </div>
+                            </td>
+                            <td class="text-end">
+                                <div class="d-flex flex-column align-items-end gap-1">
+                                    <span id="subtotalAmount">@Model.Sale.SaleItems.Sum(x => x.Quantity * x.UnitPrice).ToString("C")</span>
+                                    <span class="text-danger" id="discountAmount">-@Model.Sale.SaleItems.Sum(x => x.Discount).ToString("C")</span>
+                                    <span class="fs-5 text-success" id="grandTotal">@Model.Sale.TotalAmount.ToString("C")</span>
+                                </div>
+                            </td>
+                            <td colspan="2"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
         </div>
 
-        <!-- Payment Status -->
-        <div class="mb-3">
-            <label class="form-label">Payment Status</label>
-            <select asp-for="Sale.PaymentStatus" class="form-select">
-                <option value="Paid">Paid</option>
-                <option value="Pending">Pending</option>
-                <option value="Partial">Partial Payment</option>
-            </select>
-            <span asp-validation-for="Sale.PaymentStatus" class="text-danger"></span>
-        </div>
-
-        <!-- Notes -->
-        <div class="mb-3">
-            <label class="form-label">Notes</label>
-            <textarea asp-for="Sale.Note" class="form-control" rows="2"></textarea>
-            <span asp-validation-for="Sale.Note" class="text-danger"></span>
+        <!-- Payment & Notes Section -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <div class="dashboard-card h-100">
+                    <h6 class="card-subtitle mb-3">
+                        <i class="fas fa-credit-card text-primary"></i> Payment Information
+                    </h6>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Payment Status</label>
+                        <select asp-for="Sale.PaymentStatus" class="form-select" id="paymentStatus">
+                            <option value="Paid" selected>💳 Paid (Full Payment)</option>
+                            <option value="Pending">⏳ Pending (Pay Later)</option>
+                            <option value="Partial">💰 Partial Payment</option>
+                        </select>
+                        <span asp-validation-for="Sale.PaymentStatus" class="text-danger"></span>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle"></i> Select the current payment status for this sale
+                        </div>
+                    </div>
+                    
+                    <div id="partialPaymentSection" style="display: none;" class="mb-3">
+                        <label class="form-label fw-semibold">Amount Received</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" id="amountReceived" step="0.01" min="0" placeholder="0.00">
+                            <button class="btn btn-outline-secondary" type="button" onclick="setFullAmount()">
+                                <i class="fas fa-percentage"></i> Full
+                            </button>
+                        </div>
+                        <div class="form-text">
+                            <i class="fas fa-calculator"></i> Balance due: <span id="balanceDue" class="fw-bold">$0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="dashboard-card h-100">
+                    <h6 class="card-subtitle mb-3">
+                        <i class="fas fa-sticky-note text-primary"></i> Additional Notes
+                    </h6>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Sale Notes</label>
+                        <textarea asp-for="Sale.Note" 
+                                  class="form-control" 
+                                  rows="4" 
+                                  placeholder="Add any special instructions, customer requests, or important notes about this sale..."></textarea>
+                        <span asp-validation-for="Sale.Note" class="text-danger"></span>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle"></i> Optional notes for future reference
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     }
     else
     {
-        <div class="alert alert-info mb-3">
-            <i class="fas fa-info-circle"></i> No items added yet. Please add products above.
+        <div class="dashboard-card mb-4">
+            <div class="text-center py-5">
+                <i class="fas fa-shopping-cart fa-4x text-muted mb-3"></i>
+                <h5 class="text-muted">No Items in Cart</h5>
+                <p class="text-muted mb-4">Start by adding products to create your sale order</p>
+                <div class="d-flex justify-content-center gap-2">
+                    <button type="button" class="btn btn-outline-primary" onclick="focusProductSelect()">
+                        <i class="fas fa-search"></i> Browse Products
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="showQuickAdd()">
+                        <i class="fas fa-plus"></i> Quick Add
+                    </button>
+                </div>
+            </div>
         </div>
     }
 
-    <div asp-validation-summary="All" class="alert alert-danger"></div>
+    <!-- Validation Summary -->
+    <div asp-validation-summary="All" class="alert alert-danger" style="display: none;"></div>
 
-    <div class="d-flex gap-2">
-        @if (Model.Sale.SaleItems != null && Model.Sale.SaleItems.Any())
-        {
-            <button type="submit" class="btn btn-success">
-                <i class="fas fa-save"></i> Create Sale
-            </button>
-        }
-        <a asp-page="Index" class="btn btn-secondary">Cancel</a>
+    <!-- Action Buttons -->
+    <div class="dashboard-card">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex gap-2">
+                <a asp-page="Index" class="btn btn-outline-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+                <button type="button" class="btn btn-outline-info" onclick="saveDraft()" id="draftBtn">
+                    <i class="fas fa-save"></i> Save Draft
+                </button>
+            </div>
+            
+            @if (Model.Sale.SaleItems != null && Model.Sale.SaleItems.Any())
+            {
+                <div class="d-flex gap-2 align-items-center">
+                    <div class="text-end me-3">
+                        <div class="small text-muted">Order Total</div>
+                        <div class="h4 mb-0 text-success fw-bold" id="finalTotal">@Model.Sale.TotalAmount.ToString("C")</div>
+                    </div>
+                    <button type="submit" 
+                            asp-page-handler="" 
+                            class="btn btn-success btn-lg px-4" 
+                            id="completeSaleBtn"
+                            formnovalidate>
+                        <i class="fas fa-check-circle"></i> Complete Sale
+                    </button>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-success dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <button class="dropdown-item" type="submit" name="handler" value="SaveAndPrint">
+                                    <i class="fas fa-print me-2"></i>Complete & Print
+                                </button>
+                            </li>
+                            <li>
+                                <button class="dropdown-item" type="submit" name="handler" value="SaveAndNew">
+                                    <i class="fas fa-plus me-2"></i>Complete & New Sale
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            }
+        </div>
     </div>
 </form>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-        // Recalculate totals when quantity, price, or discount changes
-        document.addEventListener('input', function(e) {
-            if (e.target.matches('input[data-recalculate]')) {
-                // Find the row
-                const row = e.target.closest('tr');
-                if (row) {
-                    const quantity = parseFloat(row.querySelector('input[name*="Quantity"]').value) || 0;
-                    const unitPrice = parseFloat(row.querySelector('input[name*="UnitPrice"]').value) || 0;
-                    const discount = parseFloat(row.querySelector('input[name*="Discount"]').value) || 0;
+        document.addEventListener('DOMContentLoaded', function() {
+            // Immediately disable CustomerName validation
+            const customerNameInput = document.getElementById('newCustomerInput');
+            if (customerNameInput) {
+                // Remove all validation attributes
+                customerNameInput.removeAttribute('data-val');
+                customerNameInput.removeAttribute('data-val-required');
+                customerNameInput.removeAttribute('required');
+                
+                // Clear any existing validation state
+                customerNameInput.setCustomValidity('');
+                customerNameInput.classList.remove('is-invalid');
+            }
+            
+            initializeForm();
+            updateTotals();
+            
+            // Check if we're returning from a successful item addition
+            handlePostAdditionState();
+        });
 
-                    const total = (quantity * unitPrice) - discount;
-                    row.querySelector('td:nth-child(5)').textContent = '$' + total.toFixed(2);
+        // Function to reset product selection state
+        function resetProductSelection() {
+            document.getElementById('productInfo').style.display = 'none';
+            document.getElementById('stockWarning').style.display = 'none';
+            document.getElementById('calculatedPrice').style.display = 'none';
+            const addItemBtn = document.getElementById('addItemBtn');
+            addItemBtn.disabled = true;
+            addItemBtn.innerHTML = '<i class="fas fa-plus-circle"></i> Add to Cart';
+            addItemBtn.classList.add('btn-success');
+            addItemBtn.classList.remove('btn-warning');
+            
+            // Clear any validation messages for product selection
+            clearProductValidationMessages();
+        }
 
-                    // Update hidden total field
-                    const totalInput = row.querySelector('input[name*="TotalPrice"]');
-                    if (totalInput) {
-                        totalInput.value = total.toFixed(2);
+        function clearProductValidationMessages() {
+            // Clear validation messages related to product selection
+            const validationSpans = document.querySelectorAll('.text-danger');
+            validationSpans.forEach(span => {
+                if (span.textContent.includes('Please select a product') || 
+                    span.textContent.includes('Product selection is required')) {
+                    span.textContent = '';
+                    span.style.display = 'none';
+                }
+            });
+            
+            // Also clear any validation summary errors related to product selection
+            const validationSummary = document.querySelector('[data-valmsg-summary="true"]');
+            if (validationSummary) {
+                const listItems = validationSummary.querySelectorAll('li');
+                listItems.forEach(li => {
+                    if (li.textContent.includes('Please select a product') ||
+                        li.textContent.includes('Product selection is required')) {
+                        li.remove();
+                    }
+                });
+                
+                // Hide summary if no errors remain
+                if (validationSummary.querySelectorAll('li').length === 0) {
+                    validationSummary.style.display = 'none';
+                }
+            }
+        }
+
+        function handlePostAdditionState() {
+            // Check if there are items in the cart and product selection is empty
+            const hasItems = document.querySelectorAll('.sale-item-row').length > 0;
+            const productSelect = document.getElementById('productSelect');
+            const isProductEmpty = !productSelect.value;
+            
+            if (hasItems && isProductEmpty) {
+                // This means we just added an item and the form was reset
+                // Clear any validation messages and reset the UI properly
+                resetProductSelection();
+                
+                console.log('Post-addition state handled: form reset after successful item addition');
+            }
+        }
+
+        function initializeForm() {
+            // Customer selection logic
+            const customerSelect = document.getElementById('customerSelect');
+            const newCustomerInput = document.getElementById('newCustomerInput');
+            
+            customerSelect.addEventListener('change', function() {
+                if (this.value) {
+                    newCustomerInput.value = '';
+                    newCustomerInput.disabled = true;
+                    // Clear any validation errors when selecting existing customer
+                    clearCustomerValidation();
+                } else {
+                    newCustomerInput.disabled = false;
+                }
+            });
+
+            newCustomerInput.addEventListener('input', function() {
+                if (this.value.trim()) {
+                    customerSelect.value = '';
+                    customerSelect.disabled = true;
+                } else {
+                    customerSelect.disabled = false;
+                }
+                // Clear validation errors for walk-in customers
+                clearCustomerValidation();
+            });
+
+            // Clear customer validation function
+            function clearCustomerValidation() {
+                const customerInput = document.getElementById('newCustomerInput');
+                if (customerInput) {
+                    customerInput.setCustomValidity('');
+                    customerInput.classList.remove('is-invalid');
+                    // Remove any validation messages
+                    const validationSpan = customerInput.parentElement.parentElement.querySelector('.text-danger');
+                    if (validationSpan) {
+                        validationSpan.textContent = '';
+                        validationSpan.style.display = 'none';
+                    }
+                }
+            }
+
+            // Initialize customer search functionality
+            setupCustomerSearch();
+
+            // Product selection logic
+            const productSelect = document.getElementById('productSelect');
+            const quantityInput = document.getElementById('quantityInput');
+            const addItemBtn = document.getElementById('addItemBtn');
+
+            productSelect.addEventListener('change', function() {
+                console.log('Product selected:', this.value);
+                const selectedOption = this.options[this.selectedIndex];
+                if (selectedOption.value) {
+                    const price = parseFloat(selectedOption.dataset.price || 0);
+                    const stock = parseInt(selectedOption.dataset.stock || 0);
+                    const category = selectedOption.dataset.category || '';
+
+                    console.log('Product details:', { price, stock, category });
+
+                    // Show product info
+                    document.getElementById('productInfo').style.display = 'block';
+                    document.getElementById('productDetails').textContent = 
+                        `Category: ${category} | Stock: ${stock} units | Price: $${price.toFixed(2)}`;
+
+                    // Enable add button and perform real-time validation
+                    updateCalculatedPrice();
+
+                    // Check stock warning
+                    const stockWarning = document.getElementById('stockWarning');
+                    if (stock <= 10) {
+                        stockWarning.style.display = 'block';
+                        stockWarning.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Only ${stock} units in stock`;
+                    } else {
+                        stockWarning.style.display = 'none';
                     }
 
-                    // Update grand total
-                    updateGrandTotal();
+                    // Update calculated price
+                    updateCalculatedPrice();
+                } else {
+                    console.log('No product selected');
+                    resetProductSelection();
+                }
+            });
+
+            quantityInput.addEventListener('input', updateCalculatedPrice);
+
+            // Payment status logic
+            const paymentStatus = document.getElementById('paymentStatus');
+            const partialPaymentSection = document.getElementById('partialPaymentSection');
+
+            paymentStatus.addEventListener('change', function() {
+                if (this.value === 'Partial') {
+                    partialPaymentSection.style.display = 'block';
+                    updateBalanceDue();
+                } else {
+                    partialPaymentSection.style.display = 'none';
+                }
+            });
+
+            // Amount received input
+            const amountReceived = document.getElementById('amountReceived');
+            if (amountReceived) {
+                amountReceived.addEventListener('input', updateBalanceDue);
+            }
+
+            // Form validation
+            enableFormValidation();
+        }
+
+        function adjustQuantity(delta) {
+            const quantityInput = document.getElementById('quantityInput');
+            const currentValue = parseInt(quantityInput.value) || 1;
+            const newValue = Math.max(1, currentValue + delta);
+            quantityInput.value = newValue;
+            updateCalculatedPrice();
+        }
+
+        function updateCalculatedPrice() {
+            const productSelect = document.getElementById('productSelect');
+            const quantityInput = document.getElementById('quantityInput');
+            const selectedOption = productSelect.options[productSelect.selectedIndex];
+
+            if (selectedOption.value) {
+                const productId = selectedOption.value;
+                const quantity = parseInt(quantityInput.value) || 1;
+                const price = parseFloat(selectedOption.dataset.price || 0);
+                const total = price * quantity;
+
+                // Show calculated price immediately
+                document.getElementById('calculatedPrice').style.display = 'block';
+                document.getElementById('itemTotal').textContent = `$${total.toFixed(2)}`;
+
+                // Enable the add button immediately for better UX
+                const addItemBtn = document.getElementById('addItemBtn');
+                addItemBtn.disabled = false;
+                addItemBtn.innerHTML = '<i class="fas fa-plus-circle"></i> Add to Cart';
+                addItemBtn.classList.add('btn-success');
+                addItemBtn.classList.remove('btn-warning');
+                
+                // Real-time stock validation (async)
+                validateProductStock(productId, quantity).then(result => {
+                    if (!result.isValid) {
+                        addItemBtn.disabled = true;
+                        addItemBtn.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Insufficient Stock (${result.available} available)`;
+                        addItemBtn.classList.add('btn-warning');
+                        addItemBtn.classList.remove('btn-success');
+                        
+                        // Show stock warning
+                        showStockWarning(selectedOption.text, quantity, result.available);
+                    } else {
+                        hideStockWarning();
+                    }
+                }).catch(error => {
+                    console.error('Stock validation error:', error);
+                    // Keep button enabled if validation fails
+                });
+            } else {
+                // No product selected
+                const hasItems = document.querySelectorAll('.sale-item-row').length > 0;
+                if (hasItems) {
+                    // There are items in cart but no product selected - this is normal after adding an item
+                    // Just reset the UI without showing validation errors
+                    resetProductSelection();
+                } else {
+                    // No items and no product selected - show normal "disabled" state
+                    document.getElementById('calculatedPrice').style.display = 'none';
+                    const addItemBtn = document.getElementById('addItemBtn');
+                    addItemBtn.disabled = true;
+                    addItemBtn.innerHTML = '<i class="fas fa-plus-circle"></i> Add to Cart';
+                    addItemBtn.classList.add('btn-success');
+                    addItemBtn.classList.remove('btn-warning');
+                }
+            }
+        }
+
+        // Real-time stock validation
+        async function validateProductStock(productId, quantity) {
+            try {
+                console.log('Validating stock for product:', productId, 'quantity:', quantity);
+                const response = await fetch(`?handler=ProductStock&productId=${productId}`);
+                
+                if (!response.ok) {
+                    console.error('Stock validation response not ok:', response.status);
+                    return { isValid: true, available: 999 }; // Default to valid if can't validate
+                }
+                
+                const result = await response.json();
+                console.log('Stock validation result:', result);
+                
+                if (result.success) {
+                    return {
+                        isValid: result.stock >= quantity && result.isActive,
+                        available: result.stock,
+                        price: result.price,
+                        isActive: result.isActive
+                    };
+                }
+                console.error('Stock validation failed:', result.message);
+                return { isValid: true, available: 999 }; // Default to valid if validation fails
+            } catch (error) {
+                console.error('Error validating stock:', error);
+                return { isValid: true, available: 999 }; // Default to valid if error occurs
+            }
+        }
+
+        // Customer search functionality
+        let customerSearchTimeout;
+        function setupCustomerSearch() {
+            const customerInput = document.getElementById('newCustomerInput');
+            const customerDropdown = document.getElementById('customerDropdown');
+            
+            if (customerInput) {
+                customerInput.addEventListener('input', function() {
+                    clearTimeout(customerSearchTimeout);
+                    const term = this.value.trim();
+                    
+                    if (term.length >= 2) {
+                        customerSearchTimeout = setTimeout(() => {
+                            searchCustomers(term);
+                        }, 300);
+                    } else {
+                        hideCustomerDropdown();
+                    }
+                });
+
+                // Handle click outside to close dropdown
+                document.addEventListener('click', function(e) {
+                    if (!customerInput.contains(e.target) && !customerDropdown.contains(e.target)) {
+                        hideCustomerDropdown();
+                    }
+                });
+            }
+        }
+
+        async function searchCustomers(term) {
+            try {
+                const response = await fetch(`?handler=SearchCustomers&term=${encodeURIComponent(term)}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    showCustomerDropdown(result.customers);
+                }
+            } catch (error) {
+                console.error('Error searching customers:', error);
+            }
+        }
+
+        function showCustomerDropdown(customers) {
+            const dropdown = document.getElementById('customerDropdown');
+            if (!dropdown) return;
+
+            dropdown.innerHTML = '';
+            
+            if (customers.length === 0) {
+                dropdown.innerHTML = '<div class="dropdown-item text-muted">No customers found</div>';
+            } else {
+                customers.forEach(customer => {
+                    const item = document.createElement('div');
+                    item.className = 'dropdown-item customer-dropdown-item';
+                    item.innerHTML = `
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <strong>${customer.name}</strong>
+                                <small class="text-muted d-block">${customer.contact}</small>
+                            </div>
+                            <small class="text-muted">${customer.email}</small>
+                        </div>
+                    `;
+                    item.addEventListener('click', () => selectCustomer(customer));
+                    dropdown.appendChild(item);
+                });
+            }
+            
+            dropdown.style.display = 'block';
+        }
+
+        function hideCustomerDropdown() {
+            const dropdown = document.getElementById('customerDropdown');
+            if (dropdown) {
+                dropdown.style.display = 'none';
+            }
+        }
+
+        function selectCustomer(customer) {
+            document.getElementById('newCustomerInput').value = customer.name;
+            
+            // Update the hidden field for selected customer ID
+            const selectedCustomerField = document.querySelector('select[name="SelectedCustomerID"]');
+            if (selectedCustomerField) {
+                selectedCustomerField.value = customer.id;
+            }
+            
+            hideCustomerDropdown();
+            
+            // Show selected customer info
+            showCustomerInfo(customer);
+        }
+
+        function showCustomerInfo(customer) {
+            const infoDiv = document.getElementById('selectedCustomerInfo');
+            if (infoDiv) {
+                infoDiv.innerHTML = `
+                    <div class="alert alert-info">
+                        <strong>${customer.name}</strong><br>
+                        <small>Contact: ${customer.contact} | Email: ${customer.email}</small>
+                    </div>
+                `;
+            }
+        }
+
+        // Enhanced stock warning system
+        function showStockWarning(productName, requested, available) {
+            const warningDiv = document.getElementById('stockWarning');
+            if (warningDiv) {
+                warningDiv.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Stock Warning:</strong> ${productName} - Requested: ${requested}, Available: ${available}
+                    </div>
+                `;
+                warningDiv.style.display = 'block';
+            }
+        }
+
+        function hideStockWarning() {
+            const warningDiv = document.getElementById('stockWarning');
+            if (warningDiv) {
+                warningDiv.style.display = 'none';
+            }
+        }
+
+        // Real-time sale validation
+        async function validateSale() {
+            try {
+                const response = await fetch('?handler=ValidateSale');
+                const result = await response.json();
+                
+                updateValidationStatus(result);
+                return result.success;
+            } catch (error) {
+                console.error('Error validating sale:', error);
+                return false;
+            }
+        }
+
+        function updateValidationStatus(validation) {
+            const statusDiv = document.getElementById('saleValidationStatus');
+            if (!statusDiv) return;
+
+            if (validation.success) {
+                statusDiv.innerHTML = `
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle"></i> Sale is ready to process
+                    </div>
+                `;
+            } else {
+                const issues = validation.validation?.filter(v => !v.isValid) || [];
+                let issueText = '';
+                
+                if (issues.length > 0) {
+                    issueText = '<ul class="mb-0">';
+                    issues.forEach(issue => {
+                        issueText += `<li>${issue.productName}: ${issue.requested} requested, ${issue.available} available</li>`;
+                    });
+                    issueText += '</ul>';
+                }
+
+                statusDiv.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> Issues found:
+                        ${issueText}
+                    </div>
+                `;
+            }
+        }
+
+        function updateItemQuantity(index, delta) {
+            const quantityInput = document.querySelector(`input[name="Sale.SaleItems[${index}].Quantity"]`);
+            const currentValue = parseInt(quantityInput.value) || 1;
+            const newValue = Math.max(1, currentValue + delta);
+            quantityInput.value = newValue;
+            recalculateItemTotal(index);
+        }
+
+        function recalculateItemTotal(index) {
+            const quantityInput = document.querySelector(`input[name="Sale.SaleItems[${index}].Quantity"]`);
+            const priceInput = document.querySelector(`input[name="Sale.SaleItems[${index}].UnitPrice"]`);
+            const discountInput = document.querySelector(`input[name="Sale.SaleItems[${index}].Discount"]`);
+            const totalDisplay = document.querySelector(`.item-total[data-index="${index}"]`);
+            const hiddenTotal = document.querySelector(`.hidden-total[data-index="${index}"]`);
+
+            const quantity = parseInt(quantityInput.value) || 0;
+            const price = parseFloat(priceInput.value) || 0;
+            const discount = parseFloat(discountInput.value) || 0;
+
+            const total = Math.max(0, (quantity * price) - discount);
+
+            totalDisplay.textContent = `$${total.toFixed(2)}`;
+            hiddenTotal.value = total.toFixed(2);
+
+            updateTotals();
+        }
+
+        function updateTotals() {
+            let subtotal = 0;
+            let totalDiscount = 0;
+
+            document.querySelectorAll('.hidden-total').forEach(input => {
+                subtotal += parseFloat(input.value) || 0;
+            });
+
+            document.querySelectorAll('.item-discount').forEach(input => {
+                totalDiscount += parseFloat(input.value) || 0;
+            });
+
+            const grandTotal = subtotal;
+
+            // Update display
+            document.getElementById('subtotalAmount').textContent = `$${(subtotal + totalDiscount).toFixed(2)}`;
+            document.getElementById('discountAmount').textContent = `-$${totalDiscount.toFixed(2)}`;
+            document.getElementById('grandTotal').textContent = `$${grandTotal.toFixed(2)}`;
+            
+            const finalTotal = document.getElementById('finalTotal');
+            if (finalTotal) {
+                finalTotal.textContent = `$${grandTotal.toFixed(2)}`;
+            }
+            
+            // Update the hidden field for form submission
+            const hiddenTotalField = document.getElementById('hiddenTotalAmount');
+            if (hiddenTotalField) {
+                hiddenTotalField.value = grandTotal.toFixed(2);
+            }
+
+            updateBalanceDue();
+        }
+
+        function updateBalanceDue() {
+            const amountReceived = document.getElementById('amountReceived');
+            const balanceDue = document.getElementById('balanceDue');
+            
+            if (amountReceived && balanceDue) {
+                const total = parseFloat(document.getElementById('finalTotal')?.textContent.replace('$', '') || 0);
+                const received = parseFloat(amountReceived.value) || 0;
+                const balance = total - received;
+                
+                balanceDue.textContent = `$${Math.max(0, balance).toFixed(2)}`;
+                balanceDue.className = balance > 0 ? 'fw-bold text-danger' : 'fw-bold text-success';
+            }
+        }
+
+        function setFullAmount() {
+            const amountReceived = document.getElementById('amountReceived');
+            const finalTotal = document.getElementById('finalTotal');
+            
+            if (amountReceived && finalTotal) {
+                const total = parseFloat(finalTotal.textContent.replace('$', '') || 0);
+                amountReceived.value = total.toFixed(2);
+                updateBalanceDue();
+            }
+        }
+
+        function clearAllItems() {
+            if (confirm('Are you sure you want to clear all items from this sale?')) {
+                // This would require a server call to clear items
+                // For now, we'll show a message
+                alert('Clear all functionality would be implemented here');
+            }
+        }
+
+        function clearForm() {
+            if (confirm('Clear the entire form? All unsaved data will be lost.')) {
+                window.location.reload();
+            }
+        }
+
+        function focusProductSelect() {
+            document.getElementById('productSelect').focus();
+        }
+
+        function showQuickAdd() {
+            // Future implementation for quick add functionality
+            alert('Quick add functionality will be implemented');
+        }
+
+        function saveDraft() {
+            // Future implementation for saving draft
+            alert('Save draft functionality will be implemented');
+        }
+
+        function enableFormValidation() {
+            // Bootstrap validation
+            const forms = document.querySelectorAll('.needs-validation');
+            Array.from(forms).forEach(form => {
+                form.addEventListener('submit', event => {
+                    // Custom validation for walk-in customers
+                    const customerNameInput = document.getElementById('newCustomerInput');
+                    const customerSelect = document.getElementById('customerSelect');
+                    
+                    // Always allow empty customer name for walk-in customers
+                    if (customerNameInput) {
+                        customerNameInput.setCustomValidity('');
+                        customerNameInput.classList.remove('is-invalid');
+                        
+                        // Remove any existing validation messages
+                        const validationSpan = customerNameInput.parentElement.parentElement.querySelector('.text-danger');
+                        if (validationSpan) {
+                            validationSpan.textContent = '';
+                            validationSpan.style.display = 'none';
+                        }
+                    }
+                    
+                    // Override the default validation for CustomerName
+                    const customerNameValidation = form.querySelector('[data-valmsg-for="Sale.CustomerName"]');
+                    if (customerNameValidation) {
+                        customerNameValidation.textContent = '';
+                        customerNameValidation.style.display = 'none';
+                    }
+                    
+                    const isValid = form.checkValidity();
+                    console.log('Form validation check:', isValid);
+                    
+                    if (!isValid) {
+                        console.log('Form validation failed - preventing submission');
+                        // Find and log invalid fields
+                        const invalidFields = form.querySelectorAll(':invalid');
+                        invalidFields.forEach(field => {
+                            console.log('Invalid field:', field.name || field.id, field.validationMessage);
+                        });
+                        event.preventDefault();
+                        event.stopPropagation();
+                    } else {
+                        console.log('Form validation passed - allowing submission');
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+            
+            // Also clear validation on page load
+            const customerNameInput = document.getElementById('newCustomerInput');
+            if (customerNameInput) {
+                customerNameInput.setCustomValidity('');
+                customerNameInput.classList.remove('is-invalid');
+            }
+        }
+
+        // Initialize all input change listeners for recalculation
+        document.addEventListener('input', function(e) {
+            if (e.target.matches('.item-quantity, .item-price, .item-discount')) {
+                const index = e.target.dataset.index;
+                if (index !== undefined) {
+                    recalculateItemTotal(parseInt(index));
                 }
             }
         });
 
-        function updateGrandTotal() {
-            let grandTotal = 0;
-            document.querySelectorAll('input[name*="TotalPrice"]').forEach(input => {
-                grandTotal += parseFloat(input.value) || 0;
-            });
-
-            document.querySelector('tfoot td:nth-child(2)').textContent = '$' + grandTotal.toFixed(2);
-        }
-
-        // Initialize recalculations
-        document.querySelectorAll('input[name*="Quantity"], input[name*="UnitPrice"], input[name*="Discount"]').forEach(input => {
-            input.setAttribute('data-recalculate', 'true');
-        });
+        // Auto-save functionality (every 30 seconds)
+        setInterval(function() {
+            const hasItems = document.querySelectorAll('.sale-item-row').length > 0;
+            if (hasItems) {
+                console.log('Auto-saving draft...');
+                // Implement auto-save logic here
+            }
+        }, 30000);
     </script>
 }

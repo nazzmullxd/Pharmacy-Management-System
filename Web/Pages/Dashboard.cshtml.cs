@@ -62,33 +62,25 @@ namespace Web.Pages
 
         private async Task LoadDataAsync()
         {
-            // Fire tasks in parallel
-            var todayTask        = _dashboardService.GetTodayKPIsAsync();
-            var monthTask        = _dashboardService.GetThisMonthKPIsAsync();
-            var stockValueTask   = _dashboardService.GetTotalStockValueAsync();
-            var duesTask         = _dashboardService.GetTotalSalesDueAsync();
-            var topSellingTask   = _dashboardService.GetTopSellingProductsAsync(10);
-            var topStockTask     = _dashboardService.GetTopStockProductsAsync(10);
-            var recentSalesTask  = _dashboardService.GetRecentSalesAsync(5);
-            var expiringTask     = _dashboardService.GetExpiringProductsAsync(30);
-
-            await Task.WhenAll(
-                todayTask, monthTask, stockValueTask, duesTask,
-                topSellingTask, topStockTask, recentSalesTask, expiringTask
-            );
-
-            var today = todayTask.Result;
-            var month = monthTask.Result;
+            // Sequentially await each call to avoid DbContext concurrency issues
+            var today = await _dashboardService.GetTodayKPIsAsync();
+            var month = await _dashboardService.GetThisMonthKPIsAsync();
+            var stockValue = await _dashboardService.GetTotalStockValueAsync();
+            var dues = await _dashboardService.GetTotalSalesDueAsync();
+            var topSelling = await _dashboardService.GetTopSellingProductsAsync(10);
+            var topStock = await _dashboardService.GetTopStockProductsAsync(10);
+            var recentSales = await _dashboardService.GetRecentSalesAsync(5);
+            var expiring = await _dashboardService.GetExpiringProductsAsync(30);
 
             TodayOrders      = today?.TodaySaleOrdersCount ?? 0;
             ThisMonthOrders  = month?.ThisMonthSaleOrdersCount ?? 0;
-            StockValue       = stockValueTask.Result;
-            OutstandingDues  = duesTask.Result;
+            StockValue       = stockValue;
+            OutstandingDues  = dues;
 
-            TopSellingProducts = topSellingTask.Result ?? Enumerable.Empty<TopProductDTO>();
-            TopStockProducts   = topStockTask.Result ?? Enumerable.Empty<ProductDTO>();
-            RecentSales        = recentSalesTask.Result ?? Enumerable.Empty<SaleDTO>();
-            ExpiringProducts   = expiringTask.Result ?? Enumerable.Empty<ExpiryAlertDTO>();
+            TopSellingProducts = topSelling ?? Enumerable.Empty<TopProductDTO>();
+            TopStockProducts   = topStock ?? Enumerable.Empty<ProductDTO>();
+            RecentSales        = recentSales ?? Enumerable.Empty<SaleDTO>();
+            ExpiringProducts   = expiring ?? Enumerable.Empty<ExpiryAlertDTO>();
         }
 
         private void SetDefaults()

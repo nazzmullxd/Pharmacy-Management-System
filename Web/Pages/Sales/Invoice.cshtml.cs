@@ -21,15 +21,24 @@ namespace Web.Pages.Sales
 
         public async Task<IActionResult> OnGet(Guid id)
         {
-            Id = id;
-            Sale = await _salesService.GetSaleByIdAsync(id);
-            if (Sale == null)
+            try
             {
-                return NotFound();
+                Id = id;
+                Sale = await _salesService.GetSaleByIdAsync(id);
+                
+                if (Sale == null)
+                {
+                    TempData["ErrorMessage"] = $"Invoice not found for Sale ID: {id}";
+                    return RedirectToPage("/Sales/Index");
+                }
+                
+                return Page();
             }
-            return Page();
+            catch (Exception)
+            {
+                TempData["ErrorMessage"] = "Error loading invoice. Please try again.";
+                return RedirectToPage("/Sales/Index");
+            }
         }
     }
 }
-
-

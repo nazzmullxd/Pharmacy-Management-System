@@ -15,8 +15,7 @@ namespace Database.Model
         [ForeignKey(nameof(Supplier))]
         public Guid SupplierID { get; set; } = Guid.Empty;
 
-        [Required]
-        [ForeignKey(nameof(UserInfo))]
+        [ForeignKey(nameof(User))]
         public Guid UserID { get; set; } = Guid.Empty;
 
         [ForeignKey(nameof(ProductBatch))]
@@ -26,6 +25,7 @@ namespace Database.Model
         public Supplier? Supplier { get; set; }
         public UserInfo? User { get; set; }
         public ProductBatch? ProductBatch { get; set; }
+        public ICollection<PurchaseItem> PurchaseItems { get; set; } = new List<PurchaseItem>();
 
         // Value Properties
         [Required]

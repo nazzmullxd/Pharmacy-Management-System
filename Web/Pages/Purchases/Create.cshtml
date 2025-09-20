@@ -63,13 +63,26 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var i in Model.Order.OrderItems)
+                @for (int i = 0; i < Model.Order.OrderItems.Count; i++)
                 {
                     <tr>
-                        <td>@i.ProductName</td>
-                        <td>@i.OrderedQuantity</td>
-                        <td>@i.UnitPrice.ToString("C")</td>
-                        <td>@i.TotalPrice.ToString("C")</td>
+                        <td>
+                            @Model.Order.OrderItems[i].ProductName
+                            <input type="hidden" asp-for="Order.OrderItems[@i].ProductID" />
+                            <input type="hidden" asp-for="Order.OrderItems[@i].ProductName" />
+                        </td>
+                        <td>
+                            @Model.Order.OrderItems[i].OrderedQuantity
+                            <input type="hidden" asp-for="Order.OrderItems[@i].OrderedQuantity" />
+                        </td>
+                        <td>
+                            @Model.Order.OrderItems[i].UnitPrice.ToString("C")
+                            <input type="hidden" asp-for="Order.OrderItems[@i].UnitPrice" />
+                        </td>
+                        <td>
+                            @Model.Order.OrderItems[@i].TotalPrice.ToString("C")
+                            <input type="hidden" asp-for="Order.OrderItems[@i].TotalPrice" />
+                        </td>
                     </tr>
                 }
             </tbody>

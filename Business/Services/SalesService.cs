@@ -49,7 +49,13 @@ namespace Business.Services
         public async Task<SaleDTO> CreateSaleAsync(SaleDTO saleDto)
         {
             if (saleDto == null) throw new ArgumentNullException(nameof(saleDto));
-            ValidateSale(saleDto);
+            
+            // Comprehensive validation
+            await ValidateSale(saleDto);
+
+            // Additional business rule validations
+            if (!await ValidateStockAvailability(saleDto))
+                throw new InvalidOperationException("Insufficient stock for one or more items in the sale");
 
             // Recompute item totals and overall total
             RecalculateSaleTotals(saleDto);
@@ -65,8 +71,13 @@ namespace Business.Services
                 var saleItem = MapToSaleItemEntity(itemDto, sale.SaleID);
                 await _saleItemRepository.AddAsync(saleItem);
 
-                // OPTIONAL: adjust stock here if you have a product/batch stock decrement method
-                // await _productRepository.DecrementStockAsync(itemDto.ProductID, itemDto.Quantity);
+                // Update product stock
+                var product = await _productRepository.GetByIdAsync(itemDto.ProductID);
+                if (product != null)
+                {
+                    product.TotalStock -= itemDto.Quantity;
+                    await _productRepository.UpdateAsync(product);
+                }
             }
 
             // Persist recomputed total (source of truth)
@@ -84,23 +95,43 @@ namespace Business.Services
             if (existingSale == null)
                 throw new ArgumentException("Sale not found.", nameof(saleDto.SaleID));
 
-            ValidateSale(saleDto);
+            await ValidateSale(saleDto);
+            
+            // Additional validation for stock availability (considering existing sale items)
+            if (!await ValidateStockAvailabilityForUpdate(saleDto, existingSale.SaleID))
+                throw new InvalidOperationException("Insufficient stock for updated sale items");
+
             RecalculateSaleTotals(saleDto);
 
             var updatedEntity = MapToEntity(saleDto);
             // Preserve original date
             updatedEntity.SaleDate = existingSale.SaleDate;
 
-            // Remove existing items first
+            // Handle stock adjustments - restore stock from existing items first
             var existingItems = await _saleItemRepository.GetBySaleIdAsync(updatedEntity.SaleID);
-            foreach (var item in existingItems)
-                await _saleItemRepository.DeleteAsync(item.SaleItemID);
+            foreach (var existingItem in existingItems)
+            {
+                var product = await _productRepository.GetByIdAsync(existingItem.ProductID);
+                if (product != null)
+                {
+                    product.TotalStock += existingItem.Quantity; // Restore stock
+                    await _productRepository.UpdateAsync(product);
+                }
+                await _saleItemRepository.DeleteAsync(existingItem.SaleItemID);
+            }
 
+            // Add new items and adjust stock
             foreach (var itemDto in saleDto.SaleItems)
             {
                 var newItem = MapToSaleItemEntity(itemDto, updatedEntity.SaleID);
                 await _saleItemRepository.AddAsync(newItem);
-                // OPTIONAL: recalculate stock delta if quantity changed; requires previous snapshot.
+                
+                var product = await _productRepository.GetByIdAsync(itemDto.ProductID);
+                if (product != null)
+                {
+                    product.TotalStock -= itemDto.Quantity; // Deduct new quantity
+                    await _productRepository.UpdateAsync(product);
+                }
             }
 
             updatedEntity.TotalAmount = saleDto.TotalAmount;
@@ -113,11 +144,23 @@ namespace Business.Services
         {
             try
             {
+                var sale = await _saleRepository.GetByIdAsync(saleId);
+                if (sale == null)
+                    return false;
+
+                // Get sale items and restore stock
                 var saleItems = await _saleItemRepository.GetBySaleIdAsync(saleId);
                 foreach (var item in saleItems)
                 {
+                    // Restore stock to products
+                    var product = await _productRepository.GetByIdAsync(item.ProductID);
+                    if (product != null)
+                    {
+                        product.TotalStock += item.Quantity;
+                        await _productRepository.UpdateAsync(product);
+                    }
+                    
                     await _saleItemRepository.DeleteAsync(item.SaleItemID);
-                    // OPTIONAL: restore stock here
                 }
 
                 await _saleRepository.DeleteAsync(saleId);
@@ -243,28 +286,245 @@ namespace Business.Services
             return true;
         }
 
-        private void ValidateSale(SaleDTO saleDto)
+        // Additional validation and utility methods implementation
+        public async Task<bool> ValidateProductStockAsync(Guid productId, int requestedQuantity)
         {
-            if (saleDto.CustomerID == Guid.Empty)
-                throw new ArgumentException("Customer ID is required", nameof(saleDto.CustomerID));
+            try
+            {
+                var product = await _productRepository.GetByIdAsync(productId);
+                return product != null && product.IsActive && product.TotalStock >= requestedQuantity;
+            }
+            catch
+            {
+                return false;
+            }
+        }
 
+        public async Task<bool> CanProcessSaleAsync(SaleDTO saleDto)
+        {
+            try
+            {
+                if (saleDto?.SaleItems == null || !saleDto.SaleItems.Any())
+                    return false;
+
+                // Check if all products exist and have sufficient stock
+                foreach (var item in saleDto.SaleItems)
+                {
+                    if (!await ValidateProductStockAsync(item.ProductID, item.Quantity))
+                        return false;
+                }
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<Dictionary<Guid, int>> GetAvailableStockAsync(IEnumerable<Guid> productIds)
+        {
+            var stockDictionary = new Dictionary<Guid, int>();
+            
+            try
+            {
+                foreach (var productId in productIds)
+                {
+                    var product = await _productRepository.GetByIdAsync(productId);
+                    stockDictionary[productId] = product?.TotalStock ?? 0;
+                }
+            }
+            catch
+            {
+                // Return empty dictionary on error
+            }
+
+            return stockDictionary;
+        }
+
+        public async Task<decimal> CalculateSaleTotalAsync(SaleDTO saleDto)
+        {
+            try
+            {
+                if (saleDto?.SaleItems == null)
+                    return 0m;
+
+                decimal total = 0m;
+                foreach (var item in saleDto.SaleItems)
+                {
+                    // Validate product exists and price is reasonable
+                    var product = await _productRepository.GetByIdAsync(item.ProductID);
+                    if (product != null)
+                    {
+                        var lineTotal = (item.UnitPrice * item.Quantity) - item.Discount;
+                        total += Math.Max(0, lineTotal); // Prevent negative line totals
+                    }
+                }
+
+                return total;
+            }
+            catch
+            {
+                return 0m;
+            }
+        }
+
+        public async Task<bool> IsSaleValidAsync(SaleDTO saleDto)
+        {
+            try
+            {
+                await ValidateSale(saleDto);
+                return await CanProcessSaleAsync(saleDto);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private async Task ValidateSale(SaleDTO saleDto)
+        {
+            if (saleDto == null)
+                throw new ArgumentNullException(nameof(saleDto));
+
+            // Validate customer (allow empty for walk-in customers)
+            if (saleDto.CustomerID != Guid.Empty)
+            {
+                var customer = await _customerRepository.GetByIdAsync(saleDto.CustomerID);
+                if (customer == null)
+                    throw new ArgumentException("Invalid customer ID - customer not found", nameof(saleDto.CustomerID));
+            }
+
+            // Validate user
             if (saleDto.UserID == Guid.Empty)
                 throw new ArgumentException("User ID is required", nameof(saleDto.UserID));
 
+            var user = await _userRepository.GetByIdAsync(saleDto.UserID);
+            if (user == null)
+                throw new ArgumentException("Invalid user ID - user not found", nameof(saleDto.UserID));
+
+            // Validate sale items
             if (saleDto.SaleItems == null || saleDto.SaleItems.Count == 0)
                 throw new ArgumentException("Sale must contain at least one item", nameof(saleDto.SaleItems));
 
+            // Validate payment status
+            var validPaymentStatuses = new[] { "Paid", "Pending", "Partial", "Cancelled" };
+            if (!validPaymentStatuses.Contains(saleDto.PaymentStatus))
+                throw new ArgumentException($"Invalid payment status. Must be one of: {string.Join(", ", validPaymentStatuses)}", nameof(saleDto.PaymentStatus));
+
+            // Validate sale date
+            if (saleDto.SaleDate > DateTime.UtcNow.AddDays(1))
+                throw new ArgumentException("Sale date cannot be in the future", nameof(saleDto.SaleDate));
+
+            // Validate each sale item
             foreach (var item in saleDto.SaleItems)
             {
-                if (item.Quantity <= 0)
-                    throw new ArgumentException("Item quantity must be greater than zero", nameof(item.Quantity));
-                if (item.UnitPrice <= 0)
-                    throw new ArgumentException("Item unit price must be greater than zero", nameof(item.UnitPrice));
-                if (item.Discount < 0)
-                    throw new ArgumentException("Item discount cannot be negative", nameof(item.Discount));
-                if (item.Discount > item.UnitPrice * item.Quantity)
-                    throw new ArgumentException("Item discount cannot exceed line value", nameof(item.Discount));
+                await ValidateSaleItem(item);
             }
+
+            // Validate total amount consistency
+            var calculatedTotal = saleDto.SaleItems.Sum(i => (i.UnitPrice * i.Quantity) - i.Discount);
+            if (Math.Abs(saleDto.TotalAmount - calculatedTotal) > 0.01m)
+                throw new ArgumentException($"Total amount mismatch. Expected: {calculatedTotal:C}, Provided: {saleDto.TotalAmount:C}", nameof(saleDto.TotalAmount));
+        }
+
+        private async Task ValidateSaleItem(SaleItemDTO item)
+        {
+            if (item == null)
+                throw new ArgumentNullException(nameof(item));
+
+            // Validate product exists
+            if (item.ProductID == Guid.Empty)
+                throw new ArgumentException("Product ID is required for all sale items", nameof(item.ProductID));
+
+            var product = await _productRepository.GetByIdAsync(item.ProductID);
+            if (product == null)
+                throw new ArgumentException($"Product not found: {item.ProductID}", nameof(item.ProductID));
+
+            if (!product.IsActive)
+                throw new ArgumentException($"Product is not active: {product.ProductName}", nameof(item.ProductID));
+
+            // Validate quantity
+            if (item.Quantity <= 0)
+                throw new ArgumentException("Item quantity must be greater than zero", nameof(item.Quantity));
+
+            // Validate stock availability
+            if (product.TotalStock < item.Quantity)
+                throw new ArgumentException($"Insufficient stock for {product.ProductName}. Available: {product.TotalStock}, Requested: {item.Quantity}", nameof(item.Quantity));
+
+            // Validate unit price
+            if (item.UnitPrice <= 0)
+                throw new ArgumentException("Item unit price must be greater than zero", nameof(item.UnitPrice));
+
+            // Validate discount
+            if (item.Discount < 0)
+                throw new ArgumentException("Item discount cannot be negative", nameof(item.Discount));
+
+            var lineTotal = item.UnitPrice * item.Quantity;
+            if (item.Discount > lineTotal)
+                throw new ArgumentException($"Item discount cannot exceed line value. Line total: {lineTotal:C}, Discount: {item.Discount:C}", nameof(item.Discount));
+
+            // Validate unit price is reasonable (not significantly different from product default)
+            var priceVariance = Math.Abs(item.UnitPrice - product.UnitPrice) / product.UnitPrice;
+            if (priceVariance > 0.5m) // Allow 50% variance
+                throw new ArgumentException($"Unit price variance too high for {product.ProductName}. Product price: {product.UnitPrice:C}, Sale price: {item.UnitPrice:C}", nameof(item.UnitPrice));
+        }
+
+        private async Task<bool> ValidateStockAvailability(SaleDTO saleDto)
+        {
+            if (saleDto?.SaleItems == null)
+                return false;
+
+            // Group items by product to handle multiple line items for same product
+            var productQuantities = saleDto.SaleItems
+                .GroupBy(i => i.ProductID)
+                .ToDictionary(g => g.Key, g => g.Sum(i => i.Quantity));
+
+            foreach (var productQuantity in productQuantities)
+            {
+                var product = await _productRepository.GetByIdAsync(productQuantity.Key);
+                if (product == null || product.TotalStock < productQuantity.Value)
+                    return false;
+            }
+
+            return true;
+        }
+
+        private async Task<bool> ValidateStockAvailabilityForUpdate(SaleDTO saleDto, Guid existingSaleId)
+        {
+            if (saleDto?.SaleItems == null)
+                return false;
+
+            // Get existing sale items to calculate stock differences
+            var existingItems = await _saleItemRepository.GetBySaleIdAsync(existingSaleId);
+            var existingQuantities = existingItems
+                .GroupBy(i => i.ProductID)
+                .ToDictionary(g => g.Key, g => g.Sum(i => i.Quantity));
+
+            // Group new items by product
+            var newQuantities = saleDto.SaleItems
+                .GroupBy(i => i.ProductID)
+                .ToDictionary(g => g.Key, g => g.Sum(i => i.Quantity));
+
+            // Check stock for each product considering the differences
+            var allProductIds = existingQuantities.Keys.Union(newQuantities.Keys);
+            
+            foreach (var productId in allProductIds)
+            {
+                var product = await _productRepository.GetByIdAsync(productId);
+                if (product == null)
+                    return false;
+
+                var existingQty = existingQuantities.GetValueOrDefault(productId, 0);
+                var newQty = newQuantities.GetValueOrDefault(productId, 0);
+                var netChange = newQty - existingQty;
+
+                // If net change is positive (more stock needed), check availability
+                if (netChange > 0 && product.TotalStock < netChange)
+                    return false;
+            }
+
+            return true;
         }
 
         private static void RecalculateSaleTotals(SaleDTO saleDto)
@@ -293,6 +553,7 @@ namespace Business.Services
                     SaleItemID = item.SaleItemID,
                     SaleID = item.SaleID,
                     ProductID = item.ProductID,
+                    ProductBatchID = item.ProductBatchID,
                     ProductName = product?.ProductName ?? string.Empty,
                     Quantity = item.Quantity,
                     UnitPrice = item.UnitPrice,
@@ -342,6 +603,7 @@ namespace Business.Services
                 SaleItemID = itemDto.SaleItemID == Guid.Empty ? Guid.NewGuid() : itemDto.SaleItemID,
                 SaleID = saleId,
                 ProductID = itemDto.ProductID,
+                ProductBatchID = itemDto.ProductBatchID,
                 Quantity = itemDto.Quantity,
                 UnitPrice = itemDto.UnitPrice,
                 Discount = itemDto.Discount,

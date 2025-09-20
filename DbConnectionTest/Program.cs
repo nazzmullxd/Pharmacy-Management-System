@@ -13,6 +13,7 @@ class Program
             {
                 await connection.OpenAsync();
                 Console.WriteLine("Connection successful!");
+                Console.WriteLine("Connection string: " + connectionString);
             }
         }
         catch (Exception ex)

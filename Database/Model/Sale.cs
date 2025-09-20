@@ -20,6 +20,7 @@ namespace Database.Model
         public Guid UserID { get; set; } = Guid.Empty;
 
         public UserInfo? User { get; set; }
+        public ICollection<SaleItem> SaleItems { get; set; } = new List<SaleItem>();
 
         [Required]
         public DateTime SaleDate { get; set; } = DateTime.UtcNow;

@@ -1,110 +1,211 @@
 @page
 @model Web.Pages.Customers.IndexModel
 @{
-    ViewData["Title"] = "Customers";
+    ViewData["Title"] = "Customer Management";
 }
 
 <!-- Page Header -->
 <div class="page-header">
-    <h1><i class="fas fa-users"></i> Customer Management</h1>
-    <p>Manage your pharmacy's customer database and customer relationships.</p>
-</div>
-
-<!-- Action Buttons -->
-<div class="row mb-4">
-    <div class="col-md-6">
-        <a href="/Customers/Create" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Add New Customer
-        </a>
-        <a href="/Customers/Import" class="btn btn-outline-secondary">
-            <i class="fas fa-file-import"></i> Import Customers
-        </a>
-    </div>
-    <div class="col-md-6">
-        <div class="input-group">
-            <input type="text" class="form-control search-input" placeholder="Search customers...">
-            <button class="btn btn-outline-secondary" type="button">
-                <i class="fas fa-search"></i>
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-users text-primary"></i> Customer Management</h1>
+            <p class="mb-0">Manage your pharmacy's customer database and build stronger customer relationships</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/Customers/Create" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add Customer
+            </a>
+            <a href="/Customers/Import" class="btn btn-outline-info">
+                <i class="fas fa-file-import"></i> Import
+            </a>
+            <button type="button" class="btn btn-outline-secondary" onclick="exportCustomers()">
+                <i class="fas fa-download"></i> Export
             </button>
         </div>
     </div>
 </div>
 
+<!-- Quick Actions & Filters -->
+<div class="dashboard-card mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-4">
+            <h6 class="mb-2 text-muted">Quick Actions</h6>
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="/Customers/Create" class="btn btn-sm btn-success">
+                    <i class="fas fa-user-plus"></i> Add Customer
+                </a>
+                <a href="/Sales/Create" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-shopping-cart"></i> New Sale
+                </a>
+                <button class="btn btn-sm btn-outline-secondary" onclick="refreshPage()">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Filter by Status</label>
+                    <select class="form-select form-select-sm" id="statusFilter">
+                        <option value="">All Customers</option>
+                        <option value="active">Active Customers</option>
+                        <option value="new">New This Month</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Sort By</label>
+                    <select class="form-select form-select-sm" id="sortFilter">
+                        <option value="name">Name A-Z</option>
+                        <option value="recent">Recently Added</option>
+                        <option value="purchases">Total Purchases</option>
+                        <option value="last-purchase">Last Purchase</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Search Customers</label>
+                    <div class="input-group input-group-sm">
+                        <input type="text" class="form-control" id="searchInput" placeholder="Name, phone, email...">
+                        <button class="btn btn-outline-secondary" type="button" id="searchBtn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Customer Summary Cards -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="kpi-card">
-            <div class="kpi-header">
-                <div class="kpi-title">Total Customers</div>
-                <div class="kpi-icon" style="background: #3498db;">
-                    <i class="fas fa-users"></i>
-                </div>
+<div class="kpi-grid mb-4">
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Total Customers</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #3498db, #5dade2);">
+                <i class="fas fa-users"></i>
             </div>
-            <div class="kpi-value">@Model.TotalCustomers</div>
-            <div class="kpi-change positive">
-                <i class="fas fa-arrow-up"></i> Registered
+        </div>
+        <div class="kpi-value">@Model.TotalCustomers</div>
+        <div class="kpi-change positive">
+            <i class="fas fa-chart-bar"></i> Registered customers
+        </div>
+        <div class="kpi-progress mt-2">
+            <div class="progress" style="height: 4px;">
+                <div class="progress-bar bg-info" role="progressbar" style="width: 90%" aria-valuenow="90" aria-valuemin="0" aria-valuemax="100"></div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="kpi-card">
-            <div class="kpi-header">
-                <div class="kpi-title">Active Customers</div>
-                <div class="kpi-icon" style="background: #27ae60;">
-                    <i class="fas fa-user-check"></i>
-                </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Active Customers</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #27ae60, #2ecc71);">
+                <i class="fas fa-user-check"></i>
             </div>
-            <div class="kpi-value">@Model.ActiveCustomers</div>
-            <div class="kpi-change positive">
-                <i class="fas fa-arrow-up"></i> This month
+        </div>
+        <div class="kpi-value">@Model.ActiveCustomers</div>
+        <div class="kpi-change positive">
+            <i class="fas fa-arrow-up"></i> Active this month
+        </div>
+        <div class="kpi-progress mt-2">
+            <div class="progress" style="height: 4px;">
+                <div class="progress-bar bg-success" role="progressbar" style="width: 75%" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="kpi-card">
-            <div class="kpi-header">
-                <div class="kpi-title">New This Month</div>
-                <div class="kpi-icon" style="background: #9b59b6;">
-                    <i class="fas fa-user-plus"></i>
-                </div>
-            </div>
-            <div class="kpi-value">@Model.NewCustomers</div>
-            <div class="kpi-change positive">
-                <i class="fas fa-arrow-up"></i> New registrations
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">New This Month</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #9b59b6, #bb8fce);">
+                <i class="fas fa-user-plus"></i>
             </div>
         </div>
+        <div class="kpi-value">@Model.NewCustomers</div>
+        <div class="kpi-change positive">
+            <i class="fas fa-calendar-plus"></i> New registrations
+        </div>
+        <div class="mt-2">
+            <a href="/Customers/Create" class="btn btn-sm btn-outline-primary">
+                <i class="fas fa-plus"></i> Add Customer
+            </a>
+        </div>
     </div>
-    <div class="col-md-3">
-        <div class="kpi-card">
-            <div class="kpi-header">
-                <div class="kpi-title">Total Sales</div>
-                <div class="kpi-icon" style="background: #e67e22;">
-                    <i class="fas fa-dollar-sign"></i>
-                </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Customer Sales</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #e67e22, #f39c12);">
+                <i class="fas fa-dollar-sign"></i>
             </div>
-            <div class="kpi-value">$@Model.TotalCustomerSales.ToString("N0")</div>
-            <div class="kpi-change positive">
-                <i class="fas fa-arrow-up"></i> Customer sales
-            </div>
+        </div>
+        <div class="kpi-value">$@Model.TotalCustomerSales.ToString("N0")</div>
+        <div class="kpi-change positive">
+            <i class="fas fa-chart-line"></i> Total revenue
+        </div>
+        <div class="mt-2">
+            <a href="/Reports" class="btn btn-sm btn-warning">
+                <i class="fas fa-chart-pie"></i> View Report
+            </a>
         </div>
     </div>
 </div>
 
 <!-- Customers Table -->
 <div class="table-container">
-    <h5><i class="fas fa-list"></i> Customer Directory</h5>
-    <div class="table-responsive">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0"><i class="fas fa-list text-primary"></i> Customer Directory</h5>
+        <div class="d-flex align-items-center gap-3">
+            <small class="text-muted">
+                Showing @(Model.Customers?.Count() ?? 0) customers
+            </small>
+            <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-secondary" onclick="toggleView('table')" id="tableViewBtn">
+                    <i class="fas fa-table"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="toggleView('card')" id="cardViewBtn">
+                    <i class="fas fa-th-large"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table View -->
+    <div id="tableView" class="table-responsive">
         <table class="table table-hover" id="customersTable">
-            <thead>
+            <thead class="table-light">
                 <tr>
-                    <th data-sort="0">Customer Name</th>
-                    <th data-sort="1">Contact</th>
-                    <th data-sort="2">Email</th>
-                    <th data-sort="3">Address</th>
-                    <th data-sort="4">Registration Date</th>
-                    <th data-sort="5">Total Purchases</th>
-                    <th data-sort="6">Last Purchase</th>
-                    <th>Actions</th>
+                    <th class="sortable" data-sort="0">
+                        <i class="fas fa-user text-muted me-1"></i>Customer Name
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="sortable" data-sort="1">
+                        <i class="fas fa-phone text-muted me-1"></i>Contact
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="sortable" data-sort="2">
+                        <i class="fas fa-envelope text-muted me-1"></i>Email
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="sortable" data-sort="3">
+                        <i class="fas fa-map-marker-alt text-muted me-1"></i>Address
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="sortable" data-sort="4">
+                        <i class="fas fa-calendar text-muted me-1"></i>Registration
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="text-end sortable" data-sort="5">
+                        <i class="fas fa-dollar-sign text-muted me-1"></i>Total Purchases
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="sortable" data-sort="6">
+                        <i class="fas fa-shopping-cart text-muted me-1"></i>Last Purchase
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="text-center" style="width: 180px;">
+                        <i class="fas fa-cogs text-muted me-1"></i>Actions
+                    </th>
                 </tr>
             </thead>
             <tbody>
@@ -112,72 +213,135 @@
                 {
                     @foreach (var customer in Model.Customers)
                     {
-                        <tr>
+                        <tr class="customer-row" data-customer-id="@customer.CustomerID">
                             <td>
-                                <strong>@customer.CustomerName</strong>
-                                <br><small class="text-muted">ID: @customer.CustomerID.ToString().Substring(0, 8)</small>
+                                <div class="customer-info">
+                                    <div class="customer-name">@customer.CustomerName</div>
+                                    <small class="customer-id text-muted">
+                                        <i class="fas fa-id-card me-1"></i>ID: @customer.CustomerID.ToString().Substring(0, 8).ToUpper()
+                                    </small>
+                                </div>
                             </td>
                             <td>
-                                @customer.ContactNumber
-                                @if (!string.IsNullOrEmpty(customer.ContactNumber))
-                                {
-                                    <br><small class="text-muted">Phone</small>
-                                }
+                                <div class="contact-info">
+                                    @if (!string.IsNullOrEmpty(customer.ContactNumber))
+                                    {
+                                        <div class="contact-number">@customer.ContactNumber</div>
+                                        <small class="text-muted">
+                                            <i class="fas fa-phone me-1"></i>Phone
+                                        </small>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">No contact</span>
+                                    }
+                                </div>
                             </td>
                             <td>
-                                @if (!string.IsNullOrEmpty(customer.Email))
-                                {
-                                    <a href="mailto:@customer.Email">@customer.Email</a>
-                                }
-                                else
-                                {
-                                    <span class="text-muted">No email</span>
-                                }
+                                <div class="email-info">
+                                    @if (!string.IsNullOrEmpty(customer.Email))
+                                    {
+                                        <a href="mailto:@customer.Email" class="customer-email">@customer.Email</a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">No email</span>
+                                    }
+                                </div>
                             </td>
                             <td>
-                                @if (!string.IsNullOrEmpty(customer.Address))
-                                {
-                                    <span title="@customer.Address">
-                                        @(customer.Address.Length > 30 ? customer.Address.Substring(0, 30) + "..." : customer.Address)
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span class="text-muted">No address</span>
-                                }
+                                <div class="address-info">
+                                    @if (!string.IsNullOrEmpty(customer.Address))
+                                    {
+                                        <div class="customer-address" title="@customer.Address">
+                                            @(customer.Address.Length > 30 ? customer.Address.Substring(0, 30) + "..." : customer.Address)
+                                        </div>
+                                        <small class="text-muted">
+                                            <i class="fas fa-map-marker-alt me-1"></i>Address
+                                        </small>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">No address</span>
+                                    }
+                                </div>
                             </td>
                             <td>
-                                @customer.CreatedDate.ToString("MMM dd, yyyy")
-                                <br><small class="text-muted">@customer.CreatedDate.ToString("hh:mm tt")</small>
+                                <div class="date-info">
+                                    <div class="registration-date">@customer.CreatedDate.ToString("MMM dd, yyyy")</div>
+                                    <small class="registration-time text-muted">
+                                        <i class="fas fa-clock me-1"></i>@customer.CreatedDate.ToString("hh:mm tt")
+                                    </small>
+                                </div>
+                            </td>
+                            <td class="text-end">
+                                <div class="purchase-info">
+                                    <strong class="purchase-amount">$@(customer.TotalPurchases?.ToString("F2") ?? "0.00")</strong>
+                                </div>
                             </td>
                             <td>
-                                <span class="badge badge-info">$@(customer.TotalPurchases?.ToString("F2") ?? "0.00")</span>
+                                <div class="last-purchase-info">
+                                    @if (customer.LastPurchaseDate.HasValue)
+                                    {
+                                        <div class="last-purchase-date">@customer.LastPurchaseDate.Value.ToString("MMM dd, yyyy")</div>
+                                        <small class="last-purchase-time text-muted">
+                                            <i class="fas fa-clock me-1"></i>@customer.LastPurchaseDate.Value.ToString("hh:mm tt")
+                                        </small>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">No purchases</span>
+                                    }
+                                </div>
                             </td>
                             <td>
-                                @if (customer.LastPurchaseDate.HasValue)
-                                {
-                                    @customer.LastPurchaseDate.Value.ToString("MMM dd, yyyy")
-                                    <br><small class="text-muted">@customer.LastPurchaseDate.Value.ToString("hh:mm tt")</small>
-                                }
-                                else
-                                {
-                                    <span class="text-muted">No purchases</span>
-                                }
-                            </td>
-                            <td>
-                                <div class="btn-group" role="group">
-                                    <a href="/Customers/Details/@customer.CustomerID" class="btn btn-sm btn-outline-info" title="View Details">
+                                <div class="action-buttons d-flex gap-1 justify-content-center">
+                                    <a href="/Customers/Details/@customer.CustomerID" 
+                                       class="btn btn-sm btn-outline-info" 
+                                       title="View Details"
+                                       data-bs-toggle="tooltip">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <a href="/Customers/Edit/@customer.CustomerID" class="btn btn-sm btn-outline-primary" title="Edit">
+                                    <a href="/Customers/Edit/@customer.CustomerID" 
+                                       class="btn btn-sm btn-outline-primary" 
+                                       title="Edit Customer"
+                                       data-bs-toggle="tooltip">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <a href="/Sales/Create?customerId=@customer.CustomerID" class="btn btn-sm btn-outline-success" title="New Sale">
+                                    <a href="/Sales/Create?customerId=@customer.CustomerID" 
+                                       class="btn btn-sm btn-outline-success" 
+                                       title="New Sale"
+                                       data-bs-toggle="tooltip">
                                         <i class="fas fa-shopping-cart"></i>
                                     </a>
-                                    <button type="button" class="btn btn-sm btn-outline-danger" title="Delete" onclick="confirmDelete('@customer.CustomerID', '@customer.CustomerName')">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                                                type="button" 
+                                                data-bs-toggle="dropdown" 
+                                                aria-expanded="false"
+                                                title="More Actions">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li><a class="dropdown-item" href="/Customers/Details/@customer.CustomerID">
+                                                <i class="fas fa-eye me-2"></i>View Details
+                                            </a></li>
+                                            <li><a class="dropdown-item" href="/Customers/Edit/@customer.CustomerID">
+                                                <i class="fas fa-edit me-2"></i>Edit Customer
+                                            </a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><a class="dropdown-item" href="/Sales/Create?customerId=@customer.CustomerID">
+                                                <i class="fas fa-shopping-cart me-2"></i>Create Sale
+                                            </a></li>
+                                            <li><a class="dropdown-item" href="/Sales?customerId=@customer.CustomerID">
+                                                <i class="fas fa-history me-2"></i>Purchase History
+                                            </a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><button class="dropdown-item text-danger" onclick="confirmDelete('@customer.CustomerID', '@customer.CustomerName')">
+                                                <i class="fas fa-trash me-2"></i>Delete Customer
+                                            </button></li>
+                                        </ul>
+                                    </div>
                                 </div>
                             </td>
                         </tr>
@@ -186,72 +350,192 @@
                 else
                 {
                     <tr>
-                        <td colspan="8" class="text-center text-muted py-4">
-                            <i class="fas fa-users fa-3x mb-3"></i>
-                            <br>No customers found. <a href="/Customers/Create">Add your first customer</a>
+                        <td colspan="8" class="text-center py-5">
+                            <div class="empty-state">
+                                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                                <h6 class="text-muted">No customers found</h6>
+                                <p class="text-muted mb-3">Start building your customer base by adding your first customer</p>
+                                <a href="/Customers/Create" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i> Add First Customer
+                                </a>
+                            </div>
                         </td>
                     </tr>
                 }
             </tbody>
         </table>
     </div>
+
+    <!-- Card View (Alternative View) -->
+    <div id="cardView" style="display: none;" class="row">
+        @if (Model.Customers != null && Model.Customers.Any())
+        {
+            @foreach (var customer in Model.Customers)
+            {
+                <div class="col-lg-6 col-xl-4 mb-3">
+                    <div class="card customer-card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">@customer.CustomerName</h6>
+                            @if (customer.LastPurchaseDate.HasValue)
+                            {
+                                <span class="badge bg-success">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">New</span>
+                            }
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <p class="mb-1"><strong>@customer.ContactNumber</strong></p>
+                                    <small class="text-muted">@customer.Email</small>
+                                </div>
+                                <h5 class="text-success mb-0">$@(customer.TotalPurchases?.ToString("F2") ?? "0.00")</h5>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar me-1"></i>Joined @customer.CreatedDate.ToString("MMM yyyy")
+                                </small>
+                                @if (customer.LastPurchaseDate.HasValue)
+                                {
+                                    <small class="text-muted">Last: @customer.LastPurchaseDate.Value.ToString("MMM dd")</small>
+                                }
+                                else
+                                {
+                                    <small class="text-warning">No purchases</small>
+                                }
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <div class="d-flex gap-1">
+                                <a href="/Customers/Details/@customer.CustomerID" class="btn btn-sm btn-outline-info flex-fill">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                                <a href="/Sales/Create?customerId=@customer.CustomerID" class="btn btn-sm btn-outline-success flex-fill">
+                                    <i class="fas fa-shopping-cart"></i> Sale
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
 </div>
 
-<!-- Pagination -->
-@if (Model.Customers != null && Model.Customers.Count() > 10)
+<!-- Enhanced Pagination -->
+@if (Model.Customers != null && Model.Customers.Count() > 25)
 {
-    <nav aria-label="Customers pagination">
-        <ul class="pagination justify-content-center">
-            <li class="page-item disabled">
-                <a class="page-link" href="#" tabindex="-1">Previous</a>
-            </li>
-            <li class="page-item active"><a class="page-link" href="#">1</a></li>
-            <li class="page-item"><a class="page-link" href="#">2</a></li>
-            <li class="page-item"><a class="page-link" href="#">3</a></li>
-            <li class="page-item">
-                <a class="page-link" href="#">Next</a>
-            </li>
-        </ul>
+    <nav aria-label="Customers pagination" class="mt-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="pagination-info">
+                <small class="text-muted">
+                    Showing <strong>1-@Math.Min(25, Model.Customers.Count())</strong> of <strong>@Model.Customers.Count()</strong> customers
+                </small>
+            </div>
+            <ul class="pagination justify-content-center mb-0">
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </a>
+                </li>
+                <li class="page-item active">
+                    <a class="page-link" href="#">1</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="#">2</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="#">3</a>
+                </li>
+                <li class="page-item">
+                    <span class="page-link">...</span>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="#">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+            <div class="page-size-selector">
+                <select class="form-select form-select-sm" style="width: auto;">
+                    <option value="25" selected>25 per page</option>
+                    <option value="50">50 per page</option>
+                    <option value="100">100 per page</option>
+                </select>
+            </div>
+        </div>
     </nav>
 }
 
-<!-- Quick Actions -->
+<!-- Data Tables -->
 <div class="row mt-4">
-    <div class="col-md-6">
+    <div class="col-lg-6 mb-4">
         <div class="table-container">
-            <h5><i class="fas fa-star"></i> Top Customers (This Month)</h5>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0"><i class="fas fa-star text-warning"></i> Top Customers (This Month)</h5>
+                <a href="/Reports" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-chart-bar"></i> Full Report
+                </a>
+            </div>
             <div class="table-responsive">
-                <table class="table table-sm">
-                    <thead>
+                <table class="table table-hover">
+                    <thead class="table-light">
                         <tr>
-                            <th>Customer</th>
-                            <th>Purchases</th>
-                            <th>Total Amount</th>
-                            <th>Action</th>
+                            <th><i class="fas fa-hashtag text-muted me-1"></i>Rank</th>
+                            <th><i class="fas fa-user text-muted me-1"></i>Customer</th>
+                            <th class="text-center"><i class="fas fa-shopping-bag text-muted me-1"></i>Purchases</th>
+                            <th class="text-end"><i class="fas fa-dollar-sign text-muted me-1"></i>Amount</th>
+                            <th class="text-center">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         @if (Model.TopCustomers != null && Model.TopCustomers.Any())
                         {
+                            var rank = 1;
                             @foreach (var customer in Model.TopCustomers.Take(5))
                             {
                                 <tr>
-                                    <td>@customer.CustomerName</td>
-                                    <td><span class="badge badge-info">@customer.TotalPurchases</span></td>
-                                    <td>$@(customer.TotalAmount?.ToString("F2") ?? "0.00")</td>
                                     <td>
-                                        <a href="/Sales/Create?customerId=@customer.CustomerID" class="btn btn-sm btn-outline-primary">
+                                        <span class="badge @(rank == 1 ? "bg-warning" : rank == 2 ? "bg-secondary" : rank == 3 ? "bg-success" : "bg-info") rank-badge">
+                                            @rank
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="customer-info">
+                                            <div class="customer-name">@customer.CustomerName</div>
+                                            <small class="text-muted">
+                                                <i class="fas fa-crown me-1"></i>Top customer
+                                            </small>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-info items-badge">
+                                            @customer.TotalPurchases <small>orders</small>
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <strong class="text-success">$@(customer.TotalAmount?.ToString("F2") ?? "0.00")</strong>
+                                    </td>
+                                    <td class="text-center">
+                                        <a href="/Sales/Create?customerId=@customer.CustomerID" class="btn btn-sm btn-outline-success">
                                             <i class="fas fa-shopping-cart"></i> New Sale
                                         </a>
                                     </td>
                                 </tr>
+                                rank++;
                             }
                         }
                         else
                         {
                             <tr>
-                                <td colspan="4" class="text-center text-muted">
-                                    <i class="fas fa-info-circle"></i> No customer data available
+                                <td colspan="5" class="text-center py-4">
+                                    <div class="empty-state">
+                                        <i class="fas fa-chart-line fa-2x text-muted mb-2"></i>
+                                        <h6 class="text-muted">No customer data available</h6>
+                                        <p class="text-muted mb-0">Customer analytics will appear as sales are made</p>
+                                    </div>
                                 </td>
                             </tr>
                         }
@@ -261,17 +545,22 @@
         </div>
     </div>
 
-    <div class="col-md-6">
+    <div class="col-lg-6 mb-4">
         <div class="table-container">
-            <h5><i class="fas fa-user-plus"></i> Recent Registrations</h5>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0"><i class="fas fa-user-plus text-success"></i> Recent Registrations</h5>
+                <a href="/Customers/Create" class="btn btn-sm btn-outline-success">
+                    <i class="fas fa-plus"></i> Add Customer
+                </a>
+            </div>
             <div class="table-responsive">
-                <table class="table table-sm">
-                    <thead>
+                <table class="table table-hover">
+                    <thead class="table-light">
                         <tr>
-                            <th>Customer</th>
-                            <th>Contact</th>
-                            <th>Registration Date</th>
-                            <th>Action</th>
+                            <th><i class="fas fa-user text-muted me-1"></i>Customer</th>
+                            <th><i class="fas fa-phone text-muted me-1"></i>Contact</th>
+                            <th class="text-center"><i class="fas fa-calendar text-muted me-1"></i>Registration</th>
+                            <th class="text-center">Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -280,10 +569,33 @@
                             @foreach (var customer in Model.RecentCustomers.Take(5))
                             {
                                 <tr>
-                                    <td>@customer.CustomerName</td>
-                                    <td>@customer.ContactNumber</td>
-                                    <td>@customer.CreatedDate.ToString("MMM dd")</td>
                                     <td>
+                                        <div class="customer-info">
+                                            <div class="customer-name">@customer.CustomerName</div>
+                                            <small class="text-muted">
+                                                <i class="fas fa-sparkles me-1"></i>New customer
+                                            </small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="contact-info">
+                                            @if (!string.IsNullOrEmpty(customer.ContactNumber))
+                                            {
+                                                <div class="contact-number">@customer.ContactNumber</div>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">No contact</span>
+                                            }
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="date-info">
+                                            <div class="registration-date">@customer.CreatedDate.ToString("MMM dd")</div>
+                                            <small class="registration-time text-muted">@customer.CreatedDate.ToString("hh:mm tt")</small>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
                                         <a href="/Customers/Details/@customer.CustomerID" class="btn btn-sm btn-outline-info">
                                             <i class="fas fa-eye"></i> View
                                         </a>
@@ -294,8 +606,15 @@
                         else
                         {
                             <tr>
-                                <td colspan="4" class="text-center text-muted">
-                                    <i class="fas fa-info-circle"></i> No recent registrations
+                                <td colspan="4" class="text-center py-4">
+                                    <div class="empty-state">
+                                        <i class="fas fa-user-plus fa-2x text-muted mb-2"></i>
+                                        <h6 class="text-muted">No recent registrations</h6>
+                                        <p class="text-muted mb-3">Start building your customer base</p>
+                                        <a href="/Customers/Create" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-plus"></i> Add Customer
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                         }
@@ -308,13 +627,287 @@
 
 @section Scripts {
     <script>
-        function confirmDelete(customerId, customerName) {
-            if (confirm(`Are you sure you want to delete "${customerName}"? This action cannot be undone.`)) {
-                // In a real implementation, this would make an API call
-                showAlert('Customer deleted successfully', 'success');
-                // Remove the row from the table
-                event.target.closest('tr').remove();
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+
+        // Enhanced filtering functionality
+        document.getElementById('statusFilter').addEventListener('change', function() {
+            filterCustomers();
+        });
+
+        document.getElementById('sortFilter').addEventListener('change', function() {
+            const sortBy = this.value;
+            sortCustomers(sortBy);
+        });
+
+        // Enhanced Search functionality
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+
+        searchInput.addEventListener('input', debounce(filterCustomers, 300));
+        searchBtn.addEventListener('click', filterCustomers);
+
+        function filterCustomers() {
+            const statusFilter = document.getElementById('statusFilter').value.toLowerCase();
+            const searchTerm = searchInput.value.toLowerCase();
+            const rows = document.querySelectorAll('#customersTable tbody tr.customer-row');
+            
+            let visibleCount = 0;
+            
+            rows.forEach(row => {
+                const customerNameCell = row.querySelector('.customer-name');
+                const contactCell = row.querySelector('.contact-number');
+                const emailCell = row.querySelector('.customer-email');
+                const registrationCell = row.querySelector('.registration-date');
+                
+                let shouldShow = true;
+                
+                // Status filter (simplified - you can enhance based on your data)
+                if (statusFilter && shouldShow) {
+                    // Add status filtering logic here based on your customer data
+                    // For now, showing all as this would require backend filtering
+                }
+                
+                // Search filter
+                if (searchTerm && shouldShow) {
+                    const searchableText = [
+                        customerNameCell?.textContent || '',
+                        contactCell?.textContent || '',
+                        emailCell?.textContent || ''
+                    ].join(' ').toLowerCase();
+                    
+                    if (!searchableText.includes(searchTerm)) {
+                        shouldShow = false;
+                    }
+                }
+                
+                row.style.display = shouldShow ? '' : 'none';
+                if (shouldShow) visibleCount++;
+            });
+            
+            // Update results count
+            updateResultsCount(visibleCount);
+            
+            // Show no results message if needed
+            toggleNoResultsMessage(visibleCount === 0);
+        }
+
+        function updateResultsCount(count) {
+            const countElement = document.querySelector('.table-container small');
+            if (countElement) {
+                countElement.textContent = `Showing ${count} customers`;
             }
         }
+
+        function toggleNoResultsMessage(show) {
+            let noResultsRow = document.getElementById('noResultsRow');
+            
+            if (show && !noResultsRow) {
+                const tbody = document.querySelector('#customersTable tbody');
+                noResultsRow = document.createElement('tr');
+                noResultsRow.id = 'noResultsRow';
+                noResultsRow.innerHTML = `
+                    <td colspan="8" class="text-center py-4">
+                        <div class="empty-state">
+                            <i class="fas fa-search fa-2x text-muted mb-2"></i>
+                            <h6 class="text-muted">No customers match your criteria</h6>
+                            <p class="text-muted mb-0">Try adjusting your search terms</p>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(noResultsRow);
+            } else if (!show && noResultsRow) {
+                noResultsRow.remove();
+            }
+        }
+
+        // View toggle functionality
+        function toggleView(viewType) {
+            const tableView = document.getElementById('tableView');
+            const cardView = document.getElementById('cardView');
+            const tableBtn = document.getElementById('tableViewBtn');
+            const cardBtn = document.getElementById('cardViewBtn');
+            
+            if (viewType === 'table') {
+                tableView.style.display = 'block';
+                cardView.style.display = 'none';
+                tableBtn.classList.add('btn-primary');
+                tableBtn.classList.remove('btn-outline-secondary');
+                cardBtn.classList.add('btn-outline-secondary');
+                cardBtn.classList.remove('btn-primary');
+            } else {
+                tableView.style.display = 'none';
+                cardView.style.display = 'block';
+                cardBtn.classList.add('btn-primary');
+                cardBtn.classList.remove('btn-outline-secondary');
+                tableBtn.classList.add('btn-outline-secondary');
+                tableBtn.classList.remove('btn-primary');
+            }
+            
+            // Save preference
+            localStorage.setItem('customersViewPreference', viewType);
+        }
+
+        // Restore view preference
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedView = localStorage.getItem('customersViewPreference') || 'table';
+            toggleView(savedView);
+        });
+
+        // Sort functionality
+        function sortCustomers(sortBy) {
+            const tbody = document.querySelector('#customersTable tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr.customer-row'));
+            
+            rows.sort((a, b) => {
+                let aVal, bVal;
+                
+                switch(sortBy) {
+                    case 'name':
+                        aVal = a.querySelector('.customer-name')?.textContent || '';
+                        bVal = b.querySelector('.customer-name')?.textContent || '';
+                        return aVal.localeCompare(bVal);
+                    
+                    case 'recent':
+                        aVal = new Date(a.querySelector('.registration-date')?.textContent || '');
+                        bVal = new Date(b.querySelector('.registration-date')?.textContent || '');
+                        return bVal - aVal; // Most recent first
+                    
+                    case 'purchases':
+                        aVal = parseFloat(a.querySelector('.purchase-amount')?.textContent.replace(/[$,]/g, '') || '0');
+                        bVal = parseFloat(b.querySelector('.purchase-amount')?.textContent.replace(/[$,]/g, '') || '0');
+                        return bVal - aVal; // Highest first
+                    
+                    case 'last-purchase':
+                        aVal = new Date(a.querySelector('.last-purchase-date')?.textContent || '1900-01-01');
+                        bVal = new Date(b.querySelector('.last-purchase-date')?.textContent || '1900-01-01');
+                        return bVal - aVal; // Most recent first
+                    
+                    default:
+                        return 0;
+                }
+            });
+            
+            // Reorder rows
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        // Export functionality
+        function exportCustomers() {
+            const visibleRows = Array.from(document.querySelectorAll('#customersTable tbody tr.customer-row'))
+                .filter(row => row.style.display !== 'none');
+            
+            if (visibleRows.length === 0) {
+                alert('No data to export');
+                return;
+            }
+            
+            console.log(`Exporting ${visibleRows.length} customers...`);
+            alert(`Export functionality will be implemented to export ${visibleRows.length} customers`);
+        }
+
+        // Refresh page
+        function refreshPage() {
+            window.location.reload();
+        }
+
+        // Delete confirmation
+        function confirmDelete(customerId, customerName) {
+            if (confirm(`Are you sure you want to delete "${customerName}"? This will also delete all their purchase history. This action cannot be undone.`)) {
+                console.log(`Deleting customer: ${customerId}`);
+                // In a real implementation, this would make an API call
+                alert('Delete functionality will be implemented');
+            }
+        }
+
+        // Table sort functionality
+        document.querySelectorAll('.sortable').forEach(header => {
+            header.addEventListener('click', function() {
+                const columnIndex = this.getAttribute('data-sort');
+                
+                // Toggle sort direction
+                let sortDirection = 'asc';
+                if (this.classList.contains('sort-asc')) {
+                    sortDirection = 'desc';
+                    this.classList.remove('sort-asc');
+                    this.classList.add('sort-desc');
+                } else {
+                    sortDirection = 'asc';
+                    this.classList.remove('sort-desc');
+                    this.classList.add('sort-asc');
+                }
+                
+                // Remove sort classes from other headers
+                document.querySelectorAll('.sortable').forEach(h => {
+                    if (h !== this) {
+                        h.classList.remove('sort-asc', 'sort-desc');
+                    }
+                });
+                
+                // Perform sort
+                sortTable(columnIndex, sortDirection);
+            });
+        });
+
+        function sortTable(columnIndex, direction) {
+            const tbody = document.querySelector('#customersTable tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr.customer-row'));
+            
+            rows.sort((a, b) => {
+                const aVal = a.cells[columnIndex].textContent.trim();
+                const bVal = b.cells[columnIndex].textContent.trim();
+                
+                // Handle numeric values (purchases)
+                if (columnIndex === '5') { // Purchases column
+                    const aNum = parseFloat(aVal.replace(/[$,]/g, ''));
+                    const bNum = parseFloat(bVal.replace(/[$,]/g, ''));
+                    return direction === 'asc' ? aNum - bNum : bNum - aNum;
+                }
+                
+                // Handle date values
+                if (columnIndex === '4' || columnIndex === '6') { // Registration or Last Purchase
+                    const aDate = new Date(aVal);
+                    const bDate = new Date(bVal);
+                    return direction === 'asc' ? aDate - bDate : bDate - aDate;
+                }
+                
+                // Handle text values
+                const comparison = aVal.localeCompare(bVal);
+                return direction === 'asc' ? comparison : -comparison;
+            });
+            
+            // Reorder rows
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        // Debounce function for search
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Auto-refresh every 10 minutes
+        setInterval(function() {
+            if (document.visibilityState === 'visible') {
+                // Only refresh if page is visible and no filters are applied
+                const hasFilters = document.getElementById('statusFilter').value || 
+                                 document.getElementById('searchInput').value;
+                
+                if (!hasFilters) {
+                    console.log('Auto-refreshing customers data...');
+                    window.location.reload();
+                }
+            }
+        }, 600000); // 10 minutes
     </script>
 }

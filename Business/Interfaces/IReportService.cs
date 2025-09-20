@@ -16,6 +16,6 @@ namespace Business.Interfaces
         Task<IEnumerable<SaleDTO>> GetDailySalesReportAsync(DateTime date);
         Task<IEnumerable<SaleDTO>> GetMonthlySalesReportAsync(int year, int month);
         Task<ReportDTO> GenerateCustomerReportAsync(Guid customerId, DateTime? startDate = null, DateTime? endDate = null);
-        Task<IEnumerable<AuditLogDTO>> GetAuditLogsAsync(DateTime? startDate = null, DateTime? endDate = null);
+        //Task<IEnumerable<AuditLogDTO>> GetAuditLogsAsync(DateTime? startDate = null, DateTime? endDate = null);
     }
 }

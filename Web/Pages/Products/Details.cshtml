@@ -4,22 +4,643 @@
     ViewData["Title"] = "Product Details";
 }
 
+<!-- Enhanced Page Header -->
 <div class="page-header">
-    <h1><i class="fas fa-eye"></i> Product Details</h1>
-    <a class="btn btn-secondary" href="/Products">Back to Products</a>
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-eye text-info"></i> Product Details</h1>
+            <p class="mb-0">Detailed information for <strong>@(Model.Product?.ProductName ?? "Product")</strong></p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/Products" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Products
+            </a>
+            @if (Model.Product != null)
+            {
+                <a href="/Products/Edit/@Model.Product.ProductID" class="btn btn-primary">
+                    <i class="fas fa-edit"></i> Edit Product
+                </a>
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle" 
+                            type="button" 
+                            data-bs-toggle="dropdown" 
+                            aria-expanded="false">
+                        <i class="fas fa-ellipsis-v"></i> More Actions
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/Stock/Batches?productId=@Model.Product.ProductID">
+                            <i class="fas fa-boxes me-2"></i>Manage Stock
+                        </a></li>
+                        <li><a class="dropdown-item" href="/Sales/Create?productId=@Model.Product.ProductID">
+                            <i class="fas fa-shopping-cart me-2"></i>Add to Sale
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><button class="dropdown-item" onclick="printProduct()">
+                            <i class="fas fa-print me-2"></i>Print Details
+                        </button></li>
+                        <li><button class="dropdown-item" onclick="exportProduct()">
+                            <i class="fas fa-download me-2"></i>Export Data
+                        </button></li>
+                    </ul>
+                </div>
+            }
+        </div>
+    </div>
 </div>
+
 @if (Model.Product != null)
 {
-    <div class="card p-3">
-        <h5>@Model.Product.ProductName</h5>
-        <div>Generic: @Model.Product.GenericName</div>
-        <div>Manufacturer: @Model.Product.Manufacturer</div>
-        <div>Category: @Model.Product.Category</div>
-        <div>Price: @Model.Product.UnitPrice.ToString("C")</div>
-        <div>Total Stock: @Model.Product.TotalStock</div>
+    <div class="row">
+        <!-- Main Product Information -->
+        <div class="col-lg-8">
+            <!-- Basic Information Card -->
+            <div class="dashboard-card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle text-primary me-2"></i>Basic Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="info-group">
+                                <label class="info-label">
+                                    <i class="fas fa-pills text-muted me-2"></i>Product Name
+                                </label>
+                                <div class="info-value">@Model.Product.ProductName</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-group">
+                                <label class="info-label">
+                                    <i class="fas fa-flask text-muted me-2"></i>Generic Name
+                                </label>
+                                <div class="info-value">@Model.Product.GenericName</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-group">
+                                <label class="info-label">
+                                    <i class="fas fa-industry text-muted me-2"></i>Manufacturer
+                                </label>
+                                <div class="info-value">@Model.Product.Manufacturer</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-group">
+                                <label class="info-label">
+                                    <i class="fas fa-tags text-muted me-2"></i>Category
+                                </label>
+                                <div class="info-value">
+                                    <span class="badge bg-info category-badge">
+                                        <i class="fas fa-tag me-1"></i>@Model.Product.Category
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        @if (!string.IsNullOrEmpty(Model.Product.Barcode))
+                        {
+                            <div class="col-md-6">
+                                <div class="info-group">
+                                    <label class="info-label">
+                                        <i class="fas fa-barcode text-muted me-2"></i>Barcode
+                                    </label>
+                                    <div class="info-value">
+                                        <code class="bg-light p-2 rounded">@Model.Product.Barcode</code>
+                                        <button class="btn btn-sm btn-outline-secondary ms-2" onclick="copyBarcode()">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        <div class="col-md-6">
+                            <div class="info-group">
+                                <label class="info-label">
+                                    <i class="fas fa-toggle-on text-muted me-2"></i>Status
+                                </label>
+                                <div class="info-value">
+                                    @if (Model.Product.IsActive)
+                                    {
+                                        <span class="badge bg-success status-badge">
+                                            <i class="fas fa-check-circle me-1"></i>Active
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary status-badge">
+                                            <i class="fas fa-pause-circle me-1"></i>Inactive
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        @if (!string.IsNullOrEmpty(Model.Product.Description))
+                        {
+                            <div class="col-12">
+                                <div class="info-group">
+                                    <label class="info-label">
+                                        <i class="fas fa-align-left text-muted me-2"></i>Description
+                                    </label>
+                                    <div class="info-value">
+                                        <div class="description-box p-3 bg-light rounded">
+                                            @Model.Product.Description
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pricing Information Card -->
+            <div class="dashboard-card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-dollar-sign text-success me-2"></i>Pricing Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="pricing-card text-center">
+                                <div class="pricing-label">Unit Price</div>
+                                <div class="pricing-value text-primary">@Model.Product.UnitPrice.ToString("C")</div>
+                                <small class="text-muted">Cost from supplier</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="pricing-card text-center">
+                                <div class="pricing-label">Retail Price</div>
+                                <div class="pricing-value text-success">@Model.Product.DefaultRetailPrice.ToString("C")</div>
+                                <small class="text-muted">Customer selling price</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="pricing-card text-center">
+                                <div class="pricing-label">Wholesale Price</div>
+                                <div class="pricing-value text-info">@Model.Product.DefaultWholeSalePrice.ToString("C")</div>
+                                <small class="text-muted">Bulk selling price</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="profit-analysis p-3 bg-light rounded">
+                                <h6 class="mb-3"><i class="fas fa-chart-line me-2 text-primary"></i>Profit Analysis</h6>
+                                <div class="row text-center">
+                                    <div class="col-md-4">
+                                        <div class="profit-metric">
+                                            <small class="text-muted">Retail Margin</small>
+                                            @{
+                                                var retailMargin = Model.Product.UnitPrice > 0 ? 
+                                                    ((Model.Product.DefaultRetailPrice - Model.Product.UnitPrice) / Model.Product.UnitPrice * 100) : 0;
+                                            }
+                                            <div class="h6 @(retailMargin >= 30 ? "text-success" : retailMargin >= 15 ? "text-warning" : "text-danger")">
+                                                @retailMargin.ToString("F1")%
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="profit-metric">
+                                            <small class="text-muted">Wholesale Margin</small>
+                                            @{
+                                                var wholesaleMargin = Model.Product.UnitPrice > 0 ? 
+                                                    ((Model.Product.DefaultWholeSalePrice - Model.Product.UnitPrice) / Model.Product.UnitPrice * 100) : 0;
+                                            }
+                                            <div class="h6 @(wholesaleMargin >= 20 ? "text-success" : wholesaleMargin >= 10 ? "text-warning" : "text-danger")">
+                                                @wholesaleMargin.ToString("F1")%
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="profit-metric">
+                                            <small class="text-muted">Profit per Unit</small>
+                                            <div class="h6 text-success">
+                                                @((Model.Product.DefaultRetailPrice - Model.Product.UnitPrice).ToString("C"))
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stock Information Card -->
+            <div class="dashboard-card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cubes text-warning me-2"></i>Stock Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="stock-metric">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="stock-label">Current Stock</div>
+                                        <div class="stock-value">@Model.Product.TotalStock units</div>
+                                    </div>
+                                    <div class="stock-icon">
+                                        @if (Model.Product.TotalStock == 0)
+                                        {
+                                            <i class="fas fa-times-circle fa-2x text-danger"></i>
+                                        }
+                                        else if (Model.Product.IsLowStock)
+                                        {
+                                            <i class="fas fa-exclamation-triangle fa-2x text-warning"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="fas fa-check-circle fa-2x text-success"></i>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="stock-status mt-2">
+                                    @if (Model.Product.TotalStock == 0)
+                                    {
+                                        <span class="badge bg-danger">Out of Stock</span>
+                                    }
+                                    else if (Model.Product.IsLowStock)
+                                    {
+                                        <span class="badge bg-warning">Low Stock Alert</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success">Well Stocked</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="stock-metric">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="stock-label">Low Stock Threshold</div>
+                                        <div class="stock-value">@Model.Product.LowStockThreshold units</div>
+                                    </div>
+                                    <div class="stock-icon">
+                                        <i class="fas fa-chart-line fa-2x text-info"></i>
+                                    </div>
+                                </div>
+                                <div class="stock-status mt-2">
+                                    <span class="badge bg-info">Alert Level</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @if (Model.Product.TotalStock > 0)
+                    {
+                        <div class="mt-4">
+                            <div class="stock-progress">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <small class="text-muted">Stock Level</small>
+                                    <small class="text-muted">@Model.Product.TotalStock / @(Model.Product.LowStockThreshold * 3) units</small>
+                                </div>
+                                @{
+                                    var stockPercentage = Math.Min(100, (double)Model.Product.TotalStock / (Model.Product.LowStockThreshold * 3) * 100);
+                                    var progressClass = stockPercentage > 66 ? "bg-success" : stockPercentage > 33 ? "bg-warning" : "bg-danger";
+                                }
+                                <div class="progress">
+                                    <div class="progress-bar @progressClass" 
+                                         role="progressbar" 
+                                         style="width: @stockPercentage%"
+                                         aria-valuenow="@stockPercentage" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100"></div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Enhanced Sidebar -->
+        <div class="col-lg-4">
+            <!-- Quick Actions Card -->
+            <div class="dashboard-card mb-4 sticky-sidebar">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-bolt text-warning me-2"></i>Quick Actions
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="/Products/Edit/@Model.Product.ProductID" class="btn btn-primary btn-sm">
+                            <i class="fas fa-edit"></i> Edit Product
+                        </a>
+                        <a href="/Stock/Batches?productId=@Model.Product.ProductID" class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-boxes"></i> Manage Stock
+                        </a>
+                        <a href="/Sales/Create?productId=@Model.Product.ProductID" class="btn btn-outline-success btn-sm">
+                            <i class="fas fa-shopping-cart"></i> Add to Sale
+                        </a>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="printProduct()">
+                            <i class="fas fa-print"></i> Print Details
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Summary Card -->
+            <div class="dashboard-card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-pie text-primary me-2"></i>Product Summary
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="summary-metrics">
+                        <div class="summary-metric">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">Product ID:</span>
+                                <strong>#@Model.Product.ProductID</strong>
+                            </div>
+                        </div>
+                        <div class="summary-metric">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">Category:</span>
+                                <span class="badge bg-info">@Model.Product.Category</span>
+                            </div>
+                        </div>
+                        <div class="summary-metric">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">Status:</span>
+                                <span class="badge bg-@(Model.Product.IsActive ? "success" : "secondary")">
+                                    @(Model.Product.IsActive ? "Active" : "Inactive")
+                                </span>
+                            </div>
+                        </div>
+                        <div class="summary-metric">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">Stock Value:</span>
+                                <strong class="text-success">
+                                    @((Model.Product.TotalStock * Model.Product.UnitPrice).ToString("C"))
+                                </strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Related Actions Card -->
+            <div class="dashboard-card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-link text-info me-2"></i>Related Actions
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="/Products/Categories" class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-tags"></i> View All @Model.Product.Category
+                        </a>
+                        <a href="/Reports?manufacturer=@Model.Product.Manufacturer" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-industry"></i> @Model.Product.Manufacturer Products
+                        </a>
+                        <a href="/Stock/Adjustments/Create?productId=@Model.Product.ProductID" class="btn btn-outline-warning btn-sm">
+                            <i class="fas fa-plus-minus"></i> Stock Adjustment
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 }
 else
 {
-    <div class="alert alert-warning">Product not found.</div>
+    <div class="dashboard-card">
+        <div class="card-body text-center py-5">
+            <div class="empty-state">
+                <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                <h5 class="text-muted">Product Not Found</h5>
+                <p class="text-muted mb-3">The requested product could not be found or may have been deleted.</p>
+                <a href="/Products" class="btn btn-primary">
+                    <i class="fas fa-arrow-left"></i> Back to Products
+                </a>
+            </div>
+        </div>
+    </div>
+}
+
+@section Styles {
+    <style>
+        .info-group {
+            margin-bottom: 1rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #6c757d;
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+            display: block;
+        }
+
+        .info-value {
+            font-size: 1rem;
+            color: #212529;
+            word-wrap: break-word;
+        }
+
+        .pricing-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1.5rem 1rem;
+            border: 1px solid #e9ecef;
+        }
+
+        .pricing-label {
+            font-weight: 600;
+            color: #6c757d;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .pricing-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .stock-metric {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1.5rem;
+            border: 1px solid #e9ecef;
+        }
+
+        .stock-label {
+            font-weight: 600;
+            color: #6c757d;
+            font-size: 0.875rem;
+        }
+
+        .stock-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #212529;
+        }
+
+        .stock-progress {
+            background: white;
+            border-radius: 6px;
+            padding: 1rem;
+            border: 1px solid #e9ecef;
+        }
+
+        .summary-metric, .profit-metric {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f8f9fa;
+        }
+
+        .summary-metric:last-child, .profit-metric:last-child {
+            border-bottom: none;
+        }
+
+        .category-badge, .status-badge {
+            font-size: 0.875rem;
+            padding: 0.375rem 0.75rem;
+        }
+
+        .description-box {
+            border-left: 4px solid #007bff;
+            line-height: 1.6;
+        }
+
+        .profit-analysis {
+            border-left: 4px solid #28a745;
+        }
+
+        .sticky-sidebar {
+            position: sticky;
+            top: 20px;
+        }
+
+        .dashboard-card .card-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        /* Mobile responsive styles */
+        @@media (max-width: 768px) {
+            .page-header .d-flex {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .page-header .btn, .dropdown {
+                width: 100%;
+            }
+
+            .sticky-sidebar {
+                position: relative;
+            }
+
+            .pricing-card {
+                margin-bottom: 1rem;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        // Copy barcode function
+        function copyBarcode() {
+            const barcode = '@Model.Product?.Barcode';
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(barcode).then(() => {
+                    showToast('Barcode copied to clipboard!', 'success');
+                });
+            } else {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = barcode;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showToast('Barcode copied to clipboard!', 'success');
+            }
+        }
+
+        // Print product function
+        function printProduct() {
+            window.print();
+        }
+
+        // Export product function
+        function exportProduct() {
+            const productData = {
+                name: '@Model.Product?.ProductName',
+                generic: '@Model.Product?.GenericName',
+                manufacturer: '@Model.Product?.Manufacturer',
+                category: '@Model.Product?.Category',
+                barcode: '@Model.Product?.Barcode',
+                unitPrice: '@Model.Product?.UnitPrice',
+                retailPrice: '@Model.Product?.DefaultRetailPrice',
+                wholesalePrice: '@Model.Product?.DefaultWholeSalePrice',
+                stock: '@Model.Product?.TotalStock',
+                isActive: '@Model.Product?.IsActive'
+            };
+
+            const csvContent = "data:text/csv;charset=utf-8," + 
+                "Field,Value\n" +
+                Object.entries(productData).map(([key, value]) => `${key},${value}`).join("\n");
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `product_${productData.name}_details.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showToast('Product data exported successfully!', 'success');
+        }
+
+        // Toast notification function
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            toast.style.cssText = 'top: 20px; right: 20px; z-index: 1050; min-width: 250px;';
+            toast.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.remove();
+                }
+            }, 3000);
+        }
+
+        // Initialize tooltips
+        document.addEventListener('DOMContentLoaded', function() {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+
+        // Print styles
+        @@media print {
+            .page-header .btn, .dropdown, .sticky-sidebar {
+                display: none !important;
+            }
+            
+            .dashboard-card {
+                break-inside: avoid;
+                margin-bottom: 1rem;
+            }
+        }
+    </script>
 }

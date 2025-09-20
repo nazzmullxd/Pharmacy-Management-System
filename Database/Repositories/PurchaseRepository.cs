@@ -19,7 +19,6 @@ namespace Database.Repositories
             return await _context.Purchases
                 .Include(p => p.Supplier)
                 .Include(p => p.User)
-                .Include(p => p.ProductBatch)
                 .ToListAsync();
         }
 
@@ -33,7 +32,6 @@ namespace Database.Repositories
             return await _context.Purchases
                 .Include(p => p.Supplier)
                 .Include(p => p.User)
-                .Include(p => p.ProductBatch)
                 .FirstOrDefaultAsync(p => p.PurchaseID == purchaseId);
         }
 
@@ -87,11 +85,10 @@ namespace Database.Repositories
                 .Where(p => p.SupplierID == supplierId)
                 .Include(p => p.Supplier)
                 .Include(p => p.User)
-                .Include(p => p.ProductBatch)
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<Purchase>> GetByUserIdAsync(Guid userId)
+      /*  public async Task<IEnumerable<Purchase>> GetByUserIdAsync(Guid userId)
         {
             if (userId == Guid.Empty)
             {
@@ -104,7 +101,7 @@ namespace Database.Repositories
                 .Include(p => p.User)
                 .Include(p => p.ProductBatch)
                 .ToListAsync();
-        }
+        }*/
 
         public async Task<IEnumerable<Purchase>> GetByDateRangeAsync(DateTime startDate, DateTime endDate)
         {
@@ -112,7 +109,6 @@ namespace Database.Repositories
                 .Where(p => p.PurchaseDate >= startDate && p.PurchaseDate <= endDate)
                 .Include(p => p.Supplier)
                 .Include(p => p.User)
-                .Include(p => p.ProductBatch)
                 .ToListAsync();
         }
     }

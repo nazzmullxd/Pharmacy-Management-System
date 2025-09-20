@@ -202,6 +202,32 @@ namespace Business.Services
             return batches.Where(b => b.ExpiryDate > DateTime.UtcNow).Sum(b => b.QuantityInStock);
         }
 
+        public async Task<Dictionary<Guid, int>> GetTotalStockForMultipleProductsAsync(IEnumerable<Guid> productIds)
+        {
+            var result = new Dictionary<Guid, int>();
+            
+            if (!productIds.Any())
+                return result;
+
+            // Get all batches for all products in one query
+            var allBatches = await _productBatchRepository.GetAllAsync();
+            var now = DateTime.UtcNow;
+            
+            // Group by product and calculate totals
+            var stockTotals = allBatches
+                .Where(b => productIds.Contains(b.ProductID) && b.ExpiryDate > now)
+                .GroupBy(b => b.ProductID)
+                .ToDictionary(g => g.Key, g => g.Sum(b => b.QuantityInStock));
+            
+            // Ensure all requested products are in the result (with 0 if no stock)
+            foreach (var productId in productIds)
+            {
+                result[productId] = stockTotals.TryGetValue(productId, out var stock) ? stock : 0;
+            }
+            
+            return result;
+        }
+
         // Renamed to avoid CS0111 conflict
         public async Task<StockAdjustmentResultDTO> AdjustStockWithResultAsync(Guid batchId, int quantityChange, string reason)
         {

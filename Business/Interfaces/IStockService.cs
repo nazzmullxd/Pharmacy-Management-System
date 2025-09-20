@@ -17,6 +17,7 @@ namespace Business.Interfaces
         Task<IEnumerable<ProductBatchDTO>> GetExpiredBatchesAsync();
         Task<IEnumerable<ExpiryAlertDTO>> GetExpiryAlertsAsync();
         Task<int> GetTotalStockForProductAsync(Guid productId);
+        Task<Dictionary<Guid, int>> GetTotalStockForMultipleProductsAsync(IEnumerable<Guid> productIds);
         Task<bool> AdjustStockAsync(Guid batchId, int quantityChange, string reason);
         Task<IEnumerable<ProductBatchDTO>> GetLowStockBatchesAsync(int threshold = 10);
         Task<bool> ProcessStockAdjustmentAsync(Guid batchId, int newQuantity, string reason);

@@ -68,13 +68,25 @@ namespace Web.Pages.Purchases
                 return Page();
             }
 
-            // In absence of auth, leave CreatedBy empty
-            Order.CreatedBy = Order.CreatedBy == Guid.Empty ? Guid.Empty : Order.CreatedBy;
+            // Always recalculate totals before saving
+            Order.TotalAmount = Order.OrderItems.Sum(i => i.TotalPrice);
+            Order.DueAmount = Order.TotalAmount - Order.PaidAmount;
+
+            // Set CreatedBy if you have authentication, otherwise leave as is
+            // Example for authentication:
+            // if (User.Identity != null && User.Identity.IsAuthenticated)
+            // {
+            //     var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            //     if (!string.IsNullOrEmpty(userId))
+            //         Order.CreatedBy = Guid.Parse(userId);
+            // }
+
             var created = await _purchaseOrderService.CreatePurchaseOrderAsync(Order);
             TempData["Message"] = $"Purchase Order {created.OrderNumber} created.";
             return RedirectToPage("Index");
         }
     }
 }
+
 
 

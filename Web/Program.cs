@@ -1,4 +1,6 @@
 using Business;
+using Business.Interfaces;
+using Business.Services;
 using Database.Context;
 using Database.Interfaces;
 using Database.Repositories;
@@ -39,7 +41,7 @@ builder.Services.AddScoped<Business.Interfaces.IProductService, Business.Service
 builder.Services.AddScoped<Business.Interfaces.IUserService, Business.Services.UserService>();
 builder.Services.AddScoped<Business.Services.UserService>(); // Register concrete class
 builder.Services.AddScoped<Database.Interfaces.IProductRepository, Database.Repositories.ProductRepository>();
-
+builder.Services.AddScoped<IPurchaseOrderService, PurchaseOrderService>();
 
 var app = builder.Build();
 

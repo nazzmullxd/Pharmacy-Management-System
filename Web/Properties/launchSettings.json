@@ -16,7 +16,8 @@
       "applicationUrl": "http://localhost:5067",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
-      }
+      },
+      "executablePath": "chrome.exe"
     },
     "https": {
       "commandName": "Project",
@@ -33,6 +34,28 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
+    },
+    "Edge": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "launchUrl": "http://localhost:5067",
+      "applicationUrl": "https://localhost:7199;http://localhost:5067",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "executablePath": "msedge.exe"
+    },
+    "Chrome": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "launchUrl": "http://localhost:5067",
+      "applicationUrl": "https://localhost:7199;http://localhost:5067",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "executablePath": "chrome.exe"
     }
   }
 }

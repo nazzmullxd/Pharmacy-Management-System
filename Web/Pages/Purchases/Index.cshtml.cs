@@ -17,9 +17,7 @@ namespace Web.Pages.Purchases
 
         public async Task OnGet()
         {
-            Orders = await _purchaseOrderService.GetAllPurchaseOrdersAsync();
+            Orders = await _purchaseOrderService.GetAllPurchaseOrdersAsync() ?? Enumerable.Empty<PurchaseOrderDTO>();
         }
     }
 }
-
-

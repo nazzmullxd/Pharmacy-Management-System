@@ -1,109 +1,590 @@
 @page
 @model Web.Pages.Reports.StockModel
 @{
-    ViewData["Title"] = "Stock Reports";
+    ViewData["Title"] = "Stock Reports & Inventory Analysis";
 }
 
+<!-- Page Header -->
 <div class="page-header">
-    <h1><i class="fas fa-chart-bar"></i> Stock Reports</h1>
-    <a class="btn btn-secondary" href="/">Back to Dashboard</a>
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-chart-bar text-primary"></i> Stock Reports & Inventory Analysis</h1>
+            <p class="mb-0">Comprehensive inventory management and stock level monitoring for Rabiul Pharmacy</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+            <button class="btn btn-outline-primary" onclick="exportToExcel()">
+                <i class="fas fa-download"></i> Export Report
+            </button>
+            <button class="btn btn-primary" onclick="window.print()">
+                <i class="fas fa-print"></i> Print Report
+            </button>
+        </div>
+    </div>
 </div>
 
+<!-- Quick Actions & Filters -->
+<div class="dashboard-card mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-4">
+            <h6 class="mb-2 text-muted">Inventory Controls</h6>
+            <div class="d-flex gap-2 flex-wrap">
+                <button class="btn btn-sm btn-success" onclick="refreshData()">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+                <button class="btn btn-sm btn-outline-warning" onclick="checkLowStock()">
+                    <i class="fas fa-exclamation-triangle"></i> Low Stock Alert
+                </button>
+                <button class="btn btn-sm btn-outline-danger" onclick="checkExpiring()">
+                    <i class="fas fa-clock"></i> Expiry Check
+                </button>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Stock Status</label>
+                    <select class="form-select form-select-sm" id="stockFilter">
+                        <option value="">All Products</option>
+                        <option value="low">Low Stock</option>
+                        <option value="normal">Normal Stock</option>
+                        <option value="overstock">Overstock</option>
+                        <option value="out">Out of Stock</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Expiry Status</label>
+                    <select class="form-select form-select-sm" id="expiryFilter">
+                        <option value="">All Items</option>
+                        <option value="expired">Expired</option>
+                        <option value="expiring7">Expiring (7 days)</option>
+                        <option value="expiring30">Expiring (30 days)</option>
+                        <option value="fresh">Fresh Stock</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Search Inventory</label>
+                    <div class="input-group input-group-sm">
+                        <input type="text" class="form-control" id="searchInput" placeholder="Product name, batch...">
+                        <button class="btn btn-outline-secondary" type="button" id="searchBtn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Enhanced Stock Summary Cards -->
+<div class="kpi-grid mb-4">
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Total Products</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #3498db, #5dade2);">
+                <i class="fas fa-pills"></i>
+            </div>
+        </div>
+        <div class="kpi-value">@Model.Products.Count().ToString("N0")</div>
+        <div class="kpi-change positive">
+            <i class="fas fa-boxes"></i> Product catalog size
+        </div>
+        <div class="kpi-progress mt-2">
+            <div class="progress" style="height: 4px;">
+                <div class="progress-bar bg-info" role="progressbar" style="width: 85%" aria-valuenow="85" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Active Batches</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #27ae60, #58d68d);">
+                <i class="fas fa-layer-group"></i>
+            </div>
+        </div>
+        <div class="kpi-value">@Model.Batches.Count().ToString("N0")</div>
+        <div class="kpi-change positive">
+            <i class="fas fa-warehouse"></i> Inventory batches
+        </div>
+        <div class="kpi-progress mt-2">
+            <div class="progress" style="height: 4px;">
+                <div class="progress-bar bg-success" role="progressbar" style="width: 70%" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Low Stock Alerts</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #f39c12, #f7dc6f);">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+        </div>
+        <div class="kpi-value">@Model.LowStockCount.ToString("N0")</div>
+        <div class="kpi-change @(Model.LowStockCount > 10 ? "negative" : Model.LowStockCount > 5 ? "" : "positive")">
+            <i class="fas @(Model.LowStockCount > 10 ? "fa-exclamation-circle" : Model.LowStockCount > 5 ? "fa-exclamation-triangle" : "fa-check-circle")"></i>
+            @(Model.LowStockCount > 10 ? "Immediate attention needed" : Model.LowStockCount > 5 ? "Monitor closely" : "Under control")
+        </div>
+        <div class="kpi-progress mt-2">
+            <div class="progress" style="height: 4px;">
+                @{
+                    var alertLevel = Math.Min((Model.LowStockCount * 100.0 / Math.Max(Model.Products.Count(), 1)), 100);
+                }
+                <div class="progress-bar @(alertLevel > 20 ? "bg-danger" : alertLevel > 10 ? "bg-warning" : "bg-success")" 
+                     role="progressbar" style="width: @Math.Max(alertLevel, 5)%" 
+                     aria-valuenow="@alertLevel" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Inventory Value</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #9b59b6, #bb8fce);">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+        </div>
+        <div class="kpi-value">@Model.TotalStockValue.ToString("C")</div>
+        <div class="kpi-change positive">
+            <i class="fas fa-chart-line"></i> Total asset value
+        </div>
+        <div class="kpi-progress mt-2">
+            <div class="progress" style="height: 4px;">
+                <div class="progress-bar bg-purple" role="progressbar" style="width: 90%" aria-valuenow="90" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stock Analytics Charts -->
 <div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h5 class="card-title">Total Products</h5>
-                <h3 class="text-primary">@Model.Products.Count()</h3>
+    <div class="col-md-8">
+        <div class="dashboard-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0"><i class="fas fa-chart-line text-primary"></i> Stock Level Trends</h5>
+                <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-outline-primary active" onclick="changeStockView('levels')">Stock Levels</button>
+                    <button type="button" class="btn btn-outline-primary" onclick="changeStockView('turnover')">Turnover</button>
+                    <button type="button" class="btn btn-outline-primary" onclick="changeStockView('abc')">ABC Analysis</button>
+                </div>
+            </div>
+            <div class="chart-container" style="height: 300px; display: flex; align-items: center; justify-content: center; background: linear-gradient(45deg, #f8f9fa, #e9ecef); border-radius: 8px;">
+                <div class="text-center">
+                    <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+                    <h6 class="text-muted">Stock Analytics Chart</h6>
+                    <p class="text-muted mb-0">Inventory trend visualization will be implemented here</p>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h5 class="card-title">Total Batches</h5>
-                <h3 class="text-info">@Model.Batches.Count()</h3>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h5 class="card-title">Low Stock Items</h5>
-                <h3 class="text-warning">@Model.LowStockCount</h3>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h5 class="card-title">Total Value</h5>
-                <h3 class="text-success">@Model.TotalStockValue.ToString("C")</h3>
+    <div class="col-md-4">
+        <div class="dashboard-card h-100">
+            <h5 class="mb-3"><i class="fas fa-chart-pie text-primary"></i> Stock Distribution</h5>
+            <div class="stock-distribution">
+                <div class="distribution-item mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="small">Normal Stock</span>
+                        <span class="small fw-bold">@(((Model.Products.Count() - Model.LowStockCount) * 100.0 / Math.Max(Model.Products.Count(), 1)).ToString("F0"))%</span>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar bg-success" style="width: @(((Model.Products.Count() - Model.LowStockCount) * 100.0 / Math.Max(Model.Products.Count(), 1)).ToString("F0"))%"></div>
+                    </div>
+                </div>
+                <div class="distribution-item mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="small">Low Stock</span>
+                        <span class="small fw-bold">@((Model.LowStockCount * 100.0 / Math.Max(Model.Products.Count(), 1)).ToString("F0"))%</span>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar bg-warning" style="width: @((Model.LowStockCount * 100.0 / Math.Max(Model.Products.Count(), 1)).ToString("F0"))%"></div>
+                    </div>
+                </div>
+                <div class="distribution-item mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="small">Expiring Soon</span>
+                        <span class="small fw-bold">@((Model.ExpiringItems.Count() * 100.0 / Math.Max(Model.Batches.Count(), 1)).ToString("F0"))%</span>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar bg-danger" style="width: @((Model.ExpiringItems.Count() * 100.0 / Math.Max(Model.Batches.Count(), 1)).ToString("F0"))%"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Stock Tables -->
 <div class="row">
     <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5>Low Stock Products</h5>
+        <div class="table-container">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0"><i class="fas fa-exclamation-triangle text-warning"></i> Low Stock Products</h5>
+                <button class="btn btn-sm btn-outline-primary" onclick="viewAllLowStock()">
+                    <i class="fas fa-external-link-alt"></i> View All (@Model.LowStockCount)
+                </button>
             </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th>Product</th>
-                                <th>Stock</th>
-                                <th>Threshold</th>
+            <div class="table-responsive">
+                <table class="table table-hover" id="lowStockTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Product Name</th>
+                            <th class="text-center">Current Stock</th>
+                            <th class="text-center">Threshold</th>
+                            <th class="text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var p in Model.Products.Where(x => x.IsLowStock).Take(10))
+                        {
+                            <tr class="low-stock-row">
+                                <td>
+                                    <div class="product-info">
+                                        <div class="product-name">@p.ProductName</div>
+                                        <small class="text-muted">
+                                            <i class="fas fa-pills me-1"></i>Needs restocking
+                                        </small>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-@(p.TotalStock == 0 ? "danger" : p.TotalStock <= p.LowStockThreshold / 2 ? "warning" : "info")">
+                                        @p.TotalStock units
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-secondary">@p.LowStockThreshold</span>
+                                </td>
+                                <td class="text-center">
+                                    @if (p.TotalStock == 0)
+                                    {
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-times-circle"></i> Out of Stock
+                                        </span>
+                                    }
+                                    else if (p.TotalStock <= p.LowStockThreshold / 2)
+                                    {
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-exclamation-triangle"></i> Critical
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-info">
+                                            <i class="fas fa-info-circle"></i> Low
+                                        </span>
+                                    }
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var p in Model.Products.Where(x => x.IsLowStock).Take(10))
-                            {
-                                <tr>
-                                    <td>@p.ProductName</td>
-                                    <td>@p.TotalStock</td>
-                                    <td>@p.LowStockThreshold</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
+                        }
+                        @if (!Model.Products.Where(x => x.IsLowStock).Any())
+                        {
+                            <tr>
+                                <td colspan="4" class="text-center py-4">
+                                    <div class="empty-state">
+                                        <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                                        <h6 class="text-success">All products well stocked!</h6>
+                                        <p class="text-muted mb-0">No low stock alerts at this time</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
     <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5>Expiring Items (30 days)</h5>
+        <div class="table-container">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0"><i class="fas fa-clock text-danger"></i> Expiring Items (30 days)</h5>
+                <button class="btn btn-sm btn-outline-primary" onclick="viewAllExpiring()">
+                    <i class="fas fa-external-link-alt"></i> View All (@Model.ExpiringItems.Count())
+                </button>
             </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th>Product</th>
-                                <th>Batch</th>
-                                <th>Expiry</th>
+            <div class="table-responsive">
+                <table class="table table-hover" id="expiringTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Product</th>
+                            <th class="text-center">Batch</th>
+                            <th class="text-center">Expiry Date</th>
+                            <th class="text-center">Days Left</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.ExpiringItems.Take(10))
+                        {
+                            var daysLeft = (item.ExpiryDate - DateTime.Now).Days;
+                            <tr class="expiring-row">
+                                <td>
+                                    <div class="product-info">
+                                        <div class="product-name">@item.ProductName</div>
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar-times me-1"></i>Requires attention
+                                        </small>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <code class="batch-number">@item.BatchNumber</code>
+                                </td>
+                                <td class="text-center">
+                                    <div class="expiry-info">
+                                        <div class="expiry-date">@item.ExpiryDate.ToString("MMM dd, yyyy")</div>
+                                        <small class="text-muted">@item.ExpiryDate.ToString("ddd")</small>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    @if (daysLeft < 0)
+                                    {
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-times"></i> Expired
+                                        </span>
+                                    }
+                                    else if (daysLeft <= 7)
+                                    {
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-exclamation-triangle"></i> @daysLeft days
+                                        </span>
+                                    }
+                                    else if (daysLeft <= 30)
+                                    {
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-clock"></i> @daysLeft days
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-info">
+                                            <i class="fas fa-calendar"></i> @daysLeft days
+                                        </span>
+                                    }
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var item in Model.ExpiringItems.Take(10))
-                            {
-                                <tr>
-                                    <td>@item.ProductName</td>
-                                    <td>@item.BatchNumber</td>
-                                    <td>@item.ExpiryDate.ToString("yyyy-MM-dd")</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
+                        }
+                        @if (!Model.ExpiringItems.Any())
+                        {
+                            <tr>
+                                <td colspan="4" class="text-center py-4">
+                                    <div class="empty-state">
+                                        <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                                        <h6 class="text-success">No items expiring soon!</h6>
+                                        <p class="text-muted mb-0">All batches have sufficient shelf life</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Inventory Recommendations -->
+<div class="dashboard-card mt-4">
+    <h5 class="mb-3"><i class="fas fa-lightbulb text-warning"></i> Inventory Management Insights</h5>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="insight-card bg-light p-3 rounded">
+                <h6 class="@(Model.LowStockCount > 10 ? "text-danger" : Model.LowStockCount > 5 ? "text-warning" : "text-success")">
+                    <i class="fas fa-@(Model.LowStockCount > 10 ? "exclamation-triangle" : Model.LowStockCount > 5 ? "exclamation-circle" : "check-circle") me-2"></i>
+                    Stock Level Health
+                </h6>
+                <p class="mb-2 small">
+                    @if (Model.LowStockCount > 10)
+                    {
+                        <text>@Model.LowStockCount products are running low. Immediate restocking required to avoid stockouts.</text>
+                    }
+                    else if (Model.LowStockCount > 5)
+                    {
+                        <text>@Model.LowStockCount products need attention. Schedule restocking within the week.</text>
+                    }
+                    else if (Model.LowStockCount > 0)
+                    {
+                        <text>@Model.LowStockCount items need restocking. Good inventory control overall.</text>
+                    }
+                    else
+                    {
+                        <text>Excellent inventory levels! All products are adequately stocked.</text>
+                    }
+                </p>
+                <button class="btn btn-sm btn-outline-@(Model.LowStockCount > 5 ? "danger" : "success")">Reorder Actions</button>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="insight-card bg-light p-3 rounded">
+                <h6 class="@(Model.ExpiringItems.Count() > 10 ? "text-danger" : Model.ExpiringItems.Count() > 5 ? "text-warning" : "text-info")">
+                    <i class="fas fa-clock me-2"></i>Expiry Management
+                </h6>
+                <p class="mb-2 small">
+                    @if (Model.ExpiringItems.Count() > 10)
+                    {
+                        <text>@Model.ExpiringItems.Count() batches expire within 30 days. Implement discount strategy to move inventory.</text>
+                    }
+                    else if (Model.ExpiringItems.Count() > 5)
+                    {
+                        <text>@Model.ExpiringItems.Count() items expiring soon. Monitor closely and plan promotional activities.</text>
+                    }
+                    else if (Model.ExpiringItems.Count() > 0)
+                    {
+                        <text>@Model.ExpiringItems.Count() items approaching expiry. Well-managed inventory rotation.</text>
+                    }
+                    else
+                    {
+                        <text>No items expiring soon. Excellent batch rotation and inventory management.</text>
+                    }
+                </p>
+                <button class="btn btn-sm btn-outline-info">Expiry Actions</button>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="insight-card bg-light p-3 rounded">
+                <h6 class="text-purple"><i class="fas fa-chart-pie me-2"></i>Value Optimization</h6>
+                <p class="mb-2 small">
+                    Total inventory value is @Model.TotalStockValue.ToString("C"). 
+                    Optimize slow-moving items and increase turnover rate for better cash flow.
+                </p>
+                <button class="btn btn-sm btn-outline-secondary">Value Analysis</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Initialize page functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeFilters();
+            initializeStockMonitoring();
+        });
+
+        function initializeFilters() {
+            document.getElementById('stockFilter').addEventListener('change', filterStock);
+            document.getElementById('expiryFilter').addEventListener('change', filterStock);
+            document.getElementById('searchInput').addEventListener('input', debounce(filterStock, 300));
+            document.getElementById('searchBtn').addEventListener('click', filterStock);
+        }
+
+        function filterStock() {
+            const stockFilter = document.getElementById('stockFilter').value;
+            const expiryFilter = document.getElementById('expiryFilter').value;
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            // Filter low stock table
+            const lowStockRows = document.querySelectorAll('#lowStockTable tbody tr.low-stock-row');
+            lowStockRows.forEach(row => {
+                let shouldShow = true;
+                
+                if (searchTerm) {
+                    const searchableText = row.textContent.toLowerCase();
+                    if (!searchableText.includes(searchTerm)) {
+                        shouldShow = false;
+                    }
+                }
+                
+                row.style.display = shouldShow ? '' : 'none';
+            });
+
+            // Filter expiring items table
+            const expiringRows = document.querySelectorAll('#expiringTable tbody tr.expiring-row');
+            expiringRows.forEach(row => {
+                let shouldShow = true;
+                
+                if (searchTerm) {
+                    const searchableText = row.textContent.toLowerCase();
+                    if (!searchableText.includes(searchTerm)) {
+                        shouldShow = false;
+                    }
+                }
+                
+                row.style.display = shouldShow ? '' : 'none';
+            });
+        }
+
+        function initializeStockMonitoring() {
+            // Check for critical stock levels
+            const criticalItems = document.querySelectorAll('.badge.bg-danger');
+            if (criticalItems.length > 0) {
+                console.log(`Warning: ${criticalItems.length} critical stock items detected`);
+            }
+        }
+
+        function changeStockView(viewType) {
+            // Remove active class from all buttons
+            document.querySelectorAll('.btn-group .btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+            
+            console.log(`Changing stock view to: ${viewType}`);
+            // Chart update logic would go here
+        }
+
+        // Action functions
+        function refreshData() {
+            window.location.reload();
+        }
+
+        function checkLowStock() {
+            const lowStockCount = @Model.LowStockCount;
+            if (lowStockCount > 0) {
+                alert(`Found ${lowStockCount} products with low stock levels. Review the Low Stock table below.`);
+            } else {
+                alert('All products are adequately stocked!');
+            }
+        }
+
+        function checkExpiring() {
+            const expiringCount = @Model.ExpiringItems.Count();
+            if (expiringCount > 0) {
+                alert(`Found ${expiringCount} items expiring within 30 days. Review the Expiring Items table below.`);
+            } else {
+                alert('No items are expiring soon!');
+            }
+        }
+
+        function exportToExcel() {
+            alert('Excel export functionality coming soon');
+        }
+
+        function viewAllLowStock() {
+            // Filter to show only low stock items
+            document.getElementById('stockFilter').value = 'low';
+            filterStock();
+        }
+
+        function viewAllExpiring() {
+            // Filter to show only expiring items
+            document.getElementById('expiryFilter').value = 'expiring30';
+            filterStock();
+        }
+
+        // Debounce function for search
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Auto-check for critical stock levels every 5 minutes
+        setInterval(function() {
+            if (document.visibilityState === 'visible') {
+                const criticalCount = document.querySelectorAll('.badge.bg-danger').length;
+                if (criticalCount > 0) {
+                    console.log(`Stock monitoring: ${criticalCount} critical items require attention`);
+                }
+            }
+        }, 300000); // 5 minutes
+    </script>
+}
 

@@ -19,5 +19,12 @@ namespace Business.Interfaces
         Task<IEnumerable<TopProductDTO>> GetTopSellingProductsAsync(int count = 10, DateTime? startDate = null, DateTime? endDate = null);
         Task<bool> ProcessSaleAsync(SaleDTO saleDto);
         Task<bool> UpdatePaymentStatusAsync(Guid saleId, string paymentStatus);
+        
+        // Additional validation and utility methods
+        Task<bool> ValidateProductStockAsync(Guid productId, int requestedQuantity);
+        Task<bool> CanProcessSaleAsync(SaleDTO saleDto);
+        Task<Dictionary<Guid, int>> GetAvailableStockAsync(IEnumerable<Guid> productIds);
+        Task<decimal> CalculateSaleTotalAsync(SaleDTO saleDto);
+        Task<bool> IsSaleValidAsync(SaleDTO saleDto);
     }
 }

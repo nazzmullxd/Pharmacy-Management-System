@@ -6,108 +6,214 @@
 
 <!-- Page Header -->
 <div class="page-header">
-    <h1><i class="fas fa-boxes"></i> Stock Management</h1>
-    <p>Monitor and manage your pharmacy's inventory levels, batches, and stock adjustments.</p>
-</div>
-
-<!-- Stock Summary Cards -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="kpi-card">
-            <div class="kpi-header">
-                <div class="kpi-title">Total Products</div>
-                <div class="kpi-icon" style="background: #3498db;">
-                    <i class="fas fa-pills"></i>
-                </div>
-            </div>
-            <div class="kpi-value">@Model.TotalProducts</div>
-            <div class="kpi-change positive">
-                <i class="fas fa-arrow-up"></i> In inventory
-            </div>
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-boxes text-primary"></i> Stock Management</h1>
+            <p class="mb-0">Monitor and manage your pharmacy's inventory levels, batches, and stock adjustments for Rabiul Pharmacy</p>
         </div>
-    </div>
-    <div class="col-md-3">
-        <div class="kpi-card">
-            <div class="kpi-header">
-                <div class="kpi-title">Low Stock Items</div>
-                <div class="kpi-icon" style="background: #f39c12;">
-                    <i class="fas fa-exclamation-triangle"></i>
-                </div>
-            </div>
-            <div class="kpi-value">@Model.LowStockItems</div>
-            <div class="kpi-change negative">
-                <i class="fas fa-arrow-down"></i> Need reorder
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="kpi-card">
-            <div class="kpi-header">
-                <div class="kpi-title">Expiring Soon</div>
-                <div class="kpi-icon" style="background: #e74c3c;">
-                    <i class="fas fa-clock"></i>
-                </div>
-            </div>
-            <div class="kpi-value">@Model.ExpiringItems</div>
-            <div class="kpi-change negative">
-                <i class="fas fa-exclamation-triangle"></i> Next 30 days
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="kpi-card">
-            <div class="kpi-header">
-                <div class="kpi-title">Total Stock Value</div>
-                <div class="kpi-icon" style="background: #27ae60;">
-                    <i class="fas fa-dollar-sign"></i>
-                </div>
-            </div>
-            <div class="kpi-value">$@Model.TotalStockValue.ToString("N0")</div>
-            <div class="kpi-change positive">
-                <i class="fas fa-arrow-up"></i> Current value
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Action Buttons -->
-<div class="row mb-4">
-    <div class="col-md-6">
-        <a href="/Stock/Adjustments" class="btn btn-primary">
-            <i class="fas fa-edit"></i> Stock Adjustment
-        </a>
-        <a href="/Stock/Batches" class="btn btn-outline-info">
-            <i class="fas fa-layer-group"></i> View Batches
-        </a>
-        <a href="/Stock/Expiring" class="btn btn-outline-warning">
-            <i class="fas fa-clock"></i> Expiring Items
-        </a>
-    </div>
-    <div class="col-md-6">
-        <div class="input-group">
-            <input type="text" class="form-control search-input" placeholder="Search products...">
-            <button class="btn btn-outline-secondary" type="button">
-                <i class="fas fa-search"></i>
+        <div class="d-flex gap-2">
+            <a href="/Stock/Adjustments" class="btn btn-primary">
+                <i class="fas fa-edit"></i> Stock Adjustment
+            </a>
+            <a href="/Stock/AddBatch" class="btn btn-success">
+                <i class="fas fa-plus"></i> Add Batch
+            </a>
+            <button class="btn btn-outline-primary" onclick="exportToExcel()">
+                <i class="fas fa-download"></i> Export Report
             </button>
         </div>
     </div>
 </div>
 
-<!-- Stock Items Table -->
+<!-- Quick Actions & Filters -->
+<div class="dashboard-card mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-4">
+            <h6 class="mb-2 text-muted">Stock Controls</h6>
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="/Stock/Batches" class="btn btn-sm btn-outline-info">
+                    <i class="fas fa-layer-group"></i> View Batches
+                </a>
+                <a href="/Stock/Expiring" class="btn btn-sm btn-outline-warning">
+                    <i class="fas fa-clock"></i> Expiring Items
+                </a>
+                <button class="btn btn-sm btn-success" onclick="refreshData()">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Filter by Status</label>
+                    <select class="form-select form-select-sm" id="statusFilter">
+                        <option value="">All Items</option>
+                        <option value="in-stock">In Stock</option>
+                        <option value="low-stock">Low Stock</option>
+                        <option value="out-of-stock">Out of Stock</option>
+                        <option value="expiring">Expiring Soon</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Category</label>
+                    <select class="form-select form-select-sm" id="categoryFilter">
+                        <option value="">All Categories</option>
+                        <option value="prescription">Prescription</option>
+                        <option value="otc">Over-the-Counter</option>
+                        <option value="supplements">Supplements</option>
+                        <option value="medical-devices">Medical Devices</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Search Inventory</label>
+                    <div class="input-group input-group-sm">
+                        <input type="text" class="form-control search-input" id="searchInput" placeholder="Product name, batch...">
+                        <button class="btn btn-outline-secondary" type="button" id="searchBtn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Enhanced Stock Summary Cards -->
+<div class="kpi-grid mb-4">
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Total Products</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #3498db, #5dade2);">
+                <i class="fas fa-pills"></i>
+            </div>
+        </div>
+        <div class="kpi-value">@Model.TotalProducts.ToString("N0")</div>
+        <div class="kpi-change positive">
+            <i class="fas fa-boxes"></i> Active in inventory
+        </div>
+        <div class="kpi-progress mt-2">
+            <div class="progress" style="height: 4px;">
+                <div class="progress-bar bg-info" role="progressbar" style="width: 85%" aria-valuenow="85" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Low Stock Alerts</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #f39c12, #f7dc6f);">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+        </div>
+        <div class="kpi-value">@Model.LowStockItems.ToString("N0")</div>
+        <div class="kpi-change @(Model.LowStockItems > 10 ? "negative" : Model.LowStockItems > 5 ? "" : "positive")">
+            <i class="fas @(Model.LowStockItems > 10 ? "fa-exclamation-circle" : Model.LowStockItems > 5 ? "fa-exclamation-triangle" : "fa-check-circle")"></i>
+            @(Model.LowStockItems > 10 ? "Immediate attention" : Model.LowStockItems > 5 ? "Monitor closely" : "Under control")
+        </div>
+        <div class="kpi-progress mt-2">
+            <div class="progress" style="height: 4px;">
+                @{
+                    var lowStockPercentage = Model.TotalProducts > 0 ? (Model.LowStockItems * 100.0 / Model.TotalProducts) : 0;
+                }
+                <div class="progress-bar @(lowStockPercentage > 20 ? "bg-danger" : lowStockPercentage > 10 ? "bg-warning" : "bg-success")" 
+                     role="progressbar" style="width: @Math.Max(lowStockPercentage, 5)%" 
+                     aria-valuenow="@lowStockPercentage" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Expiring Soon</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #e74c3c, #ec7063);">
+                <i class="fas fa-clock"></i>
+            </div>
+        </div>
+        <div class="kpi-value">@Model.ExpiringItems.ToString("N0")</div>
+        <div class="kpi-change @(Model.ExpiringItems > 15 ? "negative" : Model.ExpiringItems > 5 ? "" : "positive")">
+            <i class="fas @(Model.ExpiringItems > 15 ? "fa-times-circle" : Model.ExpiringItems > 5 ? "fa-exclamation-triangle" : "fa-check-circle")"></i>
+            @(Model.ExpiringItems > 15 ? "Critical review needed" : Model.ExpiringItems > 5 ? "Review required" : "Well managed")
+        </div>
+        <div class="kpi-progress mt-2">
+            <div class="progress" style="height: 4px;">
+                <div class="progress-bar bg-danger" role="progressbar" style="width: 70%" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Total Stock Value</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #27ae60, #58d68d);">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+        </div>
+        <div class="kpi-value">$@Model.TotalStockValue.ToString("N0")</div>
+        <div class="kpi-change positive">
+            <i class="fas fa-chart-line"></i> Current asset value
+        </div>
+        <div class="kpi-progress mt-2">
+            <div class="progress" style="height: 4px;">
+                <div class="progress-bar bg-success" role="progressbar" style="width: 90%" aria-valuenow="90" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stock Items Main Table -->
 <div class="table-container">
-    <h5><i class="fas fa-list"></i> Current Stock Levels</h5>
-    <div class="table-responsive">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0"><i class="fas fa-list text-primary"></i> Current Stock Levels</h5>
+        <div class="d-flex align-items-center gap-3">
+            <small class="text-muted">
+                Showing @(Model.StockItems?.Count() ?? 0) products
+            </small>
+            <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-secondary active" onclick="toggleView('table')" id="tableViewBtn">
+                    <i class="fas fa-table"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="toggleView('card')" id="cardViewBtn">
+                    <i class="fas fa-th-large"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table View -->
+    <div id="tableView" class="table-responsive">
         <table class="table table-hover" id="stockTable">
-            <thead>
+            <thead class="table-light">
                 <tr>
-                    <th data-sort="0">Product</th>
-                    <th data-sort="1">Category</th>
-                    <th data-sort="2">Current Stock</th>
-                    <th data-sort="3">Low Stock Threshold</th>
-                    <th data-sort="4">Unit Price</th>
-                    <th data-sort="5">Total Value</th>
-                    <th data-sort="6">Status</th>
-                    <th>Actions</th>
+                    <th class="sortable" data-sort="0">
+                        <i class="fas fa-pills text-muted me-1"></i>Product
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="sortable" data-sort="1">
+                        <i class="fas fa-tags text-muted me-1"></i>Category
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="text-center sortable" data-sort="2">
+                        <i class="fas fa-warehouse text-muted me-1"></i>Current Stock
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="text-center sortable" data-sort="3">
+                        <i class="fas fa-exclamation-triangle text-muted me-1"></i>Threshold
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="text-end sortable" data-sort="4">
+                        <i class="fas fa-dollar-sign text-muted me-1"></i>Unit Price
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="text-end sortable" data-sort="5">
+                        <i class="fas fa-calculator text-muted me-1"></i>Total Value
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="text-center">
+                        <i class="fas fa-check-circle text-muted me-1"></i>Status
+                    </th>
+                    <th class="text-center" style="width: 150px;">
+                        <i class="fas fa-cogs text-muted me-1"></i>Actions
+                    </th>
                 </tr>
             </thead>
             <tbody>
@@ -115,59 +221,118 @@
                 {
                     @foreach (var item in Model.StockItems)
                     {
-                        <tr>
+                        <tr class="stock-row">
                             <td>
-                                <strong>@item.ProductName</strong>
-                                @if (!string.IsNullOrEmpty(item.GenericName))
-                                {
-                                    <br><small class="text-muted">@item.GenericName</small>
-                                }
-                            </td>
-                            <td><span class="badge badge-info">@item.Category</span></td>
-                            <td>
-                                @if (item.IsLowStock)
-                                {
-                                    <span class="badge badge-warning">@item.TotalStock</span>
-                                }
-                                else if (item.TotalStock == 0)
-                                {
-                                    <span class="badge badge-danger">Out of Stock</span>
-                                }
-                                else
-                                {
-                                    <span class="badge badge-success">@item.TotalStock</span>
-                                }
-                            </td>
-                            <td>@item.LowStockThreshold</td>
-                            <td>$@item.UnitPrice.ToString("F2")</td>
-                            <td>
-                                <strong>$@((item.TotalStock * item.UnitPrice).ToString("F2"))</strong>
+                                <div class="product-info">
+                                    <div class="product-name">@item.ProductName</div>
+                                    @if (!string.IsNullOrEmpty(item.GenericName))
+                                    {
+                                        <small class="text-muted">
+                                            <i class="fas fa-capsules me-1"></i>@item.GenericName
+                                        </small>
+                                    }
+                                </div>
                             </td>
                             <td>
+                                <span class="badge bg-info category-badge">@item.Category</span>
+                            </td>
+                            <td class="text-center">
                                 @if (item.TotalStock == 0)
                                 {
-                                    <span class="badge badge-danger">Out of Stock</span>
+                                    <span class="badge bg-danger stock-badge">
+                                        <i class="fas fa-times-circle me-1"></i>Out of Stock
+                                    </span>
                                 }
                                 else if (item.IsLowStock)
                                 {
-                                    <span class="badge badge-warning">Low Stock</span>
+                                    <span class="badge bg-warning stock-badge">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>@item.TotalStock units
+                                    </span>
                                 }
                                 else
                                 {
-                                    <span class="badge badge-success">In Stock</span>
+                                    <span class="badge bg-success stock-badge">
+                                        <i class="fas fa-check-circle me-1"></i>@item.TotalStock units
+                                    </span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-secondary threshold-badge">@item.LowStockThreshold</span>
+                            </td>
+                            <td class="text-end">
+                                <div class="price-info">
+                                    <strong class="unit-price">$@item.UnitPrice.ToString("F2")</strong>
+                                </div>
+                            </td>
+                            <td class="text-end">
+                                <div class="value-info">
+                                    <strong class="total-value text-success">$@((item.TotalStock * item.UnitPrice).ToString("F2"))</strong>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                @if (item.TotalStock == 0)
+                                {
+                                    <span class="badge bg-danger status-badge">
+                                        <i class="fas fa-times-circle me-1"></i>Out of Stock
+                                    </span>
+                                }
+                                else if (item.IsLowStock)
+                                {
+                                    <span class="badge bg-warning status-badge">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>Low Stock
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success status-badge">
+                                        <i class="fas fa-check-circle me-1"></i>In Stock
+                                    </span>
                                 }
                             </td>
                             <td>
-                                <div class="btn-group" role="group">
-                                    <a href="/Stock/Details/@item.ProductID" class="btn btn-sm btn-outline-info" title="View Details">
+                                <div class="action-buttons d-flex gap-1 justify-content-center">
+                                    <a href="/Stock/Details/@item.ProductID" 
+                                       class="btn btn-sm btn-outline-info" 
+                                       title="View Details"
+                                       data-bs-toggle="tooltip">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <a href="/Stock/Adjustments?productId=@item.ProductID" class="btn btn-sm btn-outline-primary" title="Adjust Stock">
+                                    <a href="/Stock/Adjustments?productId=@item.ProductID" 
+                                       class="btn btn-sm btn-outline-primary" 
+                                       title="Adjust Stock"
+                                       data-bs-toggle="tooltip">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <a href="/Stock/Batches?productId=@item.ProductID" class="btn btn-sm btn-outline-secondary" title="View Batches">
+                                    <a href="/Stock/Batches?productId=@item.ProductID" 
+                                       class="btn btn-sm btn-outline-secondary" 
+                                       title="View Batches"
+                                       data-bs-toggle="tooltip">
                                         <i class="fas fa-layer-group"></i>
                                     </a>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                                                type="button" 
+                                                data-bs-toggle="dropdown" 
+                                                aria-expanded="false"
+                                                title="More Actions">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li><a class="dropdown-item" href="/Stock/Details/@item.ProductID">
+                                                <i class="fas fa-eye me-2"></i>View Details
+                                            </a></li>
+                                            <li><a class="dropdown-item" href="/Products/Edit/@item.ProductID">
+                                                <i class="fas fa-edit me-2"></i>Edit Product
+                                            </a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            @if (item.IsLowStock)
+                                            {
+                                                <li><a class="dropdown-item text-warning" href="/Purchases/Create?productId=@item.ProductID">
+                                                    <i class="fas fa-shopping-cart me-2"></i>Reorder Stock
+                                                </a></li>
+                                            }
+                                        </ul>
+                                    </div>
                                 </div>
                             </td>
                         </tr>
@@ -176,14 +341,72 @@
                 else
                 {
                     <tr>
-                        <td colspan="8" class="text-center text-muted py-4">
-                            <i class="fas fa-box-open fa-3x mb-3"></i>
-                            <br>No stock items found. <a href="/Products/Create">Add products first</a>
+                        <td colspan="8" class="text-center py-5">
+                            <div class="empty-state">
+                                <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                                <h6 class="text-muted">No stock items found</h6>
+                                <p class="text-muted mb-3">Get started by adding products to your inventory</p>
+                                <a href="/Products/Create" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i> Add Products
+                                </a>
+                            </div>
                         </td>
                     </tr>
                 }
             </tbody>
         </table>
+    </div>
+
+    <!-- Card View -->
+    <div id="cardView" style="display: none;" class="row">
+        @if (Model.StockItems != null && Model.StockItems.Any())
+        {
+            @foreach (var item in Model.StockItems)
+            {
+                <div class="col-lg-6 col-xl-4 mb-3">
+                    <div class="card stock-card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">@item.ProductName</h6>
+                            @if (item.TotalStock == 0)
+                            {
+                                <span class="badge bg-danger">Out of Stock</span>
+                            }
+                            else if (item.IsLowStock)
+                            {
+                                <span class="badge bg-warning">Low Stock</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">In Stock</span>
+                            }
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <p class="mb-1"><strong>@item.Category</strong></p>
+                                    <small class="text-muted">Current: @item.TotalStock units</small>
+                                </div>
+                                <h5 class="text-success mb-0">$@((item.TotalStock * item.UnitPrice).ToString("F2"))</h5>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="badge bg-secondary">Threshold: @item.LowStockThreshold</span>
+                                <small class="text-muted">Unit: $@item.UnitPrice.ToString("F2")</small>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <div class="d-flex gap-1">
+                                <a href="/Stock/Details/@item.ProductID" class="btn btn-sm btn-outline-info flex-fill">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                                <a href="/Stock/Adjustments?productId=@item.ProductID" class="btn btn-sm btn-outline-primary flex-fill">
+                                    <i class="fas fa-edit"></i> Adjust
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
     </div>
 </div>
 

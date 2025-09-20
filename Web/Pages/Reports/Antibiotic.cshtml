@@ -4,50 +4,558 @@
     ViewData["Title"] = "Antibiotic Register";
 }
 
+<!-- Page Header -->
 <div class="page-header">
-    <h1><i class="fas fa-notes-medical"></i> Antibiotic Register</h1>
-    <a class="btn btn-secondary" href="/">Back to Dashboard</a>
-</div>
-
-<div class="card">
-    <div class="card-header">
-        <h5>Antibiotic Sales Log</h5>
-    </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Product</th>
-                        <th>Customer</th>
-                        <th>Quantity</th>
-                        <th>Prescription</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (Model.AntibioticLogs != null && Model.AntibioticLogs.Any())
-                    {
-                        @foreach (var log in Model.AntibioticLogs)
-                        {
-                            <tr>
-                                <td>@log.SaleDate.ToString("yyyy-MM-dd")</td>
-                                <td>@log.ProductName</td>
-                                <td>@log.CustomerName</td>
-                                <td>@log.Quantity</td>
-                                <td>@log.PrescriptionNumber</td>
-                            </tr>
-                        }
-                    }
-                    else
-                    {
-                        <tr>
-                            <td colspan="5" class="text-center text-muted">No antibiotic sales recorded.</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-notes-medical text-primary"></i> Antibiotic Register</h1>
+            <p class="mb-0">Track and monitor antibiotic prescriptions and controlled substance sales</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+            <button class="btn btn-outline-primary" onclick="exportToExcel()">
+                <i class="fas fa-download"></i> Export Report
+            </button>
+            <button class="btn btn-primary" onclick="window.print()">
+                <i class="fas fa-print"></i> Print Register
+            </button>
         </div>
     </div>
 </div>
+
+<!-- Quick Actions & Filters -->
+<div class="dashboard-card mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-4">
+            <h6 class="mb-2 text-muted">Report Controls</h6>
+            <div class="d-flex gap-2 flex-wrap">
+                <button class="btn btn-sm btn-success" onclick="refreshData()">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+                <button class="btn btn-sm btn-outline-info" onclick="showFilters()">
+                    <i class="fas fa-filter"></i> Filters
+                </button>
+                <button class="btn btn-sm btn-outline-warning" onclick="generateAuditReport()">
+                    <i class="fas fa-clipboard-check"></i> Audit
+                </button>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Date Range</label>
+                    <select class="form-select form-select-sm" id="dateFilter">
+                        <option value="">All Records</option>
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                        <option value="quarter">This Quarter</option>
+                        <option value="custom">Custom Range</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Product Type</label>
+                    <select class="form-select form-select-sm" id="productFilter">
+                        <option value="">All Antibiotics</option>
+                        <option value="prescription">Prescription Only</option>
+                        <option value="controlled">Controlled Substances</option>
+                        <option value="restricted">Restricted Access</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Search Records</label>
+                    <div class="input-group input-group-sm">
+                        <input type="text" class="form-control" id="searchInput" placeholder="Customer, Product, Prescription...">
+                        <button class="btn btn-outline-secondary" type="button" id="searchBtn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Antibiotic Summary Cards -->
+<div class="kpi-grid mb-4">
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Total Records</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #e74c3c, #ec7063);">
+                <i class="fas fa-notes-medical"></i>
+            </div>
+        </div>
+        <div class="kpi-value">@(Model.AntibioticLogs?.Count() ?? 0)</div>
+        <div class="kpi-change">
+            <i class="fas fa-prescription-bottle"></i> Antibiotic transactions logged
+        </div>
+        <div class="kpi-progress mt-2">
+            <div class="progress" style="height: 4px;">
+                <div class="progress-bar bg-danger" role="progressbar" style="width: 85%" aria-valuenow="85" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Today's Prescriptions</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #f39c12, #f7dc6f);">
+                <i class="fas fa-calendar-day"></i>
+            </div>
+        </div>
+        <div class="kpi-value">@(Model.AntibioticLogs?.Where(x => x.SaleDate.Date == DateTime.Today).Count() ?? 0)</div>
+        <div class="kpi-change">
+            <i class="fas fa-clock"></i> Dispensed today
+        </div>
+        <div class="kpi-progress mt-2">
+            <div class="progress" style="height: 4px;">
+                <div class="progress-bar bg-warning" role="progressbar" style="width: 60%" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Unique Customers</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #3498db, #5dade2);">
+                <i class="fas fa-users"></i>
+            </div>
+        </div>
+        <div class="kpi-value">@(Model.AntibioticLogs?.Select(x => x.CustomerName).Distinct().Count() ?? 0)</div>
+        <div class="kpi-change">
+            <i class="fas fa-user-check"></i> Patients served
+        </div>
+        <div class="kpi-progress mt-2">
+            <div class="progress" style="height: 4px;">
+                <div class="progress-bar bg-info" role="progressbar" style="width: 70%" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Compliance Status</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #27ae60, #58d68d);">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+        </div>
+        <div class="kpi-value">
+            @{
+                var prescriptionRate = Model.AntibioticLogs?.Count() > 0 ? 
+                    (Model.AntibioticLogs.Where(x => !string.IsNullOrEmpty(x.PrescriptionNumber)).Count() * 100.0 / Model.AntibioticLogs.Count()) : 0;
+            }
+            @prescriptionRate.ToString("F0")%
+        </div>
+        <div class="kpi-change @(prescriptionRate >= 95 ? "positive" : prescriptionRate >= 80 ? "" : "negative")">
+            <i class="fas @(prescriptionRate >= 95 ? "fa-check-circle" : prescriptionRate >= 80 ? "fa-exclamation-circle" : "fa-times-circle")"></i> 
+            @(prescriptionRate >= 95 ? "Excellent compliance" : prescriptionRate >= 80 ? "Good compliance" : "Needs attention")
+        </div>
+        <div class="kpi-progress mt-2">
+            <div class="progress" style="height: 4px;">
+                <div class="progress-bar @(prescriptionRate >= 95 ? "bg-success" : prescriptionRate >= 80 ? "bg-warning" : "bg-danger")" 
+                     role="progressbar" style="width: @prescriptionRate%" aria-valuenow="@prescriptionRate" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Antibiotic Register Table -->
+<div class="table-container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0"><i class="fas fa-list-alt text-primary"></i> Antibiotic Sales Register</h5>
+        <div class="d-flex align-items-center gap-3">
+            <small class="text-muted">
+                Showing @(Model.AntibioticLogs?.Count() ?? 0) records
+            </small>
+            <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-secondary active" onclick="toggleView('table')" id="tableViewBtn">
+                    <i class="fas fa-table"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="toggleView('card')" id="cardViewBtn">
+                    <i class="fas fa-th-large"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table View -->
+    <div id="tableView" class="table-responsive">
+        <table class="table table-hover" id="antibioticTable">
+            <thead class="table-light">
+                <tr>
+                    <th class="sortable" data-sort="0">
+                        <i class="fas fa-calendar text-muted me-1"></i>Date & Time
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="sortable" data-sort="1">
+                        <i class="fas fa-pills text-muted me-1"></i>Product Name
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="sortable" data-sort="2">
+                        <i class="fas fa-user text-muted me-1"></i>Customer
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="text-center sortable" data-sort="3">
+                        <i class="fas fa-sort-numeric-up text-muted me-1"></i>Quantity
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="sortable" data-sort="4">
+                        <i class="fas fa-prescription text-muted me-1"></i>Prescription
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="text-center">
+                        <i class="fas fa-check-circle text-muted me-1"></i>Compliance
+                    </th>
+                    <th class="text-center" style="width: 120px;">
+                        <i class="fas fa-cogs text-muted me-1"></i>Actions
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.AntibioticLogs != null && Model.AntibioticLogs.Any())
+                {
+                    @foreach (var log in Model.AntibioticLogs.OrderByDescending(x => x.SaleDate))
+                    {
+                        <tr class="antibiotic-row">
+                            <td>
+                                <div class="date-info">
+                                    <div class="sale-date">@log.SaleDate.ToString("MMM dd, yyyy")</div>
+                                    <small class="sale-time text-muted">
+                                        <i class="fas fa-clock me-1"></i>@log.SaleDate.ToString("hh:mm tt")
+                                    </small>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="product-info">
+                                    <div class="product-name">@log.ProductName</div>
+                                    <small class="text-muted">
+                                        <i class="fas fa-notes-medical me-1"></i>Controlled Substance
+                                    </small>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="customer-info">
+                                    <div class="customer-name">@log.CustomerName</div>
+                                    <small class="text-muted">
+                                        @if (log.CustomerName != "Walk-in Customer")
+                                        {
+                                            <text><i class="fas fa-user-check me-1"></i>Registered Patient</text>
+                                        }
+                                        else
+                                        {
+                                            <text><i class="fas fa-walking me-1"></i>Walk-in Patient</text>
+                                        }
+                                    </small>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-primary quantity-badge">
+                                    @log.Quantity <small>units</small>
+                                </span>
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(log.PrescriptionNumber))
+                                {
+                                    <div class="prescription-info">
+                                        <code class="prescription-number">@log.PrescriptionNumber</code>
+                                        <small class="d-block text-muted">
+                                            <i class="fas fa-file-prescription me-1"></i>Valid Prescription
+                                        </small>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="text-danger">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>No Prescription
+                                    </span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                @if (!string.IsNullOrEmpty(log.PrescriptionNumber))
+                                {
+                                    <span class="badge bg-success compliance-badge">
+                                        <i class="fas fa-check me-1"></i>Compliant
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger compliance-badge">
+                                        <i class="fas fa-times me-1"></i>Non-Compliant
+                                    </span>
+                                }
+                            </td>
+                            <td>
+                                <div class="action-buttons d-flex gap-1 justify-content-center">
+                                    <button class="btn btn-sm btn-outline-info" 
+                                            title="View Details"
+                                            data-bs-toggle="tooltip"
+                                            onclick="viewDetails('@log.SaleDate.ToString("yyyy-MM-dd")', '@log.ProductName', '@log.CustomerName')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    @if (!string.IsNullOrEmpty(log.PrescriptionNumber))
+                                    {
+                                        <button class="btn btn-sm btn-outline-primary" 
+                                                title="Verify Prescription"
+                                                data-bs-toggle="tooltip"
+                                                onclick="verifyPrescription('@log.PrescriptionNumber')">
+                                            <i class="fas fa-clipboard-check"></i>
+                                        </button>
+                                    }
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                                                type="button" 
+                                                data-bs-toggle="dropdown" 
+                                                aria-expanded="false"
+                                                title="More Actions">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li><a class="dropdown-item" href="#" onclick="viewDetails('@log.SaleDate.ToString("yyyy-MM-dd")', '@log.ProductName', '@log.CustomerName')">
+                                                <i class="fas fa-eye me-2"></i>View Details
+                                            </a></li>
+                                            <li><a class="dropdown-item" href="#" onclick="generateReport('@log.PrescriptionNumber')">
+                                                <i class="fas fa-file-medical me-2"></i>Generate Report
+                                            </a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><a class="dropdown-item text-warning" href="#" onclick="flagForReview('@log.PrescriptionNumber')">
+                                                <i class="fas fa-flag me-2"></i>Flag for Review
+                                            </a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <div class="empty-state">
+                                <i class="fas fa-notes-medical fa-3x text-muted mb-3"></i>
+                                <h6 class="text-muted">No antibiotic sales recorded</h6>
+                                <p class="text-muted mb-3">When antibiotic prescriptions are filled, they will appear here for regulatory tracking</p>
+                                <a href="/Sales/Create" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i> Record New Sale
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Card View -->
+    <div id="cardView" style="display: none;" class="row">
+        @if (Model.AntibioticLogs != null && Model.AntibioticLogs.Any())
+        {
+            @foreach (var log in Model.AntibioticLogs.OrderByDescending(x => x.SaleDate))
+            {
+                <div class="col-lg-6 col-xl-4 mb-3">
+                    <div class="card antibiotic-card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">@log.ProductName</h6>
+                            @if (!string.IsNullOrEmpty(log.PrescriptionNumber))
+                            {
+                                <span class="badge bg-success">Compliant</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Non-Compliant</span>
+                            }
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <p class="mb-1"><strong>@log.CustomerName</strong></p>
+                                    <small class="text-muted">@log.SaleDate.ToString("MMM dd, yyyy hh:mm tt")</small>
+                                </div>
+                                <span class="badge bg-primary">@log.Quantity units</span>
+                            </div>
+                            @if (!string.IsNullOrEmpty(log.PrescriptionNumber))
+                            {
+                                <div class="prescription-info">
+                                    <small class="text-muted">Prescription:</small>
+                                    <code class="d-block">@log.PrescriptionNumber</code>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-danger py-1 px-2 mb-0">
+                                    <small><i class="fas fa-exclamation-triangle me-1"></i>No prescription recorded</small>
+                                </div>
+                            }
+                        </div>
+                        <div class="card-footer">
+                            <div class="d-flex gap-1">
+                                <button class="btn btn-sm btn-outline-info flex-fill" onclick="viewDetails('@log.SaleDate.ToString("yyyy-MM-dd")', '@log.ProductName', '@log.CustomerName')">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                                @if (!string.IsNullOrEmpty(log.PrescriptionNumber))
+                                {
+                                    <button class="btn btn-sm btn-outline-primary flex-fill" onclick="verifyPrescription('@log.PrescriptionNumber')">
+                                        <i class="fas fa-clipboard-check"></i> Verify
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+
+        // Enhanced filtering functionality
+        document.getElementById('dateFilter').addEventListener('change', filterRecords);
+        document.getElementById('productFilter').addEventListener('change', filterRecords);
+        document.getElementById('searchInput').addEventListener('input', debounce(filterRecords, 300));
+        document.getElementById('searchBtn').addEventListener('click', filterRecords);
+
+        function filterRecords() {
+            const dateFilter = document.getElementById('dateFilter').value;
+            const productFilter = document.getElementById('productFilter').value;
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('#antibioticTable tbody tr.antibiotic-row');
+            
+            let visibleCount = 0;
+            
+            rows.forEach(row => {
+                let shouldShow = true;
+                
+                // Search filter
+                if (searchTerm) {
+                    const searchableText = row.textContent.toLowerCase();
+                    if (!searchableText.includes(searchTerm)) {
+                        shouldShow = false;
+                    }
+                }
+                
+                // Product filter
+                if (productFilter === 'prescription') {
+                    const prescriptionCell = row.querySelector('code');
+                    if (!prescriptionCell || !prescriptionCell.textContent.trim()) {
+                        shouldShow = false;
+                    }
+                } else if (productFilter === 'controlled') {
+                    // Show all records for controlled substances (all antibiotics are controlled)
+                }
+                
+                row.style.display = shouldShow ? '' : 'none';
+                if (shouldShow) visibleCount++;
+            });
+            
+            updateResultsCount(visibleCount);
+            toggleNoResultsMessage(visibleCount === 0);
+        }
+
+        function updateResultsCount(count) {
+            const countElement = document.querySelector('.table-container small');
+            if (countElement) {
+                countElement.textContent = `Showing ${count} records`;
+            }
+        }
+
+        function toggleNoResultsMessage(show) {
+            let noResultsRow = document.getElementById('noResultsRow');
+            
+            if (show && !noResultsRow) {
+                const tbody = document.querySelector('#antibioticTable tbody');
+                noResultsRow = document.createElement('tr');
+                noResultsRow.id = 'noResultsRow';
+                noResultsRow.innerHTML = `
+                    <td colspan="7" class="text-center py-4">
+                        <div class="empty-state">
+                            <i class="fas fa-search fa-2x text-muted mb-2"></i>
+                            <h6 class="text-muted">No records match your criteria</h6>
+                            <p class="text-muted mb-0">Try adjusting your filters or search terms</p>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(noResultsRow);
+            } else if (!show && noResultsRow) {
+                noResultsRow.remove();
+            }
+        }
+
+        // View toggle functionality
+        function toggleView(viewType) {
+            const tableView = document.getElementById('tableView');
+            const cardView = document.getElementById('cardView');
+            const tableBtn = document.getElementById('tableViewBtn');
+            const cardBtn = document.getElementById('cardViewBtn');
+            
+            if (viewType === 'table') {
+                tableView.style.display = 'block';
+                cardView.style.display = 'none';
+                tableBtn.classList.add('active');
+                cardBtn.classList.remove('active');
+            } else {
+                tableView.style.display = 'none';
+                cardView.style.display = 'block';
+                cardBtn.classList.add('active');
+                tableBtn.classList.remove('active');
+            }
+        }
+
+        // Action functions
+        function refreshData() {
+            window.location.reload();
+        }
+
+        function showFilters() {
+            alert('Advanced filters coming soon');
+        }
+
+        function generateAuditReport() {
+            alert('Audit report generation coming soon');
+        }
+
+        function exportToExcel() {
+            alert('Excel export functionality coming soon');
+        }
+
+        function viewDetails(date, product, customer) {
+            alert(`Viewing details for ${product} prescribed to ${customer} on ${date}`);
+        }
+
+        function verifyPrescription(prescriptionNumber) {
+            alert(`Verifying prescription: ${prescriptionNumber}`);
+        }
+
+        function generateReport(prescriptionNumber) {
+            alert(`Generating report for prescription: ${prescriptionNumber}`);
+        }
+
+        function flagForReview(prescriptionNumber) {
+            if (confirm('Flag this prescription for regulatory review?')) {
+                alert(`Prescription ${prescriptionNumber} has been flagged for review`);
+            }
+        }
+
+        // Debounce function for search
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+    </script>
+}
 

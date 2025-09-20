@@ -1,335 +1,457 @@
 ﻿@page
 @model Web.Pages.IndexModel
 @{
-    ViewData["Title"] = "Dashboard";
+    ViewData["Title"] = "Rabiul Pharmacy - Dashboard";
 }
 
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h4 mb-0">Welcome @Model.UserEmail</h1>
-        <form method="post" asp-page-handler="Logout" class="m-0">
-            <button type="submit" class="btn btn-sm btn-outline-danger">
-                <i class="fas fa-sign-out-alt me-1"></i> Logout
-            </button>
-        </form>
-    </div>
-
-    <div class="row g-3 mb-4" id="kpi-cards">
-        <div class="col-6 col-md-3">
-            <div class="card h-100">
-                <div class="card-body p-3 text-center" aria-live="polite" aria-atomic="true">
-                    <div class="fw-semibold small text-muted">Today Orders</div>
-                    <div class="fs-5 fw-bold" data-kpi="todayOrders" role="status">
-                        <div class="spinner-border spinner-border-sm text-primary d-none" role="status" data-kpi-loading="todayOrders">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <span data-kpi-value="todayOrders">--</span>
-                    </div>
-                </div>
-            </div>
+<!-- Page Header -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-tachometer-alt text-primary"></i> Pharmacy Dashboard</h1>
+            <p class="mb-0">Welcome to Rabiul Pharmacy Management System - Your comprehensive solution for pharmacy operations</p>
         </div>
-        <div class="col-6 col-md-3">
-            <div class="card h-100">
-                <div class="card-body p-3 text-center" aria-live="polite" aria-atomic="true">
-                    <div class="fw-semibold small text-muted">This Month Orders</div>
-                    <div class="fs-5 fw-bold" data-kpi="monthOrders" role="status">
-                        <div class="spinner-border spinner-border-sm text-primary d-none" role="status" data-kpi-loading="monthOrders">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <span data-kpi-value="monthOrders">--</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="card h-100">
-                <div class="card-body p-3 text-center" aria-live="polite" aria-atomic="true">
-                    <div class="fw-semibold small text-muted">Stock Value</div>
-                    <div class="fs-5 fw-bold" data-kpi="stockValue" role="status">
-                        <div class="spinner-border spinner-border-sm text-primary d-none" role="status" data-kpi-loading="stockValue">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <span data-kpi-value="stockValue">--</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="card h-100">
-                <div class="card-body p-3 text-center" aria-live="polite" aria-atomic="true">
-                    <div class="fw-semibold small text-muted">Outstanding Dues</div>
-                    <div class="fs-5 fw-bold text-danger" data-kpi="outstandingDues" role="status">
-                        <div class="spinner-border spinner-border-sm text-primary d-none" role="status" data-kpi-loading="outstandingDues">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <span data-kpi-value="outstandingDues">--</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Single Chart: Top Stock Products -->
-    <div class="row mb-4">
-        <div class="col-lg-6 mb-4">
-            <div class="card h-100">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>Top Stock Products</span>
-                    <small class="text-muted">Top 10</small>
-                </div>
-                <div class="card-body position-relative" style="height:300px;">
-                    <canvas id="stockChart"></canvas>
-                    <div id="stockEmpty" class="text-muted small position-absolute top-50 start-50 translate-middle d-none">
-                        No stock data
-                    </div>
-                    <div class="spinner-border text-primary position-absolute top-50 start-50 d-none" role="status" id="stockLoading">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    @if (string.Equals(Model.Role, "Admin", StringComparison.OrdinalIgnoreCase))
-    {
-        <div class="card mb-4">
-            <div class="card-header bg-primary text-white">Admin Panel</div>
-            <div class="card-body">
-                <ul class="mb-0">
-                    <li><a href="/UserManagement">Manage Users</a></li>
-                    <li><a href="/Reports">View Reports</a></li>
-                    <li><a href="/Settings">System Settings</a></li>
-                </ul>
-            </div>
-        </div>
-    }
-    else
-    {
-        <div class="card mb-4">
-            <div class="card-header bg-secondary text-white">Employee Area</div>
-            <div class="card-body">
-                <p class="mb-0">Access the features assigned to your role.</p>
-            </div>
-        </div>
-    }
-
-    <div class="card">
-        <div class="card-header">Resources</div>
-        <div class="card-body">
-            <a class="btn btn-sm btn-primary" href="https://learn.microsoft.com/aspnet/core" target="_blank">
-                ASP.NET Core Docs
+        <div class="d-flex gap-2">
+            <a href="/Sales/Create" class="btn btn-success">
+                <i class="fas fa-plus-circle"></i> New Sale
             </a>
+            <a href="/Products/Create" class="btn btn-primary">
+                <i class="fas fa-pills"></i> Add Product
+            </a>
+            <button type="button" class="btn btn-outline-info" onclick="refreshDashboard()">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
         </div>
     </div>
 </div>
 
-@section Styles {
-    <style>
-        .kpi-error {
-            color: #dc3545 !important;
-            font-style: italic;
-        }
+<!-- Quick Actions -->
+<div class="dashboard-card mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-12">
+            <h6 class="mb-3 text-muted"><i class="fas fa-bolt text-warning"></i> Quick Actions</h6>
+            <div class="row g-3">
+                <div class="col-md-2 col-sm-4 col-6">
+                    <a href="/Sales/Create" class="quick-action-btn">
+                        <i class="fas fa-cash-register"></i>
+                        <span>New Sale</span>
+                    </a>
+                </div>
+                <div class="col-md-2 col-sm-4 col-6">
+                    <a href="/Products" class="quick-action-btn">
+                        <i class="fas fa-pills"></i>
+                        <span>Products</span>
+                    </a>
+                </div>
+                <div class="col-md-2 col-sm-4 col-6">
+                    <a href="/Customers" class="quick-action-btn">
+                        <i class="fas fa-users"></i>
+                        <span>Customers</span>
+                    </a>
+                </div>
+                <div class="col-md-2 col-sm-4 col-6">
+                    <a href="/Stock" class="quick-action-btn">
+                        <i class="fas fa-boxes"></i>
+                        <span>Stock</span>
+                    </a>
+                </div>
+                <div class="col-md-2 col-sm-4 col-6">
+                    <a href="/Reports" class="quick-action-btn">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Reports</span>
+                    </a>
+                </div>
+                <div class="col-md-2 col-sm-4 col-6">
+                    <a href="/Settings" class="quick-action-btn">
+                        <i class="fas fa-cogs"></i>
+                        <span>Settings</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-        .kpi-loading {
-            opacity: 0.7;
+<!-- KPI Cards -->
+<div class="kpi-grid mb-4">
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Today's Sales</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #27ae60, #2ecc71);">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+        </div>
+        <div class="kpi-value">@Model.TodaySales.ToString("C")</div>
+        <div class="kpi-change positive">
+            <i class="fas fa-arrow-up"></i> @Model.TodayInvoices transactions today
+        </div>
+        <div class="kpi-progress mt-2">
+            <div class="progress" style="height: 4px;">
+                <div class="progress-bar bg-success" role="progressbar" style="width: 85%" aria-valuenow="85" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Monthly Sales</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #3498db, #5dade2);">
+                <i class="fas fa-chart-line"></i>
+            </div>
+        </div>
+        <div class="kpi-value">@Model.MonthlySales.ToString("C")</div>
+        <div class="kpi-change positive">
+            <i class="fas fa-arrow-up"></i> @Model.MonthlyInvoices orders this month
+        </div>
+        <div class="kpi-progress mt-2">
+            <div class="progress" style="height: 4px;">
+                <div class="progress-bar bg-info" role="progressbar" style="width: 70%" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Stock Value</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #9b59b6, #bb8fce);">
+                <i class="fas fa-boxes"></i>
+            </div>
+        </div>
+        <div class="kpi-value">@Model.StockValue.ToString("C")</div>
+        <div class="kpi-change positive">
+            <i class="fas fa-chart-bar"></i> Total inventory value
+        </div>
+        <div class="mt-2">
+            <a href="/Stock" class="btn btn-sm btn-outline-primary">
+                <i class="fas fa-eye"></i> View Stock
+            </a>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Outstanding Dues</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #e74c3c, #ec7063);">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+        </div>
+        <div class="kpi-value text-danger">@Model.OutstandingDues.ToString("C")</div>
+        <div class="kpi-change @(Model.OutstandingDues > 1000 ? "negative" : "")">
+            <i class="fas @(Model.OutstandingDues > 1000 ? "fa-exclamation-triangle" : "fa-check-circle")"></i> 
+            @(Model.OutstandingDues > 1000 ? "Needs attention" : "Under control")
+        </div>
+        @if (Model.OutstandingDues > 0)
+        {
+            <div class="mt-2">
+                <a href="/Reports" class="btn btn-sm btn-warning">
+                    <i class="fas fa-file-invoice-dollar"></i> View Details
+                </a>
+            </div>
         }
-    </style>
-}
+    </div>
+</div>
+
+<!-- Data Tables -->
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="table-container">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0"><i class="fas fa-trophy text-warning"></i> Top Selling Products</h5>
+                <a href="/Products" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-eye"></i> View All
+                </a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th><i class="fas fa-hashtag text-muted me-1"></i>Rank</th>
+                            <th><i class="fas fa-pills text-muted me-1"></i>Product Name</th>
+                            <th class="text-center"><i class="fas fa-sort-numeric-up text-muted me-1"></i>Quantity Sold</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.TopSellingProducts != null && Model.TopSellingProducts.Any())
+                        {
+                            int rank = 1;
+                            @foreach (var product in Model.TopSellingProducts)
+                            {
+                                <tr>
+                                    <td>
+                                        <span class="badge @(rank == 1 ? "bg-warning" : rank == 2 ? "bg-secondary" : rank == 3 ? "bg-success" : "bg-info") rank-badge">
+                                            @rank
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="product-info">
+                                            <div class="product-name">@product.ProductName</div>
+                                            <small class="text-muted">
+                                                <i class="fas fa-tag me-1"></i>Best seller
+                                            </small>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-primary items-badge">
+                                            @product.TotalQuantitySold <small>units</small>
+                                        </span>
+                                    </td>
+                                </tr>
+                                rank++;
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="3" class="text-center py-4">
+                                    <div class="empty-state">
+                                        <i class="fas fa-chart-line fa-2x text-muted mb-2"></i>
+                                        <h6 class="text-muted">No sales data available</h6>
+                                        <p class="text-muted mb-0">Start making sales to see top products</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+        <div class="table-container">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0"><i class="fas fa-boxes text-success"></i> Top Stock Products</h5>
+                <a href="/Stock" class="btn btn-sm btn-outline-success">
+                    <i class="fas fa-warehouse"></i> Manage Stock
+                </a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th><i class="fas fa-pills text-muted me-1"></i>Product Name</th>
+                            <th class="text-center"><i class="fas fa-cubes text-muted me-1"></i>Stock</th>
+                            <th class="text-end"><i class="fas fa-dollar-sign text-muted me-1"></i>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.TopStockProducts != null && Model.TopStockProducts.Any())
+                        {
+                            @foreach (var product in Model.TopStockProducts)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="product-info">
+                                            <div class="product-name">@product.ProductName</div>
+                                            <small class="text-muted">
+                                                <i class="fas fa-layer-group me-1"></i>High stock
+                                            </small>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-success items-badge">
+                                            @product.TotalStock <small>units</small>
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <strong class="text-success">$@((product.TotalStock * 10).ToString("F2"))</strong>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="3" class="text-center py-4">
+                                    <div class="empty-state">
+                                        <i class="fas fa-boxes fa-2x text-muted mb-2"></i>
+                                        <h6 class="text-muted">No stock data available</h6>
+                                        <p class="text-muted mb-0">Add products to track inventory</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="table-container">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0"><i class="fas fa-history text-secondary"></i> Recent Sales</h5>
+                <a href="/Sales" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-list"></i> View All Sales
+                </a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th><i class="fas fa-hashtag text-muted me-1"></i>Sale ID</th>
+                            <th class="text-end"><i class="fas fa-dollar-sign text-muted me-1"></i>Amount</th>
+                            <th class="text-center"><i class="fas fa-calendar text-muted me-1"></i>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.RecentSales != null && Model.RecentSales.Any())
+                        {
+                            @foreach (var sale in Model.RecentSales)
+                            {
+                                <tr class="sale-row">
+                                    <td>
+                                        <div class="sale-id-badge">
+                                            #@sale.SaleID.ToString().Substring(0, 8).ToUpper()
+                                        </div>
+                                    </td>
+                                    <td class="text-end">
+                                        <strong class="sale-amount">@sale.TotalAmount.ToString("C")</strong>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="date-info">
+                                            <div class="sale-date">@sale.SaleDate.ToString("MMM dd")</div>
+                                            <small class="sale-time text-muted">@sale.SaleDate.ToString("hh:mm tt")</small>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="3" class="text-center py-4">
+                                    <div class="empty-state">
+                                        <i class="fas fa-shopping-cart fa-2x text-muted mb-2"></i>
+                                        <h6 class="text-muted">No recent sales</h6>
+                                        <p class="text-muted mb-3">Start making sales to see recent transactions</p>
+                                        <a href="/Sales/Create" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-plus"></i> Create Sale
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+        <div class="table-container">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0"><i class="fas fa-exclamation-triangle text-danger"></i> Expiring Products</h5>
+                <a href="/Reports" class="btn btn-sm btn-outline-warning">
+                    <i class="fas fa-chart-pie"></i> Full Report
+                </a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th><i class="fas fa-pills text-muted me-1"></i>Product</th>
+                            <th class="text-center"><i class="fas fa-calendar-alt text-muted me-1"></i>Expiry Date</th>
+                            <th class="text-center"><i class="fas fa-clock text-muted me-1"></i>Days Left</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.ExpiringProducts != null && Model.ExpiringProducts.Any())
+                        {
+                            @foreach (var product in Model.ExpiringProducts)
+                            {
+                                var daysLeft = (product.ExpiryDate - DateTime.Now).Days;
+                                var statusClass = daysLeft <= 7 ? "bg-danger" : daysLeft <= 30 ? "bg-warning" : "bg-info";
+                                <tr>
+                                    <td>
+                                        <div class="product-info">
+                                            <div class="product-name">@product.ProductName</div>
+                                            <small class="text-muted">
+                                                <i class="fas fa-exclamation-circle me-1"></i>Expiring soon
+                                            </small>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="date-info">
+                                            <div class="sale-date">@product.ExpiryDate.ToString("MMM dd, yyyy")</div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge @statusClass">
+                                            @daysLeft days
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="3" class="text-center py-4">
+                                    <div class="empty-state">
+                                        <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                                        <h6 class="text-success">All products are fresh!</h6>
+                                        <p class="text-muted mb-0">No products expiring in the next 30 days</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
 
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script>
-        const currencyFmt = new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' });
-        let stockChart = null;
-        let isRefreshing = false;
-
-        function initStockChart() {
-            const ctx = document.getElementById('stockChart');
-
-            if (stockChart) {
-                stockChart.destroy();
-            }
-
-            stockChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: 'Units',
-                        data: [],
-                        backgroundColor: '#1cc88a',
-                        borderColor: '#17a673',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return `Units: ${context.raw}`;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Units in Stock'
-                            }
-                        },
-                        y: {
-                            title: {
-                                display: true,
-                                text: 'Products'
-                            }
-                        }
-                    }
-                }
-            });
+        // Dashboard refresh functionality
+        function refreshDashboard() {
+            window.location.reload();
         }
 
-        function setLoadingState(key, isLoading) {
-            const loadingEl = document.querySelector(`[data-kpi-loading="${key}"]`);
-            const valueEl = document.querySelector(`[data-kpi-value="${key}"]`);
-            const cardEl = document.querySelector(`[data-kpi="${key}"]`).closest('.card');
-
-            if (loadingEl) loadingEl.classList.toggle('d-none', !isLoading);
-            if (valueEl) {
-                valueEl.classList.toggle('d-none', isLoading);
-                valueEl.classList.toggle('kpi-error', false);
-            }
-            if (cardEl) cardEl.classList.toggle('kpi-loading', isLoading);
-        }
-
-        function setText(key, value) {
-            const el = document.querySelector(`[data-kpi-value="${key}"]`);
-            if (el) {
-                el.textContent = value;
-                el.classList.remove('kpi-error');
-            }
-        }
-
-        function showError(key) {
-            const el = document.querySelector(`[data-kpi-value="${key}"]`);
-            if (el) {
-                el.textContent = 'Error';
-                el.classList.add('kpi-error');
-            }
-        }
-
-        function setStockLoading(isLoading) {
-            const loadingEl = document.getElementById('stockLoading');
-            const emptyMsg = document.getElementById('stockEmpty');
-            const chartEl = document.getElementById('stockChart');
-
-            if (loadingEl) loadingEl.classList.toggle('d-none', !isLoading);
-            if (emptyMsg && isLoading) emptyMsg.classList.add('d-none');
-            if (chartEl) chartEl.style.opacity = isLoading ? '0.5' : '1';
-        }
-
-        async function loadKpis() {
-            const kpiKeys = ['todayOrders', 'monthOrders', 'stockValue', 'outstandingDues'];
-
-            kpiKeys.forEach(key => {
-                setLoadingState(key, true);
-            });
-
-            try {
-                const res = await fetch(`@Url.Page("Index", "Kpis")`, {
-                    cache: 'no-store',
-                    headers: { 'Accept': 'application/json' }
-                });
-
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-                const k = await res.json();
-                setText('todayOrders', k.todayOrders);
-                setText('monthOrders', k.monthOrders);
-                setText('stockValue', currencyFmt.format(k.stockValue));
-                setText('outstandingDues', currencyFmt.format(k.outstandingDues));
-
-            } catch (error) {
-                console.error('Error loading KPIs:', error);
-                kpiKeys.forEach(showError);
-            } finally {
-                kpiKeys.forEach(key => {
-                    setLoadingState(key, false);
-                });
-            }
-        }
-
-        async function loadStock() {
-            const emptyMsg = document.getElementById('stockEmpty');
-            if (emptyMsg) emptyMsg.classList.add('d-none');
-
-            setStockLoading(true);
-
-            try {
-                const res = await fetch(`@Url.Page("Index", "StockStatusData")`, {
-                    cache: 'no-store',
-                    headers: { 'Accept': 'application/json' }
-                });
-
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-                const data = await res.json();
-
-                if (data.values && data.values.length > 0 && data.values.some(v => v > 0)) {
-                    stockChart.data.labels = data.labels;
-                    stockChart.data.datasets[0].data = data.values;
-                    stockChart.update();
-                } else {
-                    if (emptyMsg) {
-                        emptyMsg.textContent = 'No stock data available';
-                        emptyMsg.classList.remove('d-none');
-                    }
-                }
-
-            } catch (error) {
-                console.error('Error loading stock data:', error);
-                if (emptyMsg) {
-                    emptyMsg.textContent = 'Failed to load stock data';
-                    emptyMsg.classList.remove('d-none');
-                }
-            } finally {
-                setStockLoading(false);
-            }
-        }
-
-        async function safeLoadKpis() {
-            if (isRefreshing) return;
-            isRefreshing = true;
-            try {
-                await loadKpis();
-            } finally {
-                isRefreshing = false;
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            initStockChart();
-
-            try {
-                await Promise.allSettled([loadKpis(), loadStock()]);
-            } catch (error) {
-                console.error('Error initializing dashboard:', error);
-            }
-
-            // Refresh KPIs every 60s
-            setInterval(safeLoadKpis, 60000);
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
         });
 
-        window.addEventListener('beforeunload', () => {
-            if (stockChart) {
-                stockChart.destroy();
+        // Auto-refresh dashboard every 10 minutes
+        setInterval(function() {
+            if (document.visibilityState === 'visible') {
+                console.log('Auto-refreshing dashboard...');
+                window.location.reload();
             }
+        }, 600000); // 10 minutes
+
+        // Add hover effects to quick action buttons
+        document.querySelectorAll('.quick-action-btn').forEach(btn => {
+            btn.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-3px)';
+            });
+            
+            btn.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+            });
+        });
+
+        // KPI cards animation on load
+        document.addEventListener('DOMContentLoaded', function() {
+            const kpiCards = document.querySelectorAll('.kpi-card');
+            kpiCards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(20px)';
+                    card.style.transition = 'all 0.5s ease';
+                    
+                    setTimeout(() => {
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }, 100);
+                }, index * 100);
+            });
         });
     </script>
 }

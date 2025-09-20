@@ -587,3 +587,282 @@ body {
     margin: 5px 0 0 0;
     font-size: 0.95rem;
 }
+
+/* Enhanced Sales Module Styles */
+.sale-id-badge {
+    background: linear-gradient(45deg, var(--primary-color), #34495e);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    font-family: 'Courier New', monospace;
+}
+
+.customer-info .customer-name {
+    font-weight: 600;
+    color: var(--dark-color);
+    margin-bottom: 2px;
+}
+
+.customer-info .customer-type {
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+}
+
+.date-info .sale-date {
+    font-weight: 500;
+    color: var(--dark-color);
+}
+
+.date-info .sale-time {
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+}
+
+.items-badge {
+    font-size: 0.75rem;
+    padding: 6px 10px;
+    border-radius: 12px;
+}
+
+.sale-amount {
+    font-size: 1.1rem;
+    color: var(--success-color);
+}
+
+.status-badge {
+    font-size: 0.75rem;
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+}
+
+.cashier-info .cashier-name {
+    font-weight: 500;
+    color: var(--dark-color);
+}
+
+.action-buttons .btn {
+    padding: 6px 10px;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.action-buttons .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+
+/* Table Enhancements */
+.table th.sortable {
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s;
+    position: relative;
+}
+
+.table th.sortable:hover {
+    background-color: #f8f9fa;
+}
+
+.table th.sortable.sort-asc .fa-sort:before {
+    content: "\f0de"; /* fa-sort-up */
+    color: var(--primary-color);
+}
+
+.table th.sortable.sort-desc .fa-sort:before {
+    content: "\f0dd"; /* fa-sort-down */
+    color: var(--primary-color);
+}
+
+.sale-row {
+    transition: all 0.2s;
+}
+
+.sale-row:hover {
+    background-color: #f8f9fa;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Card View Styles */
+.sale-card {
+    transition: all 0.3s;
+    border: 1px solid #e9ecef;
+}
+
+.sale-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    border-color: var(--secondary-color);
+}
+
+.sale-card .card-header {
+    background: linear-gradient(45deg, #f8f9fa, #ffffff);
+    border-bottom: 1px solid #e9ecef;
+    font-weight: 600;
+}
+
+/* Empty State */
+.empty-state {
+    padding: 40px 20px;
+}
+
+.empty-state i {
+    opacity: 0.5;
+}
+
+/* KPI Card Enhancements */
+.kpi-card .kpi-progress {
+    margin-top: 10px;
+}
+
+.kpi-card .kpi-progress .progress {
+    height: 4px;
+    border-radius: 2px;
+    background-color: #e9ecef;
+}
+
+.kpi-card .kpi-progress .progress-bar {
+    border-radius: 2px;
+}
+
+/* Filter and Search Enhancements */
+.dashboard-card .form-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 5px;
+}
+
+.dashboard-card .form-select-sm,
+.dashboard-card .form-control {
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+    transition: all 0.2s;
+}
+
+.dashboard-card .form-select-sm:focus,
+.dashboard-card .form-control:focus {
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+}
+
+/* Pagination Enhancements */
+.pagination-info {
+    min-width: 200px;
+}
+
+.page-size-selector {
+    min-width: 150px;
+}
+
+.pagination .page-link {
+    border-radius: 6px;
+    margin: 0 2px;
+    border: 1px solid #dee2e6;
+    color: var(--dark-color);
+    transition: all 0.2s;
+}
+
+.pagination .page-link:hover {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+    color: white;
+    transform: translateY(-1px);
+}
+
+.pagination .page-item.active .page-link {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* Responsive Enhancements */
+@media (max-width: 768px) {
+    .kpi-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .page-header .d-flex {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .dashboard-card .row {
+        flex-direction: column;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .action-buttons .btn {
+        font-size: 0.8rem;
+        padding: 4px 8px;
+    }
+    
+    .table-container .d-flex {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+
+@media (max-width: 576px) {
+    .sale-id-badge {
+        font-size: 0.75rem;
+        padding: 2px 6px;
+    }
+    
+    .kpi-card {
+        padding: 15px;
+    }
+    
+    .kpi-card .kpi-value {
+        font-size: 1.5rem;
+    }
+    
+    .table-responsive {
+        font-size: 0.85rem;
+    }
+    
+    .dashboard-card {
+        padding: 15px;
+    }
+}
+
+/* Animation for loading states */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.sale-row {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Custom scrollbar for tables */
+.table-responsive::-webkit-scrollbar {
+    height: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}

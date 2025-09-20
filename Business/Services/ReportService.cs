@@ -270,7 +270,7 @@ namespace Business.Services
                 ExpiringProducts = new List<ExpiryAlertDTO>()
             };
         }
-
+/*
         public async Task<IEnumerable<AuditLogDTO>> GetAuditLogsAsync(DateTime? startDate = null, DateTime? endDate = null)
         {
             var auditLogs = startDate.HasValue && endDate.HasValue
@@ -287,13 +287,12 @@ namespace Business.Services
                     UserID = log.UserID,
                     UserName = user != null ? $"{user.FirstName} {user.LastName}" : string.Empty,
                     Action = log.Action,
-                    IPAddress = log.IPAddress
                 });
             }
 
             return auditLogDtos.OrderByDescending(a => a.Timestamp);
         }
-
+*/
         private async Task<IEnumerable<SaleDTO>> GetRecentSalesAsync(int count)
         {
             var sales = await _saleRepository.GetAllAsync();

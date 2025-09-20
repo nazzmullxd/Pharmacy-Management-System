@@ -4,6 +4,42 @@
     ViewData["Title"] = "Dashboard";
 }
 
+<!-- Page Header -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-tachometer-alt text-primary"></i> Dashboard Overview</h1>
+            <p class="mb-0">Welcome back, <strong>@Model.UserEmail</strong> | Role: <span class="badge bg-primary">@Model.Role</span></p>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="button" id="densityToggle" class="btn btn-outline-secondary btn-sm" title="Toggle density">
+                <i class="fas fa-compress-alt"></i> Compact View
+            </button>
+            <form method="post" asp-page-handler="Logout" class="m-0">
+                <button type="submit" class="btn btn-outline-danger btn-sm">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Status Messages -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
 <style>
     :root {
         --kpi-gap: 1rem;
@@ -28,99 +64,88 @@
             font-size: .72rem;
         }
 
-    /* Header */
-    .dashboard-header {
-        background: linear-gradient(135deg, #4e73df, #1cc88a);
-        color: #fff;
-        border-radius: 1.1rem;
-        padding: 1.5rem 1.6rem;
-        box-shadow: 0 0.75rem 1.75rem -0.5rem rgba(0,0,0,.25);
-        position: relative;
-        overflow: hidden;
-    }
-
-        .dashboard-header:before,
-        .dashboard-header:after {
-            content: "";
-            position: absolute;
-            width: 260px;
-            height: 260px;
-            border-radius: 50%;
-            background: rgba(255,255,255,.12);
-            top: -70px;
-            right: -40px;
-            filter: blur(6px);
-        }
-
-        .dashboard-header:after {
-            width: 200px;
-            height: 200px;
-            top: auto;
-            bottom: -60px;
-            right: 120px;
-            background: rgba(255,255,255,.08);
-        }
-
     /* KPI Cards */
-    .kpi-card {
+    .dashboard-card.kpi-card {
         border: none;
         border-radius: var(--kpi-radius);
         background: linear-gradient(145deg,#ffffff,#f3f6fa);
-        box-shadow: 0 4px 16px -6px rgba(0,0,0,.12);
+        box-shadow: 0 8px 25px -8px rgba(0,0,0,0.15);
         padding: var(--kpi-padding) var(--kpi-padding) calc(var(--kpi-padding) + .2rem);
         position: relative;
         overflow: hidden;
         transition: transform .45s cubic-bezier(.34,1.56,.64,1), box-shadow .35s;
+        height: 100%;
     }
 
-        .kpi-card:hover {
+        .dashboard-card.kpi-card:hover {
             transform: translateY(-6px);
-            box-shadow: 0 10px 26px -8px rgba(0,0,0,.22);
+            box-shadow: 0 15px 35px -10px rgba(0,0,0,.25);
         }
 
     .kpi-icon-bubble {
-        width: 46px;
-        height: 46px;
-        border-radius: .9rem;
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
         background: #4e73df;
         color: #fff;
-        font-size: 1.1rem;
-        box-shadow: 0 6px 16px -8px rgba(0,0,0,.4);
+        font-size: 1.2rem;
+        box-shadow: 0 8px 20px -8px rgba(0,0,0,.4);
+        margin-bottom: 15px;
     }
 
     .kpi-label {
-        font-size: .68rem;
+        font-size: .7rem;
         letter-spacing: .08em;
         text-transform: uppercase;
         font-weight: 600;
         color: #6c757d;
-        margin-bottom: .15rem;
+        margin-bottom: .5rem;
     }
 
     .kpi-value {
-        font-size: 1.65rem;
-        font-weight: 600;
+        font-size: 1.8rem;
+        font-weight: 700;
         line-height: 1.1;
         color: #2c3e50;
     }
 
-    /* Panels / tables */
-    .panel-card {
-        border: none;
-        border-radius: 1rem;
-        box-shadow: 0 4px 18px -8px rgba(0,0,0,.18);
-        overflow: hidden;
-        background: #fff;
+    .kpi-trend {
+        font-size: 0.75rem;
+        margin-top: 0.5rem;
     }
 
-        .panel-card .card-header {
+    /* Dashboard Cards / Panels */
+    .dashboard-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 8px 25px -8px rgba(0,0,0,0.15);
+        overflow: hidden;
+        background: #fff;
+        margin-bottom: 1.5rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+        .dashboard-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px -10px rgba(0,0,0,0.2);
+        }
+
+        .dashboard-card .card-header,
+        .dashboard-card .card-title {
             background: linear-gradient(135deg,#f8f9fc,#eef2f7);
             font-weight: 600;
             border-bottom: 1px solid #e3e7ec;
-            font-size: .85rem;
+            font-size: .9rem;
+            padding: 1rem 1.25rem;
+            margin-bottom: 0;
+            color: #2c3e50;
+        }
+
+        .dashboard-card .card-body {
+            padding: 1.25rem;
         }
 
     .table-responsive {
@@ -217,11 +242,20 @@
 
     /* Empty state */
     .empty-state {
-        padding: 1rem 1.25rem;
-        font-size: .74rem;
+        padding: 3rem 1.25rem;
+        text-align: center;
         color: #6c757d;
-        font-style: italic;
     }
+
+        .empty-state i {
+            display: block;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state p {
+            margin: 0;
+            font-size: .9rem;
+        }
 
     /* Skeletons */
     .skeleton {
@@ -284,27 +318,32 @@
 </style>
 
 <div class="dashboard-root loading" id="dashboardRoot">
-    <div class="dashboard-header mb-4">
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-            <div>
-                <h1 class="h5 mb-2 d-flex align-items-center">
-                    <i class="fas fa-tachometer-alt me-2"></i> Dashboard
-                </h1>
-                <div class="small fw-semibold text-white-50 hide-on-loading">
-                    Signed in as:
-                    <span class="text-white">@Model.UserEmail</span> (@Model.Role)
-                </div>
-                <div class="skeleton skeleton-line sm skeleton-group" style="width:180px;"></div>
+    
+    <!-- Quick Actions Card -->
+    <div class="dashboard-card mb-4">
+        <h5 class="card-title mb-3">
+            <i class="fas fa-bolt text-warning"></i> Quick Actions
+        </h5>
+        <div class="row g-3">
+            <div class="col-6 col-md-3">
+                <a href="/Sales/Create" class="btn btn-outline-success w-100">
+                    <i class="fas fa-plus-circle me-1"></i> New Sale
+                </a>
             </div>
-            <div class="d-flex gap-2">
-                <button type="button" id="densityToggle" class="btn btn-sm density-toggle" title="Toggle density">
-                    Compact
-                </button>
-                <form method="post" asp-page-handler="Logout" class="m-0">
-                    <button type="submit" class="btn btn-sm btn-outline-light logout-btn">
-                        <i class="fas fa-sign-out-alt me-1"></i> Logout
-                    </button>
-                </form>
+            <div class="col-6 col-md-3">
+                <a href="/Products/Create" class="btn btn-outline-primary w-100">
+                    <i class="fas fa-pills me-1"></i> Add Product
+                </a>
+            </div>
+            <div class="col-6 col-md-3">
+                <a href="/Stock/Adjustments" class="btn btn-outline-info w-100">
+                    <i class="fas fa-warehouse me-1"></i> Stock Adjust
+                </a>
+            </div>
+            <div class="col-6 col-md-3">
+                <a href="/Stock/AddBatch" class="btn btn-outline-secondary w-100">
+                    <i class="fas fa-box me-1"></i> Add Batch
+                </a>
             </div>
         </div>
     </div>
@@ -315,61 +354,61 @@
         @for (int i = 0; i < 4; i++)
         {
             <div class="col-6 col-lg-3 skeleton-group">
-                <div class="kpi-card">
+                <div class="dashboard-card kpi-card">
                     <div class="skeleton skeleton-kpi"></div>
                 </div>
             </div>
         }
         <!-- Real KPI content -->
         <div class="col-6 col-lg-3 hide-on-loading">
-            <div class="kpi-card h-100">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <div class="kpi-label">Today's Orders</div>
-                        <div class="kpi-value">@Model.TodayOrders</div>
-                    </div>
-                    <div class="kpi-icon-bubble" style="background:#4e73df;">
-                        <i class="fas fa-file-invoice"></i>
-                    </div>
+            <div class="dashboard-card kpi-card">
+                <div class="kpi-icon-bubble" style="background: linear-gradient(135deg, #4e73df, #224abe);">
+                    <i class="fas fa-file-invoice"></i>
+                </div>
+                <div class="kpi-label">Today's Orders</div>
+                <div class="kpi-value">@Model.TodayOrders</div>
+                <div class="kpi-trend">
+                    <i class="fas fa-arrow-up text-success"></i>
+                    <small class="text-muted">Active sales today</small>
                 </div>
             </div>
         </div>
         <div class="col-6 col-lg-3 hide-on-loading">
-            <div class="kpi-card h-100">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <div class="kpi-label">This Month Orders</div>
-                        <div class="kpi-value">@Model.ThisMonthOrders</div>
-                    </div>
-                    <div class="kpi-icon-bubble" style="background:#1cc88a;">
-                        <i class="fas fa-calendar-alt"></i>
-                    </div>
+            <div class="dashboard-card kpi-card">
+                <div class="kpi-icon-bubble" style="background: linear-gradient(135deg, #1cc88a, #13a085);">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <div class="kpi-label">This Month Orders</div>
+                <div class="kpi-value">@Model.ThisMonthOrders</div>
+                <div class="kpi-trend">
+                    <i class="fas fa-chart-line text-success"></i>
+                    <small class="text-muted">Monthly performance</small>
                 </div>
             </div>
         </div>
         <div class="col-6 col-lg-3 hide-on-loading">
-            <div class="kpi-card h-100">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <div class="kpi-label">Stock Value</div>
-                        <div class="kpi-value">@Model.StockValue.ToString("C")</div>
-                    </div>
-                    <div class="kpi-icon-bubble" style="background:#36b9cc;">
-                        <i class="fas fa-boxes"></i>
-                    </div>
+            <div class="dashboard-card kpi-card">
+                <div class="kpi-icon-bubble" style="background: linear-gradient(135deg, #36b9cc, #2a9aaa);">
+                    <i class="fas fa-boxes"></i>
+                </div>
+                <div class="kpi-label">Stock Value</div>
+                <div class="kpi-value">@Model.StockValue.ToString("C")</div>
+                <div class="kpi-trend">
+                    <i class="fas fa-warehouse text-info"></i>
+                    <small class="text-muted">Total inventory value</small>
                 </div>
             </div>
         </div>
         <div class="col-6 col-lg-3 hide-on-loading">
-            <div class="kpi-card h-100">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <div class="kpi-label">Outstanding Dues</div>
-                        <div class="kpi-value text-danger">@Model.OutstandingDues.ToString("C")</div>
-                    </div>
-                    <div class="kpi-icon-bubble" style="background:#e74a3b;">
-                        <i class="fas fa-exclamation-triangle"></i>
-                    </div>
+            <div class="dashboard-card kpi-card">
+                <div class="kpi-icon-bubble" style="background: linear-gradient(135deg, #e74a3b, #c44027);">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="kpi-label">Outstanding Dues</div>
+                <div class="kpi-value text-danger">@Model.OutstandingDues.ToString("C")</div>
+                <div class="kpi-trend">
+                    <i class="fas fa-clock text-warning"></i>
+                    <small class="text-muted">Pending payments</small>
                 </div>
             </div>
         </div>
@@ -377,27 +416,38 @@
 
     @if (string.Equals(Model.Role, "Admin", StringComparison.OrdinalIgnoreCase))
     {
-        <div class="panel-card card mb-4 hide-on-loading">
-            <div class="card-header">
-                <i class="fas fa-user-shield me-1"></i> Admin Panel
-            </div>
-            <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-sm-4">
-                        <a class="btn w-100 btn-outline-primary" href="/UserManagement">
-                            <i class="fas fa-users-cog me-1"></i> Users
-                        </a>
-                    </div>
-                    <div class="col-sm-4">
-                        <a class="btn w-100 btn-outline-info" href="/Reports">
-                            <i class="fas fa-chart-line me-1"></i> Reports
-                        </a>
-                    </div>
-                    <div class="col-sm-4">
-                        <a class="btn w-100 btn-outline-secondary" href="/Settings">
-                            <i class="fas fa-sliders-h me-1"></i> Settings
-                        </a>
-                    </div>
+        <div class="dashboard-card mb-4 hide-on-loading">
+            <h5 class="card-title mb-3">
+                <i class="fas fa-user-shield text-primary"></i> Admin Panel
+            </h5>
+            <div class="row g-3">
+                <div class="col-sm-6 col-lg-3">
+                    <a class="btn btn-primary w-100 d-flex flex-column align-items-center py-3" href="/UserManagement">
+                        <i class="fas fa-users-cog fs-4 mb-2"></i>
+                        <span class="fw-semibold">User Management</span>
+                        <small class="text-light">Manage users & roles</small>
+                    </a>
+                </div>
+                <div class="col-sm-6 col-lg-3">
+                    <a class="btn btn-success w-100 d-flex flex-column align-items-center py-3" href="/Reports">
+                        <i class="fas fa-chart-line fs-4 mb-2"></i>
+                        <span class="fw-semibold">Reports</span>
+                        <small class="text-light">View analytics & reports</small>
+                    </a>
+                </div>
+                <div class="col-sm-6 col-lg-3">
+                    <a class="btn btn-info w-100 d-flex flex-column align-items-center py-3" href="/Settings">
+                        <i class="fas fa-sliders-h fs-4 mb-2"></i>
+                        <span class="fw-semibold">Settings</span>
+                        <small class="text-light">System configuration</small>
+                    </a>
+                </div>
+                <div class="col-sm-6 col-lg-3">
+                    <a class="btn btn-warning w-100 d-flex flex-column align-items-center py-3" href="/Backup">
+                        <i class="fas fa-database fs-4 mb-2"></i>
+                        <span class="fw-semibold">Backup</span>
+                        <small class="text-dark">Data management</small>
+                    </a>
                 </div>
             </div>
         </div>
@@ -407,9 +457,9 @@
     <div class="row">
         <div class="col-lg-6 mb-4">
             <!-- Skeleton -->
-            <div class="panel-card card mb-4 skeleton-group">
-                <div class="card-header"><div class="skeleton skeleton-line" style="height:18px;width:160px;"></div></div>
-                <div class="card-body">
+            <div class="dashboard-card mb-4 skeleton-group">
+                <h5 class="card-title"><div class="skeleton skeleton-line" style="height:18px;width:160px;"></div></h5>
+                <div>
                     @for (int i = 0; i < 5; i++)
                     {
                         <div class="skeleton skeleton-line" style="width:@(70 + i * 5)%"></div>
@@ -417,14 +467,17 @@
                 </div>
             </div>
             <!-- Real -->
-            <div class="panel-card card h-100 hide-on-loading">
-                <div class="card-header">
-                    <i class="fas fa-trophy me-1 text-warning"></i> Top Selling Products
-                </div>
-                <div class="card-body p-0 responsive-table">
+            <div class="dashboard-card h-100 hide-on-loading">
+                <h5 class="card-title mb-3">
+                    <i class="fas fa-trophy text-warning"></i> Top Selling Products
+                </h5>
+                <div class="responsive-table">
                     @if (!Model.TopSellingProducts.Any())
                     {
-                        <div class="empty-state">No sales data available.</div>
+                        <div class="empty-state">
+                            <i class="fas fa-chart-line fa-2x text-muted mb-3"></i>
+                            <p class="text-muted">No sales data available yet.</p>
+                        </div>
                     }
                     else
                     {
@@ -432,10 +485,10 @@
                             <table class="table table-hover table-sm mb-0">
                                 <thead>
                                     <tr>
-                                        <th>#</th>
-                                        <th>Product</th>
-                                        <th>Qty Sold</th>
-                                        <th>Total Revenue</th>
+                                        <th><i class="fas fa-hashtag me-1"></i>#</th>
+                                        <th><i class="fas fa-pills me-1"></i>Product</th>
+                                        <th><i class="fas fa-sort-numeric-up me-1"></i>Qty Sold</th>
+                                        <th><i class="fas fa-dollar-sign me-1"></i>Total Revenue</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -444,10 +497,12 @@
                                         foreach (var p in Model.TopSellingProducts)
                                         {
                                             <tr>
-                                                <td data-label="#">@rank</td>
-                                                <td data-label="Product">@p.ProductName</td>
-                                                <td data-label="Qty Sold" class="fw-semibold">@p.TotalQuantitySold</td>
-                                                <td data-label="Revenue">@p.TotalRevenue.ToString("C")</td>
+                                                <td data-label="#">
+                                                    <span class="badge bg-primary rounded-pill">@rank</span>
+                                                </td>
+                                                <td data-label="Product" class="fw-semibold">@p.ProductName</td>
+                                                <td data-label="Qty Sold" class="fw-bold text-success">@p.TotalQuantitySold</td>
+                                                <td data-label="Revenue" class="fw-semibold text-primary">@p.TotalRevenue.ToString("C")</td>
                                             </tr>
                                             rank++;
                                         }
@@ -462,9 +517,9 @@
 
         <div class="col-lg-6 mb-4">
             <!-- Skeleton -->
-            <div class="panel-card card mb-4 skeleton-group">
-                <div class="card-header"><div class="skeleton skeleton-line" style="height:18px;width:150px;"></div></div>
-                <div class="card-body">
+            <div class="dashboard-card mb-4 skeleton-group">
+                <h5 class="card-title"><div class="skeleton skeleton-line" style="height:18px;width:150px;"></div></h5>
+                <div>
                     @for (int i = 0; i < 5; i++)
                     {
                         <div class="skeleton skeleton-line" style="width:@(65 + i * 6)%"></div>
@@ -472,14 +527,17 @@
                 </div>
             </div>
             <!-- Real -->
-            <div class="panel-card card h-100 hide-on-loading">
-                <div class="card-header">
-                    <i class="fas fa-boxes me-1 text-success"></i> Top Stock Products
-                </div>
-                <div class="card-body p-0 responsive-table">
+            <div class="dashboard-card h-100 hide-on-loading">
+                <h5 class="card-title mb-3">
+                    <i class="fas fa-boxes text-success"></i> Top Stock Products
+                </h5>
+                <div class="responsive-table">
                     @if (!Model.TopStockProducts.Any())
                     {
-                        <div class="empty-state">No stock data available.</div>
+                        <div class="empty-state">
+                            <i class="fas fa-warehouse fa-2x text-muted mb-3"></i>
+                            <p class="text-muted">No stock data available yet.</p>
+                        </div>
                     }
                     else
                     {
@@ -487,19 +545,24 @@
                             <table class="table table-hover table-sm mb-0">
                                 <thead>
                                     <tr>
-                                        <th>Product</th>
-                                        <th>Stock</th>
-                                        <th>Value</th>
+                                        <th><i class="fas fa-pills me-1"></i>Product</th>
+                                        <th><i class="fas fa-cubes me-1"></i>Stock</th>
+                                        <th><i class="fas fa-dollar-sign me-1"></i>Value</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach (var p in Model.TopStockProducts)
                                     {
                                         var value = p.TotalStock * p.UnitPrice;
+                                        var isLowStock = p.TotalStock <= p.LowStockThreshold;
                                         <tr>
-                                            <td data-label="Product">@p.ProductName</td>
-                                            <td data-label="Stock" class="fw-semibold">@p.TotalStock</td>
-                                            <td data-label="Value">@value.ToString("C")</td>
+                                            <td data-label="Product" class="fw-semibold">@p.ProductName</td>
+                                            <td data-label="Stock">
+                                                <span class="badge @(isLowStock ? "bg-warning text-dark" : "bg-success")">
+                                                    @p.TotalStock
+                                                </span>
+                                            </td>
+                                            <td data-label="Value" class="fw-semibold text-primary">@value.ToString("C")</td>
                                         </tr>
                                     }
                                 </tbody>
@@ -514,14 +577,17 @@
     <div class="row">
         <!-- Recent Sales -->
         <div class="col-lg-6 mb-4">
-            <div class="panel-card card h-100 hide-on-loading">
-                <div class="card-header">
-                    <i class="fas fa-history me-1 text-secondary"></i> Recent Sales
-                </div>
-                <div class="card-body p-0 responsive-table">
+            <div class="dashboard-card h-100 hide-on-loading">
+                <h5 class="card-title mb-3">
+                    <i class="fas fa-history text-secondary"></i> Recent Sales
+                </h5>
+                <div class="responsive-table">
                     @if (!Model.RecentSales.Any())
                     {
-                        <div class="empty-state">No recent sales.</div>
+                        <div class="empty-state">
+                            <i class="fas fa-receipt fa-2x text-muted mb-3"></i>
+                            <p class="text-muted">No recent sales to display.</p>
+                        </div>
                     }
                     else
                     {
@@ -529,9 +595,9 @@
                             <table class="table table-sm table-hover mb-0">
                                 <thead>
                                     <tr>
-                                        <th>Date</th>
-                                        <th>Total</th>
-                                        <th>Status</th>
+                                        <th><i class="fas fa-calendar me-1"></i>Date</th>
+                                        <th><i class="fas fa-dollar-sign me-1"></i>Total</th>
+                                        <th><i class="fas fa-credit-card me-1"></i>Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -539,10 +605,11 @@
                                     {
                                         var isPending = s.PaymentStatus?.Equals("Pending", StringComparison.OrdinalIgnoreCase) == true;
                                         <tr>
-                                            <td data-label="Date">@s.SaleDate.ToString("yyyy-MM-dd")</td>
-                                            <td data-label="Total">@s.TotalAmount.ToString("C")</td>
+                                            <td data-label="Date" class="fw-semibold">@s.SaleDate.ToString("MMM dd, yyyy")</td>
+                                            <td data-label="Total" class="fw-bold text-success">@s.TotalAmount.ToString("C")</td>
                                             <td data-label="Status">
                                                 <span class="badge @(isPending ? "bg-warning text-dark" : "bg-success")">
+                                                    <i class="fas @(isPending ? "fa-clock" : "fa-check") me-1"></i>
                                                     @s.PaymentStatus
                                                 </span>
                                             </td>
@@ -558,14 +625,17 @@
 
         <!-- Expiring Products -->
         <div class="col-lg-6 mb-4">
-            <div class="panel-card card h-100 hide-on-loading">
-                <div class="card-header">
-                    <i class="fas fa-exclamation-triangle me-1 text-danger"></i> Expiring Products (30 Days)
-                </div>
-                <div class="card-body p-0 responsive-table">
+            <div class="dashboard-card h-100 hide-on-loading">
+                <h5 class="card-title mb-3">
+                    <i class="fas fa-exclamation-triangle text-danger"></i> Expiring Products (30 Days)
+                </h5>
+                <div class="responsive-table">
                     @if (!Model.ExpiringProducts.Any())
                     {
-                        <div class="empty-state">No products nearing expiry.</div>
+                        <div class="empty-state">
+                            <i class="fas fa-check-circle fa-2x text-success mb-3"></i>
+                            <p class="text-muted">No products nearing expiry - Great!</p>
+                        </div>
                     }
                     else
                     {
@@ -573,11 +643,11 @@
                             <table class="table table-sm table-hover mb-0">
                                 <thead>
                                     <tr>
-                                        <th>Product</th>
-                                        <th>Batch</th>
-                                        <th>Expiry</th>
-                                        <th>Days Left</th>
-                                        <th>Qty</th>
+                                        <th><i class="fas fa-pills me-1"></i>Product</th>
+                                        <th><i class="fas fa-barcode me-1"></i>Batch</th>
+                                        <th><i class="fas fa-calendar-times me-1"></i>Expiry</th>
+                                        <th><i class="fas fa-hourglass-half me-1"></i>Days Left</th>
+                                        <th><i class="fas fa-cubes me-1"></i>Qty</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -587,12 +657,21 @@
                                         string cls = days <= 7 ? "bg-danger"
                                         : days <= 15 ? "bg-warning text-dark"
                                         : "bg-secondary";
-                                        <tr>
-                                            <td data-label="Product">@e.ProductName</td>
-                                            <td data-label="Batch">@e.BatchNumber</td>
-                                            <td data-label="Expiry">@e.ExpiryDate.ToString("yyyy-MM-dd")</td>
-                                            <td data-label="Days Left"><span class="badge @cls">@days</span></td>
-                                            <td data-label="Qty">@e.QuantityInStock</td>
+                                        string icon = days <= 7 ? "fa-exclamation-triangle"
+                                        : days <= 15 ? "fa-exclamation"
+                                        : "fa-clock";
+                                        <tr class="@(days <= 7 ? "table-danger" : days <= 15 ? "table-warning" : "")">
+                                            <td data-label="Product" class="fw-semibold">@e.ProductName</td>
+                                            <td data-label="Batch">
+                                                <code class="bg-light text-dark">@e.BatchNumber</code>
+                                            </td>
+                                            <td data-label="Expiry" class="fw-semibold">@e.ExpiryDate.ToString("MMM dd, yyyy")</td>
+                                            <td data-label="Days Left">
+                                                <span class="badge @cls">
+                                                    <i class="fas @icon me-1"></i>@days
+                                                </span>
+                                            </td>
+                                            <td data-label="Qty" class="fw-semibold">@e.QuantityInStock</td>
                                         </tr>
                                     }
                                 </tbody>
@@ -615,7 +694,9 @@
             // Reveal content (simulate async load; remove skeletons)
             window.addEventListener('DOMContentLoaded', () => {
                 // If later you fetch via AJAX, move this after data hydration
-                root.classList.remove('loading');
+                setTimeout(() => {
+                    root.classList.remove('loading');
+                }, 500); // Small delay for better UX
             });
 
             // Restore density preference
@@ -623,13 +704,33 @@
             if (saved === 'compact') {
                 root.classList.add('compact-density');
                 toggle.classList.add('active');
+                toggle.innerHTML = '<i class="fas fa-expand-alt"></i> Normal View';
             }
 
             toggle.addEventListener('click', () => {
                 root.classList.toggle('compact-density');
                 const isCompact = root.classList.contains('compact-density');
                 toggle.classList.toggle('active', isCompact);
+                toggle.innerHTML = isCompact 
+                    ? '<i class="fas fa-expand-alt"></i> Normal View'
+                    : '<i class="fas fa-compress-alt"></i> Compact View';
                 localStorage.setItem(LS_KEY, isCompact ? 'compact' : 'regular');
+            });
+
+            // Add loading animation to quick action buttons
+            document.querySelectorAll('.dashboard-card a[href]').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    if (this.href && !this.href.includes('#')) {
+                        const icon = this.querySelector('i');
+                        if (icon) {
+                            const originalClass = icon.className;
+                            icon.className = 'fas fa-spinner fa-spin';
+                            setTimeout(() => {
+                                icon.className = originalClass;
+                            }, 2000);
+                        }
+                    }
+                });
             });
         })();
     </script>

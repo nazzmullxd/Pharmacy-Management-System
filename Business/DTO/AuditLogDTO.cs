@@ -13,6 +13,5 @@ namespace Business.DTO
         public string OldValues { get; set; } = string.Empty;
         public string NewValues { get; set; } = string.Empty;
         public DateTime Timestamp { get; set; }
-        public string IPAddress { get; set; } = string.Empty;
     }
 }

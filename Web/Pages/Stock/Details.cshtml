@@ -4,43 +4,502 @@
     ViewData["Title"] = "Stock Item Details";
 }
 
+<!-- Page Header -->
 <div class="page-header">
-    <h1><i class="fas fa-eye"></i> Stock Item Details</h1>
-    <a class="btn btn-secondary" href="/Stock">Back to Stock</a>
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-eye text-info"></i> Stock Item Details</h1>
+            <p class="mb-0">Comprehensive overview of product inventory, batches, and stock management at Rabiul Pharmacy</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/Stock" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Stock
+            </a>
+            @if (Model.Product != null)
+            {
+                <a href="/Stock/Adjustments?productId=@Model.Product.ProductID" class="btn btn-outline-primary">
+                    <i class="fas fa-edit"></i> Adjust Stock
+                </a>
+                <a href="/Stock/AddBatch" class="btn btn-outline-success">
+                    <i class="fas fa-plus"></i> Add Batch
+                </a>
+                <button class="btn btn-outline-info" onclick="exportProductReport()">
+                    <i class="fas fa-download"></i> Export Report
+                </button>
+            }
+        </div>
+    </div>
 </div>
+
 @if (Model.Product != null)
 {
-    <div class="card p-3 mb-3">
-        <h5>@Model.Product.ProductName</h5>
-        <div>Manufacturer: @Model.Product.Manufacturer</div>
-        <div>Category: @Model.Product.Category</div>
-        <div>Price: @Model.Product.UnitPrice.ToString("C")</div>
-        <div>Total Stock: @Model.Product.TotalStock</div>
-    </div>
-    <div class="table-responsive card p-3">
-        <h6>Batches</h6>
-        <table class="table table-sm">
-            <thead>
-                <tr>
-                    <th>Batch</th>
-                    <th>Expiry</th>
-                    <th>Qty</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var b in Model.Batches)
+    <!-- Product Overview Card -->
+    <div class="dashboard-card mb-4">
+        <div class="d-flex justify-content-between align-items-start mb-4">
+            <div>
+                <h4 class="text-primary mb-2">
+                    <i class="fas fa-pills me-2"></i>@Model.Product.ProductName
+                </h4>
+                @if (!string.IsNullOrEmpty(Model.Product.GenericName))
                 {
-                    <tr>
-                        <td>@b.BatchNumber</td>
-                        <td>@b.ExpiryDate.ToString("yyyy-MM-dd")</td>
-                        <td>@b.QuantityInStock</td>
-                    </tr>
+                    <p class="text-muted mb-2">
+                        <i class="fas fa-capsules me-1"></i><strong>Generic Name:</strong> @Model.Product.GenericName
+                    </p>
                 }
-            </tbody>
-        </table>
+                @if (!string.IsNullOrEmpty(Model.Product.Description))
+                {
+                    <p class="text-muted mb-0">@Model.Product.Description</p>
+                }
+            </div>
+            <div class="text-end">
+                @{
+                    var stockStatus = Model.Product.TotalStock == 0 ? "danger" : 
+                                     Model.Product.TotalStock <= Model.Product.LowStockThreshold ? "warning" : "success";
+                    var stockIcon = Model.Product.TotalStock == 0 ? "fa-times-circle" : 
+                                   Model.Product.TotalStock <= Model.Product.LowStockThreshold ? "fa-exclamation-triangle" : "fa-check-circle";
+                }
+                <span class="badge bg-@stockStatus badge-lg">
+                    <i class="fas @stockIcon me-1"></i>
+                    @(Model.Product.TotalStock == 0 ? "Out of Stock" : 
+                      Model.Product.TotalStock <= Model.Product.LowStockThreshold ? "Low Stock" : "In Stock")
+                </span>
+            </div>
+        </div>
+
+        <!-- Key Information Grid -->
+        <div class="row g-3">
+            <div class="col-md-3">
+                <div class="info-card">
+                    <div class="info-header">
+                        <i class="fas fa-industry text-primary"></i>
+                        <span>Manufacturer</span>
+                    </div>
+                    <div class="info-value">@(Model.Product.Manufacturer ?? "Not specified")</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="info-card">
+                    <div class="info-header">
+                        <i class="fas fa-tags text-success"></i>
+                        <span>Category</span>
+                    </div>
+                    <div class="info-value">@Model.Product.Category</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="info-card">
+                    <div class="info-header">
+                        <i class="fas fa-dollar-sign text-warning"></i>
+                        <span>Unit Price</span>
+                    </div>
+                    <div class="info-value">@Model.Product.UnitPrice.ToString("C")</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="info-card">
+                    <div class="info-header">
+                        <i class="fas fa-warehouse text-info"></i>
+                        <span>Total Stock</span>
+                    </div>
+                    <div class="info-value">@Model.Product.TotalStock units</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stock Analytics -->
+    <div class="kpi-grid mb-4">
+        @{
+            var batchCount = Model.Batches?.Count() ?? 0;
+            var expiringBatches = Model.Batches?.Count(b => (b.ExpiryDate - DateTime.Now).TotalDays <= 30) ?? 0;
+            var expiredBatches = Model.Batches?.Count(b => b.ExpiryDate < DateTime.Now) ?? 0;
+            var totalValue = Model.Product.TotalStock * Model.Product.UnitPrice;
+        }
+
+        <div class="kpi-card">
+            <div class="kpi-header">
+                <div class="kpi-title">Total Batches</div>
+                <div class="kpi-icon" style="background: linear-gradient(45deg, #3498db, #5dade2);">
+                    <i class="fas fa-layer-group"></i>
+                </div>
+            </div>
+            <div class="kpi-value">@batchCount</div>
+            <div class="kpi-change positive">
+                <i class="fas fa-boxes"></i> Active batches
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-header">
+                <div class="kpi-title">Expiring Soon</div>
+                <div class="kpi-icon" style="background: linear-gradient(45deg, #f39c12, #f7dc6f);">
+                    <i class="fas fa-clock"></i>
+                </div>
+            </div>
+            <div class="kpi-value">@expiringBatches</div>
+            <div class="kpi-change @(expiringBatches > 0 ? "negative" : "positive")">
+                <i class="fas @(expiringBatches > 0 ? "fa-exclamation-triangle" : "fa-check-circle")"></i>
+                @(expiringBatches > 0 ? "Next 30 days" : "All good")
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-header">
+                <div class="kpi-title">Expired Items</div>
+                <div class="kpi-icon" style="background: linear-gradient(45deg, #e74c3c, #ec7063);">
+                    <i class="fas fa-times-circle"></i>
+                </div>
+            </div>
+            <div class="kpi-value">@expiredBatches</div>
+            <div class="kpi-change @(expiredBatches > 0 ? "negative" : "positive")">
+                <i class="fas @(expiredBatches > 0 ? "fa-exclamation-circle" : "fa-check-circle")"></i>
+                @(expiredBatches > 0 ? "Requires action" : "None expired")
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-header">
+                <div class="kpi-title">Stock Value</div>
+                <div class="kpi-icon" style="background: linear-gradient(45deg, #27ae60, #58d68d);">
+                    <i class="fas fa-calculator"></i>
+                </div>
+            </div>
+            <div class="kpi-value">@totalValue.ToString("C")</div>
+            <div class="kpi-change positive">
+                <i class="fas fa-chart-line"></i> Current worth
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Product Information -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="dashboard-card h-100">
+                <h6 class="card-subtitle mb-3">
+                    <i class="fas fa-info-circle text-primary"></i> Product Details
+                </h6>
+                <div class="row g-2">
+                    <div class="col-6">
+                        <div class="detail-item">
+                            <span class="detail-label">Product ID:</span>
+                            <span class="detail-value">@Model.Product.ProductID.ToString().Substring(0, 8)...</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="detail-item">
+                            <span class="detail-label">Low Stock Alert:</span>
+                            <span class="detail-value">@Model.Product.LowStockThreshold units</span>
+                        </div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(Model.Product.Barcode))
+                    {
+                        <div class="col-6">
+                            <div class="detail-item">
+                                <span class="detail-label">Barcode:</span>
+                                <span class="detail-value">@Model.Product.Barcode</span>
+                            </div>
+                        </div>
+                    }
+                    <div class="col-6">
+                        <div class="detail-item">
+                            <span class="detail-label">Created:</span>
+                            <span class="detail-value">@Model.Product.CreatedDate.ToString("MMM dd, yyyy")</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="dashboard-card h-100">
+                <h6 class="card-subtitle mb-3">
+                    <i class="fas fa-chart-line text-success"></i> Stock Summary
+                </h6>
+                <div class="stock-summary">
+                    <div class="summary-item">
+                        <div class="summary-label">Current Stock Level</div>
+                        <div class="summary-value @(Model.Product.TotalStock <= Model.Product.LowStockThreshold ? "text-warning" : "text-success")">
+                            @Model.Product.TotalStock units
+                        </div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">Stock Status</div>
+                        <div class="summary-value">
+                            @if (Model.Product.TotalStock == 0)
+                            {
+                                <span class="badge bg-danger">Out of Stock</span>
+                            }
+                            else if (Model.Product.TotalStock <= Model.Product.LowStockThreshold)
+                            {
+                                <span class="badge bg-warning">Low Stock Alert</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">Adequately Stocked</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">Reorder Threshold</div>
+                        <div class="summary-value">@Model.Product.LowStockThreshold units</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">Total Value</div>
+                        <div class="summary-value text-success">@totalValue.ToString("C")</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Batch Information Table -->
+    <div class="dashboard-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-layer-group text-primary"></i> Batch Inventory
+                <span class="badge bg-info ms-2">@batchCount batches</span>
+            </h5>
+            <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-secondary" onclick="refreshBatches()">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+                <button class="btn btn-sm btn-outline-primary" onclick="exportBatches()">
+                    <i class="fas fa-download"></i> Export
+                </button>
+            </div>
+        </div>
+
+        @if (Model.Batches != null && Model.Batches.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 20%;">
+                                <i class="fas fa-barcode text-muted me-1"></i>Batch Number
+                            </th>
+                            <th class="text-center" style="width: 15%;">
+                                <i class="fas fa-calendar-alt text-muted me-1"></i>Expiry Date
+                            </th>
+                            <th class="text-center" style="width: 15%;">
+                                <i class="fas fa-warehouse text-muted me-1"></i>Quantity
+                            </th>
+                            <th class="text-center" style="width: 15%;">
+                                <i class="fas fa-clock text-muted me-1"></i>Days Left
+                            </th>
+                            <th class="text-center" style="width: 15%;">
+                                <i class="fas fa-check-circle text-muted me-1"></i>Status
+                            </th>
+                            <th class="text-end" style="width: 15%;">
+                                <i class="fas fa-dollar-sign text-muted me-1"></i>Batch Value
+                            </th>
+                            <th class="text-center" style="width: 5%;">
+                                <i class="fas fa-cogs text-muted"></i>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var batch in Model.Batches.OrderBy(b => b.ExpiryDate))
+                        {
+                            var daysToExpiry = (batch.ExpiryDate - DateTime.Now).TotalDays;
+                            var isExpired = daysToExpiry < 0;
+                            var isCritical = daysToExpiry <= 7 && daysToExpiry >= 0;
+                            var isExpiring = daysToExpiry <= 30 && daysToExpiry > 7;
+                            var batchValue = batch.QuantityInStock * Model.Product.UnitPrice;
+
+                            <tr class="@(isExpired ? "table-danger" : isCritical ? "table-warning" : isExpiring ? "table-light" : "")">
+                                <td>
+                                    <div class="batch-info">
+                                        <span class="badge bg-secondary">@batch.BatchNumber</span>
+                                        @if (!string.IsNullOrEmpty(batch.SupplierName))
+                                        {
+                                            <small class="text-muted d-block mt-1">
+                                                <i class="fas fa-truck me-1"></i>@batch.SupplierName
+                                            </small>
+                                        }
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <div class="expiry-info">
+                                        <div class="@(isExpired ? "text-danger" : isCritical ? "text-warning" : "")">
+                                            @batch.ExpiryDate.ToString("MMM dd, yyyy")
+                                        </div>
+                                        <small class="text-muted">@batch.ExpiryDate.ToString("ddd")</small>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    @if (batch.QuantityInStock == 0)
+                                    {
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-times-circle me-1"></i>Empty
+                                        </span>
+                                    }
+                                    else if (batch.QuantityInStock <= 10)
+                                    {
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>@batch.QuantityInStock
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check-circle me-1"></i>@batch.QuantityInStock
+                                        </span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    @if (isExpired)
+                                    {
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-times-circle me-1"></i>@Math.Abs(Math.Round(daysToExpiry)) days ago
+                                        </span>
+                                    }
+                                    else if (isCritical)
+                                    {
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>@Math.Round(daysToExpiry) days
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-calendar-check me-1"></i>@Math.Round(daysToExpiry) days
+                                        </span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    @if (isExpired)
+                                    {
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-skull-crossbones me-1"></i>EXPIRED
+                                        </span>
+                                    }
+                                    else if (isCritical)
+                                    {
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-exclamation-circle me-1"></i>CRITICAL
+                                        </span>
+                                    }
+                                    else if (isExpiring)
+                                    {
+                                        <span class="badge bg-info">
+                                            <i class="fas fa-info-circle me-1"></i>EXPIRING
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check-circle me-1"></i>GOOD
+                                        </span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <strong class="text-success">@batchValue.ToString("C")</strong>
+                                </td>
+                                <td class="text-center">
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                                                type="button" 
+                                                data-bs-toggle="dropdown" 
+                                                aria-expanded="false">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li><a class="dropdown-item" href="/Stock/Adjustments?batchId=@batch.ProductBatchID">
+                                                <i class="fas fa-edit me-2"></i>Adjust Stock
+                                            </a></li>
+                                            @if (isExpired)
+                                            {
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><a class="dropdown-item text-danger" href="#" onclick="removeExpiredBatch('@batch.ProductBatchID')">
+                                                    <i class="fas fa-trash me-2"></i>Remove Expired
+                                                </a></li>
+                                            }
+                                            else if (isCritical)
+                                            {
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><a class="dropdown-item text-warning" href="#" onclick="markForDiscount('@batch.ProductBatchID')">
+                                                    <i class="fas fa-percentage me-2"></i>Create Discount
+                                                </a></li>
+                                            }
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr class="fw-bold">
+                            <td>Total:</td>
+                            <td></td>
+                            <td class="text-center">@Model.Batches.Sum(b => b.QuantityInStock) units</td>
+                            <td></td>
+                            <td></td>
+                            <td class="text-end text-success">@Model.Batches.Sum(b => b.QuantityInStock * Model.Product.UnitPrice).ToString("C")</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="fas fa-layer-group fa-4x text-muted mb-3"></i>
+                <h5 class="text-muted">No Batches Found</h5>
+                <p class="text-muted mb-4">This product doesn't have any batches in the system</p>
+                <a href="/Stock/AddBatch" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add First Batch
+                </a>
+            </div>
+        }
     </div>
 }
 else
 {
-    <div class="alert alert-warning">Product not found.</div>
+    <div class="dashboard-card">
+        <div class="text-center py-5">
+            <i class="fas fa-exclamation-triangle fa-4x text-warning mb-3"></i>
+            <h4 class="text-warning">Product Not Found</h4>
+            <p class="text-muted mb-4">The requested product could not be found in the system</p>
+            <div class="d-flex justify-content-center gap-2">
+                <a href="/Stock" class="btn btn-primary">
+                    <i class="fas fa-arrow-left"></i> Back to Stock
+                </a>
+                <a href="/Products" class="btn btn-outline-primary">
+                    <i class="fas fa-pills"></i> Browse Products
+                </a>
+            </div>
+        </div>
+    </div>
 }
+
+<script>
+function exportProductReport() {
+    // Implementation for exporting product report
+    console.log('Exporting product report...');
+}
+
+function refreshBatches() {
+    // Implementation for refreshing batch data
+    location.reload();
+}
+
+function exportBatches() {
+    // Implementation for exporting batch data
+    console.log('Exporting batch data...');
+}
+
+function removeExpiredBatch(batchId) {
+    if (confirm('Are you sure you want to remove this expired batch?')) {
+        // Implementation for removing expired batch
+        console.log('Removing expired batch:', batchId);
+    }
+}
+
+function markForDiscount(batchId) {
+    if (confirm('Create a discount for this expiring batch?')) {
+        // Implementation for creating discount
+        console.log('Creating discount for batch:', batchId);
+    }
+}
+</script>

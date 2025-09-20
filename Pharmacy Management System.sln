@@ -11,8 +11,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Presentation", "Presentatio
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Web", "Web\Web.csproj", "{792C6DCC-97A9-4AA2-A8C1-3D4B31DBC98A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbConnectionTest", "DbConnectionTest\DbConnectionTest.csproj", "{C613BB9C-0A98-4E37-8493-68D74FEBB19B}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Database Query BackUp", "Database Query BackUp", "{8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}"
 	ProjectSection(SolutionItems) = preProject
 		DatabaseMain.sql = DatabaseMain.sql
@@ -41,10 +39,6 @@ Global
 		{792C6DCC-97A9-4AA2-A8C1-3D4B31DBC98A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{792C6DCC-97A9-4AA2-A8C1-3D4B31DBC98A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{792C6DCC-97A9-4AA2-A8C1-3D4B31DBC98A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C613BB9C-0A98-4E37-8493-68D74FEBB19B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C613BB9C-0A98-4E37-8493-68D74FEBB19B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C613BB9C-0A98-4E37-8493-68D74FEBB19B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C613BB9C-0A98-4E37-8493-68D74FEBB19B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

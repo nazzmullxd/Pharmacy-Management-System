@@ -14,7 +14,10 @@ namespace Database.Repositories
         }
 
         public async Task<IEnumerable<PurchaseItem>> GetAllAsync()
-        {   return await _context.PurchaseItems.ToListAsync(); }
+        {   return await _context.PurchaseItems
+                .Include(pi => pi.Product)
+                .Include(pi => pi.Purchase)
+                .ToListAsync(); }
         public async Task<PurchaseItem?> GetByIdAsync(Guid purchaseItemId)
             {
             return await _context.PurchaseItems.FirstOrDefaultAsync(pi => pi.PurchaseItemID == purchaseItemId);

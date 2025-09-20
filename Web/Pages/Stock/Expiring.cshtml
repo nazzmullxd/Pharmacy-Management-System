@@ -4,41 +4,410 @@
     ViewData["Title"] = "Expiring Stock";
 }
 
+<!-- Page Header -->
 <div class="page-header">
-    <h1><i class="fas fa-clock"></i> Expiring Stock</h1>
-    <a class="btn btn-secondary" href="/Stock">Back to Stock</a>
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-clock text-warning"></i> Expiring Stock Alert</h1>
+            <p class="mb-0">Monitor products approaching expiry dates to prevent wastage and ensure patient safety at Rabiul Pharmacy</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/Stock" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Stock
+            </a>
+            <a href="/Stock/Batches" class="btn btn-outline-info">
+                <i class="fas fa-layer-group"></i> All Batches
+            </a>
+            <button class="btn btn-outline-primary" onclick="exportExpiringReport()">
+                <i class="fas fa-download"></i> Export Report
+            </button>
+        </div>
+    </div>
 </div>
 
-<div class="card p-3 mt-3">
-    <h5>Expiring within 30 days</h5>
-    <div class="table-responsive">
-        <table class="table table-striped">
-            <thead>
+<!-- Expiry Alert Summary -->
+<div class="kpi-grid mb-4">
+    @{
+        var expiredItems = Model.Batches?.Where(b => b.ExpiryDate < DateTime.Now) ?? Enumerable.Empty<object>();
+        var expiringSoon = Model.Batches?.Where(b => b.ExpiryDate >= DateTime.Now && (b.ExpiryDate - DateTime.Now).TotalDays <= 7) ?? Enumerable.Empty<object>();
+        var expiringThis30Days = Model.Batches?.Where(b => (b.ExpiryDate - DateTime.Now).TotalDays <= 30 && (b.ExpiryDate - DateTime.Now).TotalDays > 7) ?? Enumerable.Empty<object>();
+        var totalValue = Model.Batches?.Sum(b => b.QuantityInStock * 10) ?? 0; // Assuming average value
+    }
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Already Expired</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #e74c3c, #ec7063);">
+                <i class="fas fa-times-circle"></i>
+            </div>
+        </div>
+        <div class="kpi-value">@expiredItems.Count()</div>
+        <div class="kpi-change negative">
+            <i class="fas fa-exclamation-circle"></i> Immediate action required
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Expiring This Week</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #f39c12, #f7dc6f);">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+        </div>
+        <div class="kpi-value">@expiringSoon.Count()</div>
+        <div class="kpi-change negative">
+            <i class="fas fa-clock"></i> 7 days or less
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Expiring This Month</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #f7dc6f, #f4d03f);">
+                <i class="fas fa-calendar-alt"></i>
+            </div>
+        </div>
+        <div class="kpi-value">@expiringThis30Days.Count()</div>
+        <div class="kpi-change">
+            <i class="fas fa-calendar-times"></i> 8-30 days
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">At Risk Value</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #8e44ad, #bb8fce);">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+        </div>
+        <div class="kpi-value">$@totalValue.ToString("N0")</div>
+        <div class="kpi-change">
+            <i class="fas fa-chart-line"></i> Estimated value
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="dashboard-card mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-4">
+            <h6 class="mb-2 text-muted">Expiry Management</h6>
+            <div class="d-flex gap-2 flex-wrap">
+                <button class="btn btn-sm btn-danger" onclick="filterExpired()">
+                    <i class="fas fa-times-circle"></i> Expired
+                </button>
+                <button class="btn btn-sm btn-warning" onclick="filterExpiringSoon()">
+                    <i class="fas fa-exclamation-triangle"></i> This Week
+                </button>
+                <button class="btn btn-sm btn-info" onclick="filterExpiringMonth()">
+                    <i class="fas fa-calendar-alt"></i> This Month
+                </button>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Time Period</label>
+                    <select class="form-select form-select-sm" id="periodFilter">
+                        <option value="30" selected>Next 30 Days</option>
+                        <option value="60">Next 60 Days</option>
+                        <option value="90">Next 90 Days</option>
+                        <option value="all">All Upcoming</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Priority</label>
+                    <select class="form-select form-select-sm" id="priorityFilter">
+                        <option value="">All Items</option>
+                        <option value="critical">Critical (7 days)</option>
+                        <option value="urgent">Urgent (15 days)</option>
+                        <option value="warning">Warning (30 days)</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Search Products</label>
+                    <div class="input-group input-group-sm">
+                        <input type="text" class="form-control search-input" id="searchInput" placeholder="Product, batch...">
+                        <button class="btn btn-outline-secondary" type="button" id="searchBtn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Expiring Items Table -->
+<div class="table-container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0"><i class="fas fa-list text-warning"></i> Products Expiring Soon</h5>
+        <div class="d-flex align-items-center gap-3">
+            <small class="text-muted">
+                Showing @(Model.Batches?.Count() ?? 0) expiring items
+            </small>
+            <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-secondary active" onclick="toggleView('table')" id="tableViewBtn">
+                    <i class="fas fa-table"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="toggleView('card')" id="cardViewBtn">
+                    <i class="fas fa-th-large"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table View -->
+    <div id="tableView" class="table-responsive">
+        <table class="table table-hover" id="expiringTable">
+            <thead class="table-light">
                 <tr>
-                    <th>Product</th>
-                    <th>Batch</th>
-                    <th>Expiry</th>
-                    <th>Qty</th>
+                    <th class="sortable" data-sort="0">
+                        <i class="fas fa-pills text-muted me-1"></i>Product
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="sortable" data-sort="1">
+                        <i class="fas fa-barcode text-muted me-1"></i>Batch Number
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="text-center sortable" data-sort="2">
+                        <i class="fas fa-calendar-alt text-muted me-1"></i>Expiry Date
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="text-center sortable" data-sort="3">
+                        <i class="fas fa-warehouse text-muted me-1"></i>Quantity
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="text-center">
+                        <i class="fas fa-clock text-muted me-1"></i>Days Left
+                    </th>
+                    <th class="text-center">
+                        <i class="fas fa-exclamation-triangle text-muted me-1"></i>Priority
+                    </th>
+                    <th class="text-center" style="width: 150px;">
+                        <i class="fas fa-cogs text-muted me-1"></i>Actions
+                    </th>
                 </tr>
             </thead>
             <tbody>
                 @if (Model.Batches != null && Model.Batches.Any())
                 {
-                    foreach (var b in Model.Batches)
+                    @foreach (var batch in Model.Batches.OrderBy(b => b.ExpiryDate))
                     {
-                        <tr>
-                            <td>@b.ProductName</td>
-                            <td>@b.BatchNumber</td>
-                            <td>@b.ExpiryDate.ToString("yyyy-MM-dd")</td>
-                            <td>@b.QuantityInStock</td>
+                        var daysToExpiry = (batch.ExpiryDate - DateTime.Now).TotalDays;
+                        var isExpired = daysToExpiry < 0;
+                        var isCritical = daysToExpiry <= 7 && daysToExpiry >= 0;
+                        var isUrgent = daysToExpiry <= 15 && daysToExpiry > 7;
+                        var isWarning = daysToExpiry <= 30 && daysToExpiry > 15;
+
+                        <tr class="expiry-row @(isExpired ? "table-danger" : isCritical ? "table-danger" : isUrgent ? "table-warning" : "table-light")">
+                            <td>
+                                <div class="product-info">
+                                    <div class="product-name">@batch.ProductName</div>
+                                    <small class="text-muted">
+                                        <i class="fas fa-tag me-1"></i>Pharmaceutical Product
+                                    </small>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary batch-number">@batch.BatchNumber</span>
+                            </td>
+                            <td class="text-center">
+                                <div class="expiry-info">
+                                    <div class="expiry-date @(isExpired ? "text-danger" : isCritical ? "text-danger" : isUrgent ? "text-warning" : "")">
+                                        @batch.ExpiryDate.ToString("MMM dd, yyyy")
+                                    </div>
+                                    <small class="text-muted">@batch.ExpiryDate.ToString("ddd")</small>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-info quantity-badge">
+                                    <i class="fas fa-box me-1"></i>@batch.QuantityInStock units
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                @if (isExpired)
+                                {
+                                    <span class="badge bg-danger days-badge">
+                                        <i class="fas fa-times-circle me-1"></i>@Math.Abs(Math.Round(daysToExpiry)) days ago
+                                    </span>
+                                }
+                                else if (isCritical)
+                                {
+                                    <span class="badge bg-danger days-badge">
+                                        <i class="fas fa-exclamation-circle me-1"></i>@Math.Round(daysToExpiry) days
+                                    </span>
+                                }
+                                else if (isUrgent)
+                                {
+                                    <span class="badge bg-warning days-badge">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>@Math.Round(daysToExpiry) days
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-info days-badge">
+                                        <i class="fas fa-calendar-check me-1"></i>@Math.Round(daysToExpiry) days
+                                    </span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                @if (isExpired)
+                                {
+                                    <span class="badge bg-danger priority-badge">
+                                        <i class="fas fa-skull-crossbones me-1"></i>EXPIRED
+                                    </span>
+                                }
+                                else if (isCritical)
+                                {
+                                    <span class="badge bg-danger priority-badge">
+                                        <i class="fas fa-exclamation-circle me-1"></i>CRITICAL
+                                    </span>
+                                }
+                                else if (isUrgent)
+                                {
+                                    <span class="badge bg-warning priority-badge">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>URGENT
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-info priority-badge">
+                                        <i class="fas fa-info-circle me-1"></i>WARNING
+                                    </span>
+                                }
+                            </td>
+                            <td>
+                                <div class="action-buttons d-flex gap-1 justify-content-center">
+                                    <a href="/Stock/Details/@batch.ProductBatchID" 
+                                       class="btn btn-sm btn-outline-info" 
+                                       title="View Details"
+                                       data-bs-toggle="tooltip">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    @if (!isExpired)
+                                    {
+                                        <button class="btn btn-sm btn-outline-warning" 
+                                                title="Mark for Review"
+                                                data-bs-toggle="tooltip"
+                                                onclick="markForReview('@batch.ProductBatchID')">
+                                            <i class="fas fa-flag"></i>
+                                        </button>
+                                    }
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                                                type="button" 
+                                                data-bs-toggle="dropdown" 
+                                                aria-expanded="false"
+                                                title="More Actions">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li><a class="dropdown-item" href="/Stock/Adjustments?batchId=@batch.ProductBatchID">
+                                                <i class="fas fa-edit me-2"></i>Adjust Stock
+                                            </a></li>
+                                            @if (isExpired)
+                                            {
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><a class="dropdown-item text-danger" href="#" onclick="removeExpired('@batch.ProductBatchID')">
+                                                    <i class="fas fa-trash me-2"></i>Remove Expired
+                                                </a></li>
+                                            }
+                                            else if (isCritical || isUrgent)
+                                            {
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><a class="dropdown-item text-warning" href="#" onclick="createDiscount('@batch.ProductBatchID')">
+                                                    <i class="fas fa-percentage me-2"></i>Create Discount
+                                                </a></li>
+                                            }
+                                        </ul>
+                                    </div>
+                                </div>
+                            </td>
                         </tr>
                     }
                 }
                 else
                 {
-                    <tr><td colspan="4" class="text-center">No expiring items.</td></tr>
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <div class="empty-state">
+                                <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                                <h6 class="text-success">No items expiring soon</h6>
+                                <p class="text-muted mb-0">All products have sufficient shelf life remaining</p>
+                            </div>
+                        </td>
+                    </tr>
                 }
             </tbody>
         </table>
+    </div>
+
+    <!-- Card View -->
+    <div id="cardView" style="display: none;" class="row">
+        @if (Model.Batches != null && Model.Batches.Any())
+        {
+            @foreach (var batch in Model.Batches.OrderBy(b => b.ExpiryDate))
+            {
+                var daysToExpiry = (batch.ExpiryDate - DateTime.Now).TotalDays;
+                var isExpired = daysToExpiry < 0;
+                var isCritical = daysToExpiry <= 7 && daysToExpiry >= 0;
+                var isUrgent = daysToExpiry <= 15 && daysToExpiry > 7;
+
+                <div class="col-lg-4 col-xl-3 mb-3">
+                    <div class="card expiry-card h-100 @(isExpired ? "border-danger" : isCritical ? "border-danger" : isUrgent ? "border-warning" : "border-info")">
+                        <div class="card-header d-flex justify-content-between align-items-center @(isExpired ? "bg-danger text-white" : isCritical ? "bg-danger text-white" : isUrgent ? "bg-warning" : "bg-info text-white")">
+                            <h6 class="mb-0">@batch.BatchNumber</h6>
+                            @if (isExpired)
+                            {
+                                <span class="badge bg-dark">EXPIRED</span>
+                            }
+                            else if (isCritical)
+                            {
+                                <span class="badge bg-dark">CRITICAL</span>
+                            }
+                            else if (isUrgent)
+                            {
+                                <span class="badge bg-dark">URGENT</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-dark">WARNING</span>
+                            }
+                        </div>
+                        <div class="card-body">
+                            <h6 class="card-title">@batch.ProductName</h6>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted">Quantity:</span>
+                                <span class="badge bg-primary">@batch.QuantityInStock units</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted">Expires:</span>
+                                <small class="@(isExpired ? "text-danger" : isCritical ? "text-danger" : isUrgent ? "text-warning" : "")">@batch.ExpiryDate.ToString("MMM dd, yyyy")</small>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted">Days left:</span>
+                                <span class="badge @(isExpired ? "bg-danger" : isCritical ? "bg-danger" : isUrgent ? "bg-warning" : "bg-info")">
+                                    @(isExpired ? Math.Abs(Math.Round(daysToExpiry)) + " days ago" : Math.Round(daysToExpiry) + " days")
+                                </span>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <div class="d-flex gap-1">
+                                <a href="/Stock/Details/@batch.ProductBatchID" class="btn btn-sm btn-outline-info flex-fill">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                                @if (!isExpired)
+                                {
+                                    <button class="btn btn-sm btn-outline-warning flex-fill" onclick="markForReview('@batch.ProductBatchID')">
+                                        <i class="fas fa-flag"></i> Review
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
     </div>
 </div>
