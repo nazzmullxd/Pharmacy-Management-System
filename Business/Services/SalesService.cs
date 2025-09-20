@@ -409,7 +409,7 @@ namespace Business.Services
 
             // Validate payment status
             var validPaymentStatuses = new[] { "Paid", "Pending", "Partial", "Cancelled" };
-            if (!validPaymentStatuses.Contains(saleDto.PaymentStatus))
+            if (string.IsNullOrEmpty(saleDto.PaymentStatus) || !validPaymentStatuses.Contains(saleDto.PaymentStatus))
                 throw new ArgumentException($"Invalid payment status. Must be one of: {string.Join(", ", validPaymentStatuses)}", nameof(saleDto.PaymentStatus));
 
             // Validate sale date
@@ -540,7 +540,12 @@ namespace Business.Services
 
         private async Task<SaleDTO> MapToDTO(Sale sale)
         {
-            var customer = await _customerRepository.GetByIdAsync(sale.CustomerID);
+            Customer? customer = null;
+            if (sale.CustomerID.HasValue && sale.CustomerID.Value != Guid.Empty)
+            {
+                customer = await _customerRepository.GetByIdAsync(sale.CustomerID.Value);
+            }
+
             var user = await _userRepository.GetByIdAsync(sale.UserID);
             var saleItems = await _saleItemRepository.GetBySaleIdAsync(sale.SaleID);
 
@@ -558,7 +563,7 @@ namespace Business.Services
                     Quantity = item.Quantity,
                     UnitPrice = item.UnitPrice,
                     Discount = item.Discount,
-                    BatchNumber = item.BatchNumber
+                    BatchNumber = item.BatchNumber ?? string.Empty
                 };
                 dto.RecomputeTotal();
                 saleItemDtos.Add(dto);
@@ -570,14 +575,14 @@ namespace Business.Services
             return new SaleDTO
             {
                 SaleID = sale.SaleID,
-                CustomerID = sale.CustomerID,
-                CustomerName = customer?.CustomerName ?? string.Empty,
+                CustomerID = sale.CustomerID ?? Guid.Empty,
+                CustomerName = customer?.CustomerName ?? "Walk-in Customer",
                 UserID = sale.UserID,
-                UserName = user != null ? $"{user.FirstName} {user.LastName}" : string.Empty,
+                UserName = user != null ? $"{user.FirstName} {user.LastName}".Trim() : "Unknown User",
                 SaleDate = sale.SaleDate,
                 TotalAmount = recomputed, // override with authoritative aggregation
-                PaymentStatus = sale.PaymentStatus,
-                Note = sale.Note,
+                PaymentStatus = sale.PaymentStatus ?? "Unknown",
+                Note = sale.Note ?? string.Empty,
                 SaleItems = saleItemDtos
             };
         }
@@ -587,12 +592,12 @@ namespace Business.Services
             return new Sale
             {
                 SaleID = saleDto.SaleID,
-                CustomerID = saleDto.CustomerID,
+                CustomerID = saleDto.CustomerID == Guid.Empty ? null : saleDto.CustomerID,
                 UserID = saleDto.UserID,
                 SaleDate = saleDto.SaleDate,
                 TotalAmount = saleDto.TotalAmount,
-                PaymentStatus = saleDto.PaymentStatus,
-                Note = saleDto.Note
+                PaymentStatus = saleDto.PaymentStatus ?? "Paid",
+                Note = saleDto.Note ?? string.Empty
             };
         }
 

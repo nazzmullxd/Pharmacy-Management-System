@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Business.DTO;
 using Business.Interfaces;
 using Database.Interfaces;
+using Database.Model;
 
 namespace Business.Services
 {
@@ -251,20 +252,24 @@ namespace Business.Services
             var saleDtos = new List<SaleDTO>();
             foreach (var sale in recentSales)
             {
-                var customer = await _customerRepository.GetByIdAsync(sale.CustomerID);
+                Customer? customer = null;
+                if (sale.CustomerID.HasValue && sale.CustomerID.Value != Guid.Empty)
+                {
+                    customer = await _customerRepository.GetByIdAsync(sale.CustomerID.Value);
+                }
                 var user = await _userRepository.GetByIdAsync(sale.UserID);
 
                 saleDtos.Add(new SaleDTO
                 {
                     SaleID = sale.SaleID,
-                    CustomerID = sale.CustomerID,
-                    CustomerName = customer?.CustomerName ?? string.Empty,
+                    CustomerID = sale.CustomerID ?? Guid.Empty,
+                    CustomerName = customer?.CustomerName ?? "Walk-in Customer",
                     UserID = sale.UserID,
-                    UserName = user != null ? $"{user.FirstName} {user.LastName}" : string.Empty,
+                    UserName = user != null ? $"{user.FirstName} {user.LastName}".Trim() : "Unknown User",
                     SaleDate = sale.SaleDate,
                     TotalAmount = sale.TotalAmount,
-                    PaymentStatus = sale.PaymentStatus,
-                    Note = sale.Note
+                    PaymentStatus = sale.PaymentStatus ?? "Unknown",
+                    Note = sale.Note ?? string.Empty
                 });
             }
 

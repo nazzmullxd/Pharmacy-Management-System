@@ -9,9 +9,8 @@ namespace Database.Model
         [Key]
         public Guid SaleID { get; set; } = Guid.NewGuid();
 
-        [Required]
         [ForeignKey(nameof(Customer))]
-        public Guid CustomerID { get; set; } = Guid.Empty;
+        public Guid? CustomerID { get; set; }
 
         public Customer? Customer { get; set; }
 
@@ -29,11 +28,10 @@ namespace Database.Model
         [Range(0, double.MaxValue, ErrorMessage = "Total amount must be a positive value.")]
         public decimal TotalAmount { get; set; } = 0.0m;
 
-        [Required]
         [MaxLength(20, ErrorMessage = "Payment status cannot exceed 20 characters.")]
-        public string PaymentStatus { get; set; } = "Paid"; // Example statuses: Pending, Paid, Failed
+        public string? PaymentStatus { get; set; } = "Paid"; // Example statuses: Pending, Paid, Failed
 
         [MaxLength(500, ErrorMessage = "Note cannot exceed 500 characters.")]
-        public string Note { get; set; } = string.Empty;
+        public string? Note { get; set; } = string.Empty;
     }
 }

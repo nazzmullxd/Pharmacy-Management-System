@@ -17,16 +17,12 @@ namespace Database.Repositories
         public async Task<IEnumerable<Sale>> GetAllAsync()
         {
             return await _context.Sales
-                .Include(s => s.Customer)
-                .Include(s => s.User)
                 .ToListAsync();
         }
 
         public async Task<Sale?> GetByIdAsync(Guid saleId)
         {
             return await _context.Sales
-                .Include(s => s.Customer)
-                .Include(s => s.User)
                 .FirstOrDefaultAsync(s => s.SaleID == saleId);
         }
 
@@ -71,9 +67,7 @@ namespace Database.Repositories
         public async Task<IEnumerable<Sale>> GetByCustomerIdAsync(Guid customerId)
         {
             return await _context.Sales
-                .Where(s => s.CustomerID == customerId)
-                .Include(s => s.Customer)
-                .Include(s => s.User)
+                .Where(s => s.CustomerID.HasValue && s.CustomerID.Value == customerId)
                 .ToListAsync();
         }
 
@@ -81,8 +75,6 @@ namespace Database.Repositories
         {
             return await _context.Sales
                 .Where(s => s.UserID == userId)
-                .Include(s => s.Customer)
-                .Include(s => s.User)
                 .ToListAsync();
         }
 
@@ -90,8 +82,6 @@ namespace Database.Repositories
         {
             return await _context.Sales
                 .Where(s => s.SaleDate >= startDate && s.SaleDate <= endDate)
-                .Include(s => s.Customer)
-                .Include(s => s.User)
                 .ToListAsync();
         }
     }
