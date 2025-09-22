@@ -593,10 +593,8 @@
             const toast = document.createElement('div');
             toast.className = 'alert alert-success alert-dismissible fade show position-fixed';
             toast.style.cssText = 'top: 20px; right: 20px; z-index: 1050; min-width: 250px;';
-            toast.innerHTML = `
-                <i class="fas fa-save me-2"></i>Draft saved successfully
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
+            toast.innerHTML = '<i class="fas fa-save me-2"></i>Draft saved successfully' +
+                '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
             document.body.appendChild(toast);
             
             setTimeout(() => {
