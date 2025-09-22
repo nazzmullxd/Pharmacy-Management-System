@@ -19,6 +19,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DB Backup", "DB Backup", "{DE304253-8C83-4436-8E75-E24CDC4EE161}"
 	ProjectSection(SolutionItems) = preProject
 		..\..\..\..\..\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER02\MSSQL\Backup\PharmacyManagementSystem.bak = ..\..\..\..\..\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER02\MSSQL\Backup\PharmacyManagementSystem.bak
+		..\..\..\..\..\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER02\MSSQL\Backup\[Pharmacy Management System].bak = ..\..\..\..\..\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER02\MSSQL\Backup\[Pharmacy Management System].bak
 	EndProjectSection
 EndProject
 Global
