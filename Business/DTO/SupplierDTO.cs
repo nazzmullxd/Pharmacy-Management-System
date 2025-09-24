@@ -11,6 +11,7 @@ namespace Business.DTO
         [StringLength(100, ErrorMessage = "Supplier name cannot exceed 100 characters")]
         public string SupplierName { get; set; } = string.Empty;
         
+        [Required(ErrorMessage = "Contact person is required")]
         [StringLength(100, ErrorMessage = "Contact person name cannot exceed 100 characters")]
         public string ContactPerson { get; set; } = string.Empty;
         
