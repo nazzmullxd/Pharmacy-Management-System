@@ -1,7 +1,7 @@
 using Business.DTO;
 using Business.Interfaces;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-
+//index
 namespace Web.Pages.Suppliers
 {
     public class IndexModel : PageModel
