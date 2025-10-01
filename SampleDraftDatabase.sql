@@ -1,5 +1,5 @@
 ﻿-- =====================================================================================
--- Pharmacy Management System - Database Schema
+-- Pharmacy Management System - Sample Database Schema
 -- Organized by dependency order: Parent tables first, then child tables
 -- =====================================================================================
 
