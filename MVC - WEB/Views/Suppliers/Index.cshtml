@@ -1,0 +1,499 @@
+@model MVC_WEB.Models.ViewModels.SupplierListViewModel
+@{
+    ViewData["Title"] = "Suppliers Management";
+    var isAdmin = Context.Session.GetString("role") == "Admin";
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-industry text-primary"></i> Suppliers Management</h1>
+            <p class="mb-0">Manage your pharmacy's supplier network and vendor relationships</p>
+        </div>
+        <div class="d-flex gap-2">
+            @if (isAdmin)
+            {
+                <a asp-action="Create" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add New Supplier
+                </a>
+            }
+            <button type="button" class="btn btn-outline-secondary" onclick="exportSuppliers()">
+                <i class="fas fa-download"></i> Export
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Filters & Search -->
+<div class="dashboard-card mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-4">
+            <h6 class="mb-2 text-muted">Quick Actions</h6>
+            <div class="d-flex gap-2 flex-wrap">
+                @if (isAdmin)
+                {
+                    <a asp-action="Create" class="btn btn-sm btn-success">
+                        <i class="fas fa-plus-circle"></i> Add Supplier
+                    </a>
+                }
+                <button class="btn btn-sm btn-outline-secondary" onclick="location.reload()">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Filter by Status</label>
+                    <select class="form-select form-select-sm" id="statusFilter" onchange="filterSuppliers()">
+                        <option value="">All Suppliers</option>
+                        @if (Model.StatusFilter == "active")
+                        {
+                            <option value="active" selected>Active</option>
+                        }
+                        else
+                        {
+                            <option value="active">Active</option>
+                        }
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Sort By</label>
+                    <select class="form-select form-select-sm" id="sortFilter" onchange="sortSuppliers()">
+                        <option value="name">Name (A-Z)</option>
+                        <option value="recent">Recently Added</option>
+                        <option value="contact">Contact Person</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Search Suppliers</label>
+                    <form asp-action="Search" method="get" class="input-group input-group-sm">
+                        <input type="text" name="query" class="form-control" id="searchInput" placeholder="Name, email, phone..." value="@Model.SearchQuery">
+                        <button class="btn btn-outline-secondary" type="submit" id="searchBtn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Suppliers Summary Cards -->
+<div class="kpi-grid mb-4">
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Total Suppliers</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #3498db, #5dade2);">
+                <i class="fas fa-industry"></i>
+            </div>
+        </div>
+        <div class="kpi-value">@Model.TotalSuppliers</div>
+        <div class="kpi-change positive">
+            <i class="fas fa-chart-bar"></i> All vendors
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Active Suppliers</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #27ae60, #2ecc71);">
+                <i class="fas fa-check-circle"></i>
+            </div>
+        </div>
+        <div class="kpi-value">@Model.ActiveSuppliers</div>
+        <div class="kpi-change positive">
+            <i class="fas fa-arrow-up"></i> Available
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Inactive Suppliers</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #e74c3c, #ec7063);">
+                <i class="fas fa-pause-circle"></i>
+            </div>
+        </div>
+        <div class="kpi-value">@Model.InactiveSuppliers</div>
+        <div class="kpi-change negative">
+            <i class="fas fa-minus-circle"></i> Paused
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Complete Info</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #9b59b6, #bb6bd9);">
+                <i class="fas fa-address-card"></i>
+            </div>
+        </div>
+        <div class="kpi-value">@Model.CompleteInfoCount</div>
+        <div class="kpi-change positive">
+            <i class="fas fa-check-circle"></i> Full contact details
+        </div>
+    </div>
+</div>
+
+<!-- Suppliers Table -->
+<div class="table-container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0"><i class="fas fa-list text-primary"></i> All Suppliers</h5>
+        <div class="d-flex align-items-center gap-3">
+            <small class="text-muted">
+                Showing @Model.Suppliers.Count suppliers
+            </small>
+            <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-secondary active" onclick="toggleView('table')" id="tableViewBtn">
+                    <i class="fas fa-table"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="toggleView('card')" id="cardViewBtn">
+                    <i class="fas fa-th-large"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table View -->
+    <div id="tableView" class="table-responsive">
+        <table class="table table-hover" id="suppliersTable">
+            <thead class="table-light">
+                <tr>
+                    <th>
+                        <i class="fas fa-industry text-muted me-1"></i>Supplier Name
+                    </th>
+                    <th>
+                        <i class="fas fa-user text-muted me-1"></i>Contact Person
+                    </th>
+                    <th>
+                        <i class="fas fa-phone text-muted me-1"></i>Phone
+                    </th>
+                    <th>
+                        <i class="fas fa-envelope text-muted me-1"></i>Email
+                    </th>
+                    <th>
+                        <i class="fas fa-map-marker-alt text-muted me-1"></i>Address
+                    </th>
+                    <th class="text-center">
+                        <i class="fas fa-toggle-on text-muted me-1"></i>Status
+                    </th>
+                    <th class="text-center" style="width: 150px;">
+                        <i class="fas fa-cogs text-muted me-1"></i>Actions
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Suppliers.Any())
+                {
+                    @foreach (var supplier in Model.Suppliers)
+                    {
+                        <tr class="supplier-row" data-supplier-id="@supplier.SupplierID">
+                            <td>
+                                <div class="supplier-info">
+                                    <div class="supplier-name fw-semibold">@supplier.SupplierName</div>
+                                    <small class="text-muted">
+                                        <i class="fas fa-tag me-1"></i>ID: @supplier.SupplierID.ToString().Substring(0, 8).ToUpper()
+                                    </small>
+                                </div>
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(supplier.ContactPerson))
+                                {
+                                    <span>@supplier.ContactPerson</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Not specified</span>
+                                }
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(supplier.PhoneNumber))
+                                {
+                                    <a href="tel:@supplier.PhoneNumber" class="text-decoration-none">
+                                        <i class="fas fa-phone me-1 text-success"></i>@supplier.PhoneNumber
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Not provided</span>
+                                }
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(supplier.Email))
+                                {
+                                    <a href="mailto:@supplier.Email" class="text-decoration-none">
+                                        <i class="fas fa-envelope me-1 text-info"></i>@supplier.Email
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Not provided</span>
+                                }
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(supplier.Address))
+                                {
+                                    <span title="@supplier.Address">
+                                        @(supplier.Address.Length > 30 ? supplier.Address.Substring(0, 30) + "..." : supplier.Address)
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Not provided</span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                @if (supplier.IsActive)
+                                {
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check-circle me-1"></i>Active
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">
+                                        <i class="fas fa-pause-circle me-1"></i>Inactive
+                                    </span>
+                                }
+                            </td>
+                            <td>
+                                <div class="action-buttons d-flex gap-1 justify-content-center">
+                                    <a asp-action="Details" asp-route-id="@supplier.SupplierID" 
+                                       class="btn btn-sm btn-outline-info" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    @if (isAdmin)
+                                    {
+                                        <a asp-action="Edit" asp-route-id="@supplier.SupplierID" 
+                                           class="btn btn-sm btn-outline-primary" title="Edit Supplier">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    }
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                                                type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li><a class="dropdown-item" asp-action="Details" asp-route-id="@supplier.SupplierID">
+                                                <i class="fas fa-eye me-2"></i>View Details
+                                            </a></li>
+                                            @if (isAdmin)
+                                            {
+                                                <li><a class="dropdown-item" asp-action="Edit" asp-route-id="@supplier.SupplierID">
+                                                    <i class="fas fa-edit me-2"></i>Edit Supplier
+                                                </a></li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><a class="dropdown-item" asp-controller="Purchases" asp-action="Create" asp-route-supplierId="@supplier.SupplierID">
+                                                    <i class="fas fa-shopping-cart me-2"></i>Create Purchase Order
+                                                </a></li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li>
+                                                    <form asp-action="ToggleStatus" asp-route-id="@supplier.SupplierID" method="post" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="dropdown-item">
+                                                            @if (supplier.IsActive)
+                                                            {
+                                                                <i class="fas fa-pause-circle me-2 text-warning"></i><span>Deactivate</span>
+                                                            }
+                                                            else
+                                                            {
+                                                                <i class="fas fa-check-circle me-2 text-success"></i><span>Activate</span>
+                                                            }
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><button class="dropdown-item text-danger" onclick="confirmDelete('@supplier.SupplierID', '@supplier.SupplierName')">
+                                                    <i class="fas fa-trash me-2"></i>Delete Supplier
+                                                </button></li>
+                                            }
+                                        </ul>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <div class="empty-state">
+                                <i class="fas fa-industry fa-3x text-muted mb-3"></i>
+                                <h6 class="text-muted">No suppliers found</h6>
+                                <p class="text-muted mb-3">Get started by adding your first supplier to the system</p>
+                                @if (isAdmin)
+                                {
+                                    <a asp-action="Create" class="btn btn-primary">
+                                        <i class="fas fa-plus"></i> Add First Supplier
+                                    </a>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Card View -->
+    <div id="cardView" style="display: none;" class="row">
+        @if (Model.Suppliers.Any())
+        {
+            @foreach (var supplier in Model.Suppliers)
+            {
+                <div class="col-lg-6 col-xl-4 mb-3">
+                    <div class="card supplier-card h-100 shadow-sm">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">@supplier.SupplierName</h6>
+                            @if (supplier.IsActive)
+                            {
+                                <span class="badge bg-success">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Inactive</span>
+                            }
+                        </div>
+                        <div class="card-body">
+                            @if (!string.IsNullOrEmpty(supplier.ContactPerson))
+                            {
+                                <p class="mb-2"><i class="fas fa-user me-2 text-muted"></i><strong>@supplier.ContactPerson</strong></p>
+                            }
+                            @if (!string.IsNullOrEmpty(supplier.PhoneNumber))
+                            {
+                                <p class="mb-1">
+                                    <a href="tel:@supplier.PhoneNumber" class="text-decoration-none">
+                                        <i class="fas fa-phone me-2 text-success"></i>@supplier.PhoneNumber
+                                    </a>
+                                </p>
+                            }
+                            @if (!string.IsNullOrEmpty(supplier.Email))
+                            {
+                                <p class="mb-1">
+                                    <a href="mailto:@supplier.Email" class="text-decoration-none">
+                                        <i class="fas fa-envelope me-2 text-info"></i>@supplier.Email
+                                    </a>
+                                </p>
+                            }
+                            @if (!string.IsNullOrEmpty(supplier.Address))
+                            {
+                                <p class="mb-0 small text-muted">
+                                    <i class="fas fa-map-marker-alt me-2"></i>
+                                    @(supplier.Address.Length > 50 ? supplier.Address.Substring(0, 50) + "..." : supplier.Address)
+                                </p>
+                            }
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <div class="d-flex gap-1 justify-content-center">
+                                <a asp-action="Details" asp-route-id="@supplier.SupplierID" class="btn btn-sm btn-outline-info">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                @if (isAdmin)
+                                {
+                                    <a asp-action="Edit" asp-route-id="@supplier.SupplierID" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="confirmDelete('@supplier.SupplierID', '@supplier.SupplierName')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirm Delete
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete supplier <strong id="deleteSupplierName"></strong>?</p>
+                <p class="text-muted small">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="post" style="display: inline;">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i>Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleView(view) {
+            const tableView = document.getElementById('tableView');
+            const cardView = document.getElementById('cardView');
+            const tableBtn = document.getElementById('tableViewBtn');
+            const cardBtn = document.getElementById('cardViewBtn');
+
+            if (view === 'table') {
+                tableView.style.display = 'block';
+                cardView.style.display = 'none';
+                tableBtn.classList.add('active');
+                cardBtn.classList.remove('active');
+            } else {
+                tableView.style.display = 'none';
+                cardView.style.display = 'flex';
+                cardBtn.classList.add('active');
+                tableBtn.classList.remove('active');
+            }
+        }
+
+        function confirmDelete(supplierId, supplierName) {
+            document.getElementById('deleteSupplierName').textContent = supplierName;
+            document.getElementById('deleteForm').action = '@Url.Action("Delete", "Suppliers")/' + supplierId;
+            new bootstrap.Modal(document.getElementById('deleteModal')).show();
+        }
+
+        function exportSuppliers() {
+            const table = document.getElementById('suppliersTable');
+            const rows = table.querySelectorAll('tr');
+            let csv = [];
+
+            rows.forEach(row => {
+                const cols = row.querySelectorAll('td, th');
+                const rowData = [];
+                cols.forEach((col, index) => {
+                    if (index < 6) {
+                        rowData.push('"' + col.innerText.replace(/"/g, '""') + '"');
+                    }
+                });
+                csv.push(rowData.join(','));
+            });
+
+            const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'suppliers_' + new Date().toISOString().split('T')[0] + '.csv';
+            a.click();
+        }
+
+        function filterSuppliers() {
+            const filter = document.getElementById('statusFilter').value;
+            if (filter === 'active') {
+                window.location.href = '@Url.Action("Active", "Suppliers")';
+            } else {
+                window.location.href = '@Url.Action("Index", "Suppliers")';
+            }
+        }
+    </script>
+}

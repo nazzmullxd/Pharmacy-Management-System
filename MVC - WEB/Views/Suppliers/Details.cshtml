@@ -1,0 +1,217 @@
+@model MVC_WEB.Models.ViewModels.SupplierDetailsViewModel
+@{
+    ViewData["Title"] = "Supplier Details";
+    var isAdmin = Context.Session.GetString("role") == "Admin";
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-industry text-primary"></i> Supplier Details</h1>
+            <p class="mb-0">View detailed information about this supplier</p>
+        </div>
+        <div class="d-flex gap-2">
+            @if (isAdmin)
+            {
+                <a asp-action="Edit" asp-route-id="@Model.Supplier.SupplierID" class="btn btn-primary">
+                    <i class="fas fa-edit"></i> Edit Supplier
+                </a>
+            }
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Suppliers
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Supplier Profile Card -->
+    <div class="col-lg-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body text-center py-4">
+                <div class="supplier-icon mb-3">
+                    <i class="fas fa-building fa-5x text-primary"></i>
+                </div>
+                <h4 class="mb-1">@Model.Supplier.SupplierName</h4>
+                @if (!string.IsNullOrEmpty(Model.Supplier.ContactPerson))
+                {
+                    <p class="text-muted mb-2">
+                        <i class="fas fa-user me-1"></i>@Model.Supplier.ContactPerson
+                    </p>
+                }
+                
+                @if (Model.Supplier.IsActive)
+                {
+                    <span class="badge bg-success fs-6"><i class="fas fa-check-circle me-1"></i>Active Supplier</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary fs-6"><i class="fas fa-pause-circle me-1"></i>Inactive</span>
+                }
+                
+                @if (isAdmin)
+                {
+                    <hr class="my-4" />
+                    
+                    <div class="d-grid gap-2">
+                        <a asp-action="Edit" asp-route-id="@Model.Supplier.SupplierID" class="btn btn-outline-primary">
+                            <i class="fas fa-edit me-1"></i> Edit Supplier
+                        </a>
+                        <a asp-controller="Purchases" asp-action="Create" asp-route-supplierId="@Model.Supplier.SupplierID" class="btn btn-outline-success">
+                            <i class="fas fa-shopping-cart me-1"></i> Create Purchase Order
+                        </a>
+                        <form asp-action="ToggleStatus" asp-route-id="@Model.Supplier.SupplierID" method="post" class="d-grid">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-outline-warning">
+                                @if (Model.Supplier.IsActive)
+                                {
+                                    <i class="fas fa-pause-circle me-1"></i><span>Deactivate Supplier</span>
+                                }
+                                else
+                                {
+                                    <i class="fas fa-check-circle me-1"></i><span>Activate Supplier</span>
+                                }
+                            </button>
+                        </form>
+                        <a asp-action="Delete" asp-route-id="@Model.Supplier.SupplierID" class="btn btn-outline-danger">
+                            <i class="fas fa-trash me-1"></i> Delete Supplier
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Supplier Information -->
+    <div class="col-lg-8">
+        <!-- Contact Information Card -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-address-card me-2"></i>Contact Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted small">SUPPLIER ID</label>
+                        <p class="mb-0"><code>@Model.Supplier.SupplierID</code></p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted small">SUPPLIER NAME</label>
+                        <p class="mb-0 fw-semibold">@Model.Supplier.SupplierName</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted small">CONTACT PERSON</label>
+                        <p class="mb-0">
+                            @if (!string.IsNullOrEmpty(Model.Supplier.ContactPerson))
+                            {
+                                <i class="fas fa-user me-1 text-muted"></i>@Model.Supplier.ContactPerson
+                            }
+                            else
+                            {
+                                <span class="text-muted">Not specified</span>
+                            }
+                        </p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted small">PHONE NUMBER</label>
+                        <p class="mb-0">
+                            @if (!string.IsNullOrEmpty(Model.Supplier.PhoneNumber))
+                            {
+                                <a href="tel:@Model.Supplier.PhoneNumber" class="text-decoration-none">
+                                    <i class="fas fa-phone me-1 text-success"></i>@Model.Supplier.PhoneNumber
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Not provided</span>
+                            }
+                        </p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted small">EMAIL ADDRESS</label>
+                        <p class="mb-0">
+                            @if (!string.IsNullOrEmpty(Model.Supplier.Email))
+                            {
+                                <a href="mailto:@Model.Supplier.Email" class="text-decoration-none">
+                                    <i class="fas fa-envelope me-1 text-info"></i>@Model.Supplier.Email
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Not provided</span>
+                            }
+                        </p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted small">STATUS</label>
+                        <p class="mb-0">
+                            @if (Model.Supplier.IsActive)
+                            {
+                                <span class="badge bg-success">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Inactive</span>
+                            }
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Address Card -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>Address Information</h5>
+            </div>
+            <div class="card-body">
+                @if (!string.IsNullOrEmpty(Model.Supplier.Address))
+                {
+                    <div class="d-flex align-items-start">
+                        <i class="fas fa-map-marker-alt fa-lg text-danger me-3 mt-1"></i>
+                        <div>
+                            <p class="mb-0">@Model.Supplier.Address</p>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted mb-0"><i class="fas fa-info-circle me-2"></i>No address provided</p>
+                }
+            </div>
+        </div>
+
+        <!-- Audit Information Card -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i>Audit Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label text-muted small">CREATED DATE</label>
+                        <p class="mb-0">
+                            <i class="fas fa-calendar-plus me-1 text-muted"></i>
+                            @Model.Supplier.CreatedDate.ToString("MMMM dd, yyyy")
+                        </p>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label text-muted small">LAST UPDATED</label>
+                        <p class="mb-0">
+                            <i class="fas fa-calendar-check me-1 text-muted"></i>
+                            @Model.Supplier.UpdatedDate.ToString("MMMM dd, yyyy")
+                        </p>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label text-muted small">CREATED BY</label>
+                        <p class="mb-0">
+                            <i class="fas fa-user-plus me-1 text-muted"></i>
+                            @(string.IsNullOrEmpty(Model.Supplier.CreatedBy) ? "System" : Model.Supplier.CreatedBy)
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

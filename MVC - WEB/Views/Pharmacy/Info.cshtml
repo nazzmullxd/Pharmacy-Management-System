@@ -1,0 +1,153 @@
+@model MVC_WEB.Models.ViewModels.PharmacyInfoViewModel
+@{
+    ViewData["Title"] = "Pharmacy Information";
+    var isAdmin = Context.Session.GetString("role") == "Admin";
+}
+
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Pharmacy Information</h1>
+            <p class="text-muted mb-0">View pharmacy details and license information</p>
+        </div>
+        @if (isAdmin)
+        {
+            <a asp-action="Settings" class="btn btn-primary">
+                <i class="bi bi-gear me-1"></i> Manage Settings
+            </a>
+        }
+    </div>
+
+    <div class="row">
+        <!-- Pharmacy Details Card -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-building me-2"></i>Pharmacy Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-sm-4 text-muted">Pharmacy Name</div>
+                        <div class="col-sm-8"><strong>@Model.PharmacyName</strong></div>
+                    </div>
+                    <hr />
+                    <div class="row mb-3">
+                        <div class="col-sm-4 text-muted">License Number</div>
+                        <div class="col-sm-8">
+                            <span class="badge bg-primary">@Model.LicenseNumber</span>
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="row mb-3">
+                        <div class="col-sm-4 text-muted">Owner/Manager</div>
+                        <div class="col-sm-8">@Model.OwnerName</div>
+                    </div>
+                    <hr />
+                    <div class="row mb-3">
+                        <div class="col-sm-4 text-muted">Phone Number</div>
+                        <div class="col-sm-8">
+                            <a href="tel:@Model.PhoneNumber">@Model.PhoneNumber</a>
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="row mb-3">
+                        <div class="col-sm-4 text-muted">Email</div>
+                        <div class="col-sm-8">
+                            <a href="mailto:@Model.Email">@Model.Email</a>
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="row mb-3">
+                        <div class="col-sm-4 text-muted">Address</div>
+                        <div class="col-sm-8">
+                            @Model.Address<br />
+                            @Model.City, @Model.State @Model.ZipCode
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- License Status Card -->
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-award me-2"></i>License Status</h5>
+                </div>
+                <div class="card-body text-center">
+                    @if (Model.LicenseExpiry.HasValue)
+                    {
+                        var daysToExpiry = (Model.LicenseExpiry.Value - DateTime.Today).Days;
+                        <div class="mb-3">
+                            @if (daysToExpiry > 90)
+                            {
+                                <div class="rounded-circle bg-success text-white d-inline-flex justify-content-center align-items-center" style="width: 80px; height: 80px;">
+                                    <i class="bi bi-check-lg fs-1"></i>
+                                </div>
+                            }
+                            else if (daysToExpiry > 30)
+                            {
+                                <div class="rounded-circle bg-warning text-white d-inline-flex justify-content-center align-items-center" style="width: 80px; height: 80px;">
+                                    <i class="bi bi-exclamation-lg fs-1"></i>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="rounded-circle bg-danger text-white d-inline-flex justify-content-center align-items-center" style="width: 80px; height: 80px;">
+                                    <i class="bi bi-x-lg fs-1"></i>
+                                </div>
+                            }
+                        </div>
+                        <h5 class="@(daysToExpiry > 90 ? "text-success" : daysToExpiry > 30 ? "text-warning" : "text-danger")">
+                            @if (daysToExpiry > 0)
+                            {
+                                @:Valid
+                            }
+                            else
+                            {
+                                @:Expired
+                            }
+                        </h5>
+                        <p class="text-muted mb-2">Expires: @Model.LicenseExpiry.Value.ToString("MMM dd, yyyy")</p>
+                        @if (daysToExpiry > 0 && daysToExpiry <= 90)
+                        {
+                            <small class="text-warning">
+                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                Expires in @daysToExpiry days
+                            </small>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted">No expiry date set</p>
+                    }
+                </div>
+            </div>
+
+            <!-- Status Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Status</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>Operating Status</span>
+                        @if (Model.IsActive)
+                        {
+                            <span class="badge bg-success">Active</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger">Inactive</span>
+                        }
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>System Version</span>
+                        <span class="badge bg-secondary">v1.0.0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

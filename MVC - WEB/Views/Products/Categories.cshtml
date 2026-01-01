@@ -1,0 +1,204 @@
+@model MVC_WEB.Models.ViewModels.ProductCategoriesViewModel
+@{
+    ViewData["Title"] = "Product Categories";
+    var isAdmin = Context.Session.GetString("role") == "Admin";
+}
+
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-tags text-info"></i> Product Categories</h1>
+            <p class="mb-0">Browse and manage product categories</p>
+        </div>
+        <div class="d-flex gap-2">
+            @if (isAdmin)
+            {
+                <a asp-action="Create" class="btn btn-success">
+                    <i class="fas fa-plus"></i> Add Product
+                </a>
+            }
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Products
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Category Statistics -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-primary text-white shadow-sm">
+            <div class="card-body text-center">
+                <h2 class="mb-0">@Model.Categories.Count</h2>
+                <p class="mb-0">Total Categories</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-success text-white shadow-sm">
+            <div class="card-body text-center">
+                <h2 class="mb-0">@Model.CategoryCounts.Values.Sum()</h2>
+                <p class="mb-0">Total Products</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-info text-white shadow-sm">
+            <div class="card-body text-center">
+                @{
+                    var avgPerCategory = Model.Categories.Count > 0 
+                        ? (Model.CategoryCounts.Values.Sum() / (double)Model.Categories.Count).ToString("F1") 
+                        : "0";
+                }
+                <h2 class="mb-0">@avgPerCategory</h2>
+                <p class="mb-0">Avg Products/Category</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Categories Grid -->
+<div class="row">
+    @foreach (var category in Model.Categories)
+    {
+        var count = Model.CategoryCounts.ContainsKey(category) ? Model.CategoryCounts[category] : 0;
+        var iconClass = GetCategoryIcon(category);
+        var colorClass = GetCategoryColor(category);
+        
+        <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+            <div class="card h-100 shadow-sm category-card">
+                <div class="card-body text-center">
+                    <div class="category-icon mb-3 @colorClass">
+                        <i class="@iconClass fa-3x"></i>
+                    </div>
+                    <h5 class="card-title mb-2">@category</h5>
+                    <p class="text-muted mb-3">
+                        <span class="badge bg-secondary">@count Products</span>
+                    </p>
+                    <a asp-action="Index" asp-route-category="@category" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-eye me-1"></i> View Products
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Category Table View -->
+<div class="card shadow-sm mt-4">
+    <div class="card-header bg-secondary text-white">
+        <h5 class="mb-0"><i class="fas fa-list me-2"></i>Category Overview</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Category Name</th>
+                        <th class="text-center">Products Count</th>
+                        <th class="text-center">Percentage</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        var totalProducts = Model.CategoryCounts.Values.Sum();
+                        var index = 1;
+                    }
+                    @foreach (var category in Model.Categories.OrderByDescending(c => Model.CategoryCounts.ContainsKey(c) ? Model.CategoryCounts[c] : 0))
+                    {
+                        var count = Model.CategoryCounts.ContainsKey(category) ? Model.CategoryCounts[category] : 0;
+                        var percentage = totalProducts > 0 ? (count * 100.0 / totalProducts).ToString("F1") : "0";
+                        
+                        <tr>
+                            <td>@index</td>
+                            <td>
+                                <i class="@GetCategoryIcon(category) me-2 @GetCategoryColor(category)"></i>
+                                @category
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-primary">@count</span>
+                            </td>
+                            <td class="text-center">
+                                <div class="progress" style="height: 20px; width: 100px; margin: 0 auto;">
+                                    <div class="progress-bar bg-success" role="progressbar" 
+                                         style="width: @percentage%"
+                                         aria-valuenow="@percentage" aria-valuemin="0" aria-valuemax="100">
+                                        @percentage%
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-end">
+                                <a asp-action="Index" asp-route-category="@category" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-filter"></i> Filter
+                                </a>
+                            </td>
+                        </tr>
+                        index++;
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetCategoryIcon(string category)
+    {
+        return category?.ToLower() switch
+        {
+            "tablet" or "tablets" => "fas fa-tablets",
+            "capsule" or "capsules" => "fas fa-capsules",
+            "syrup" or "syrups" => "fas fa-prescription-bottle",
+            "injection" or "injections" => "fas fa-syringe",
+            "cream" or "ointment" => "fas fa-pump-medical",
+            "drops" => "fas fa-eye-dropper",
+            "powder" => "fas fa-mortar-pestle",
+            "inhaler" or "inhalers" => "fas fa-lungs",
+            "medical equipment" or "equipment" => "fas fa-stethoscope",
+            "vitamins" or "supplements" => "fas fa-pills",
+            "first aid" => "fas fa-first-aid",
+            "personal care" => "fas fa-hand-sparkles",
+            _ => "fas fa-pills"
+        };
+    }
+    
+    string GetCategoryColor(string category)
+    {
+        return category?.ToLower() switch
+        {
+            "tablet" or "tablets" => "text-primary",
+            "capsule" or "capsules" => "text-danger",
+            "syrup" or "syrups" => "text-warning",
+            "injection" or "injections" => "text-info",
+            "cream" or "ointment" => "text-success",
+            "drops" => "text-secondary",
+            "powder" => "text-dark",
+            "inhaler" or "inhalers" => "text-primary",
+            "medical equipment" or "equipment" => "text-danger",
+            "vitamins" or "supplements" => "text-success",
+            "first aid" => "text-danger",
+            "personal care" => "text-info",
+            _ => "text-primary"
+        };
+    }
+}
+
+<style>
+    .category-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .category-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+    .category-icon {
+        width: 80px;
+        height: 80px;
+        line-height: 80px;
+        border-radius: 50%;
+        background: rgba(0,0,0,0.05);
+        margin: 0 auto;
+    }
+</style>

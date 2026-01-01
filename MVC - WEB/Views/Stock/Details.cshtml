@@ -1,0 +1,271 @@
+@model MVC_WEB.Models.ViewModels.StockDetailsViewModel
+@{
+    ViewData["Title"] = "Stock Details";
+    var isAdmin = Context.Session.GetString("role") == "Admin";
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-info-circle text-primary"></i> Stock Details</h1>
+            <p class="mb-0">View detailed stock information and batch breakdown for this product</p>
+        </div>
+        <div class="d-flex gap-2">
+            @if (isAdmin)
+            {
+                <a asp-action="Adjustments" asp-route-productId="@Model.Product.ProductID" class="btn btn-primary">
+                    <i class="fas fa-edit"></i> Adjust Stock
+                </a>
+            }
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Stock
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Product Summary Card -->
+    <div class="col-lg-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body text-center py-4">
+                <div class="product-icon mb-3">
+                    <i class="fas fa-pills fa-5x text-primary"></i>
+                </div>
+                <h4 class="mb-1">@Model.Product.ProductName</h4>
+                @if (!string.IsNullOrEmpty(Model.Product.GenericName))
+                {
+                    <p class="text-muted mb-2">@Model.Product.GenericName</p>
+                }
+                <span class="badge bg-info fs-6">@Model.Product.Category</span>
+                
+                <hr class="my-4" />
+                
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h3 class="mb-0 text-primary">@Model.Product.TotalStock</h3>
+                        <small class="text-muted">Total Units</small>
+                    </div>
+                    <div class="col-6">
+                        <h3 class="mb-0 text-success">$@Model.Product.UnitPrice.ToString("F2")</h3>
+                        <small class="text-muted">Unit Price</small>
+                    </div>
+                </div>
+                
+                <hr class="my-4" />
+                
+                @if (Model.Product.TotalStock == 0)
+                {
+                    <span class="badge bg-danger fs-6"><i class="fas fa-times-circle me-1"></i>Out of Stock</span>
+                }
+                else if (Model.Product.IsLowStock)
+                {
+                    <span class="badge bg-warning fs-6"><i class="fas fa-exclamation-triangle me-1"></i>Low Stock</span>
+                }
+                else
+                {
+                    <span class="badge bg-success fs-6"><i class="fas fa-check-circle me-1"></i>In Stock</span>
+                }
+                
+                @if (isAdmin)
+                {
+                    <div class="mt-4 d-grid gap-2">
+                        <a asp-action="Adjustments" asp-route-productId="@Model.Product.ProductID" class="btn btn-outline-primary">
+                            <i class="fas fa-edit me-1"></i> Adjust Stock
+                        </a>
+                        <a asp-action="AddBatch" class="btn btn-outline-success">
+                            <i class="fas fa-plus me-1"></i> Add New Batch
+                        </a>
+                        <a asp-controller="Products" asp-action="Edit" asp-route-id="@Model.Product.ProductID" class="btn btn-outline-secondary">
+                            <i class="fas fa-cog me-1"></i> Edit Product
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+        
+        <!-- Stock Info Card -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-secondary text-white">
+                <h6 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Stock Information</h6>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm table-borderless mb-0">
+                    <tr>
+                        <td class="text-muted">Low Stock Threshold:</td>
+                        <td><strong>@Model.Product.LowStockThreshold</strong> units</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Total Value:</td>
+                        <td><strong class="text-success">$@((Model.Product.TotalStock * Model.Product.UnitPrice).ToString("F2"))</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Active Batches:</td>
+                        <td><strong>@Model.Batches.Count()</strong></td>
+                    </tr>
+                    @if (Model.Batches.Any())
+                    {
+                        var earliestExpiry = Model.Batches.Min(b => b.ExpiryDate);
+                        <tr>
+                            <td class="text-muted">Earliest Expiry:</td>
+                            <td>
+                                @if (earliestExpiry < DateTime.Now)
+                                {
+                                    <span class="text-danger"><strong>@earliestExpiry.ToString("MMM dd, yyyy")</strong> (Expired)</span>
+                                }
+                                else
+                                {
+                                    <strong>@earliestExpiry.ToString("MMM dd, yyyy")</strong>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Batches List -->
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-layer-group me-2"></i>Product Batches</h5>
+                @if (isAdmin)
+                {
+                    <a asp-action="AddBatch" class="btn btn-sm btn-light">
+                        <i class="fas fa-plus me-1"></i> Add Batch
+                    </a>
+                }
+            </div>
+            <div class="card-body">
+                @if (Model.Batches != null && Model.Batches.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Batch Number</th>
+                                    <th>Supplier</th>
+                                    <th class="text-center">Quantity</th>
+                                    <th class="text-center">Expiry Date</th>
+                                    <th class="text-center">Status</th>
+                                    @if (isAdmin)
+                                    {
+                                        <th class="text-center">Actions</th>
+                                    }
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var batch in Model.Batches.OrderBy(b => b.ExpiryDate))
+                                {
+                                    var daysLeft = (batch.ExpiryDate - DateTime.Now).TotalDays;
+                                    <tr>
+                                        <td>
+                                            <code>@batch.BatchNumber</code>
+                                        </td>
+                                        <td>@batch.SupplierName</td>
+                                        <td class="text-center">
+                                            @if (batch.QuantityInStock == 0)
+                                            {
+                                                <span class="badge bg-danger">0 units</span>
+                                            }
+                                            else if (batch.QuantityInStock <= 10)
+                                            {
+                                                <span class="badge bg-warning">@batch.QuantityInStock units</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success">@batch.QuantityInStock units</span>
+                                            }
+                                        </td>
+                                        <td class="text-center">
+                                            @if (batch.IsExpired)
+                                            {
+                                                <span class="badge bg-danger">
+                                                    <i class="fas fa-times-circle me-1"></i>@batch.ExpiryDate.ToString("MMM dd, yyyy")
+                                                </span>
+                                            }
+                                            else if (daysLeft <= 30)
+                                            {
+                                                <span class="badge bg-warning">
+                                                    <i class="fas fa-clock me-1"></i>@batch.ExpiryDate.ToString("MMM dd, yyyy")
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">@batch.ExpiryDate.ToString("MMM dd, yyyy")</span>
+                                            }
+                                        </td>
+                                        <td class="text-center">
+                                            @if (batch.IsExpired)
+                                            {
+                                                <span class="badge bg-danger">Expired</span>
+                                            }
+                                            else if (batch.QuantityInStock == 0)
+                                            {
+                                                <span class="badge bg-secondary">Empty</span>
+                                            }
+                                            else if (batch.IsExpiringSoon)
+                                            {
+                                                <span class="badge bg-warning">Expiring</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success">Active</span>
+                                            }
+                                        </td>
+                                        @if (isAdmin)
+                                        {
+                                            <td class="text-center">
+                                                <form asp-action="DeleteBatch" asp-route-id="@batch.ProductBatchID" method="post" 
+                                                      class="d-inline" onsubmit="return confirm('Are you sure you want to delete this batch?');">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Batch">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        }
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Batch Summary -->
+                    <div class="alert alert-info mt-3">
+                        <div class="row text-center">
+                            <div class="col-md-3">
+                                <strong>Total Batches:</strong> @Model.Batches.Count()
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Total Units:</strong> @Model.Batches.Sum(b => b.QuantityInStock)
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Expiring Soon:</strong> @Model.Batches.Count(b => b.IsExpiringSoon && !b.IsExpired)
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Expired:</strong> @Model.Batches.Count(b => b.IsExpired)
+                            </div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <i class="fas fa-layer-group fa-3x text-muted mb-3"></i>
+                        <h6 class="text-muted">No batches found</h6>
+                        <p class="text-muted mb-3">Add batches to track this product's inventory</p>
+                        @if (isAdmin)
+                        {
+                            <a asp-action="AddBatch" class="btn btn-success">
+                                <i class="fas fa-plus"></i> Add First Batch
+                            </a>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

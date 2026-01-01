@@ -1,0 +1,176 @@
+@model MVC_WEB.Models.ViewModels.SupplierCreateViewModel
+@{
+    ViewData["Title"] = "Add New Supplier";
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-industry text-primary"></i> Add New Supplier</h1>
+            <p class="mb-0">Create a new supplier profile for your pharmacy network</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Suppliers
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <form asp-action="Create" method="post" id="supplierForm">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+            
+            <!-- Basic Information Section -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Basic Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="SupplierName" class="form-label">
+                                <i class="fas fa-industry text-muted me-1"></i>Supplier Name <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="SupplierName" class="form-control" placeholder="Enter supplier company name" autofocus />
+                            <span asp-validation-for="SupplierName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="ContactPerson" class="form-label">
+                                <i class="fas fa-user text-muted me-1"></i>Contact Person
+                            </label>
+                            <input asp-for="ContactPerson" class="form-control" placeholder="Enter contact person name" />
+                            <span asp-validation-for="ContactPerson" class="text-danger small"></span>
+                            <small class="text-muted">Primary contact at the supplier company</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Information Section -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-phone me-2"></i>Contact Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="PhoneNumber" class="form-label">
+                                <i class="fas fa-phone text-muted me-1"></i>Phone Number <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="PhoneNumber" class="form-control" type="tel" placeholder="e.g., +880 1234 567890" />
+                            <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                            <small class="text-muted">Include country code if international</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Email" class="form-label">
+                                <i class="fas fa-envelope text-muted me-1"></i>Email Address <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Email" class="form-control" type="email" placeholder="supplier@example.com" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                            <small class="text-muted">Primary email for communications</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Address Section -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-map-marker-alt me-2"></i>Address Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label asp-for="Address" class="form-label">
+                                <i class="fas fa-map-marker-alt text-muted me-1"></i>Full Address
+                            </label>
+                            <textarea asp-for="Address" class="form-control" rows="3" placeholder="Enter complete address including street, city, state, country"></textarea>
+                            <span asp-validation-for="Address" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Section -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-toggle-on me-2"></i>Supplier Status
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-check form-switch">
+                        <input asp-for="IsActive" class="form-check-input" type="checkbox" role="switch" id="isActiveSwitch" checked />
+                        <label class="form-check-label" for="isActiveSwitch">
+                            <strong>Supplier is Active</strong>
+                            <p class="text-muted mb-0 small">Active suppliers are available for purchase orders</p>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-save me-1"></i> Save Supplier
+                </button>
+                <button type="reset" class="btn btn-outline-secondary">
+                    <i class="fas fa-undo me-1"></i> Reset Form
+                </button>
+                <a asp-action="Index" class="btn btn-outline-danger">
+                    <i class="fas fa-times me-1"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Guidelines Card -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-warning text-dark">
+                <h6 class="mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>Supplier Guidelines
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="small text-muted mb-0">
+                    <li class="mb-2"><strong>Supplier Name:</strong> Use official company name for records</li>
+                    <li class="mb-2"><strong>Contact Person:</strong> Primary contact for orders and inquiries</li>
+                    <li class="mb-2"><strong>Phone:</strong> Direct line for urgent communications</li>
+                    <li class="mb-2"><strong>Email:</strong> Official email for orders and invoices</li>
+                    <li class="mb-0"><strong>Address:</strong> Complete address for shipping and documentation</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Tips Card -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Quick Tips
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="small text-muted mb-0">
+                    <li class="mb-2">Keep supplier information up-to-date</li>
+                    <li class="mb-2">Verify contact details before saving</li>
+                    <li class="mb-2">Use consistent naming conventions</li>
+                    <li class="mb-0">Review supplier status periodically</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

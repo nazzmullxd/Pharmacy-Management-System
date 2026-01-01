@@ -1,0 +1,194 @@
+@model MVC_WEB.Models.ViewModels.UserEditViewModel
+@{
+    ViewData["Title"] = "Edit User";
+}
+
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-user-edit text-primary"></i> Edit User</h1>
+            <p class="mb-0">Update user information and settings</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Users
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-user-edit me-2"></i>User Information</h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="Edit" method="post" id="editUserForm">
+                    <input type="hidden" asp-for="UserID" />
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="FirstName" class="form-label">
+                                <i class="fas fa-user text-muted me-1"></i>First Name <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="FirstName" class="form-control" placeholder="Enter first name" />
+                            <span asp-validation-for="FirstName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="LastName" class="form-label">
+                                <i class="fas fa-user text-muted me-1"></i>Last Name <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="LastName" class="form-control" placeholder="Enter last name" />
+                            <span asp-validation-for="LastName" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label">
+                            <i class="fas fa-envelope text-muted me-1"></i>Email Address <span class="text-danger">*</span>
+                        </label>
+                        <input asp-for="Email" class="form-control" placeholder="user@example.com" type="email" />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                        <small class="text-muted">This will be used for login and notifications</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Role" class="form-label">
+                            <i class="fas fa-shield-alt text-muted me-1"></i>Role <span class="text-danger">*</span>
+                        </label>
+                        <select asp-for="Role" class="form-select">
+                            <option value="">-- Select Role --</option>
+                            @foreach (var role in Model.AvailableRoles)
+                            {
+                                <option value="@role" selected="@(Model.Role == role)">@role</option>
+                            }
+                        </select>
+                        <span asp-validation-for="Role" class="text-danger small"></span>
+                        <small class="text-muted">Role determines user permissions in the system</small>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Note:</strong> To change the user's password, use the "Reset Password" feature from the user list.
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i> Save Changes
+                        </button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- User Summary Card -->
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-secondary text-white">
+                <h6 class="mb-0"><i class="fas fa-user me-2"></i>User Summary</h6>
+            </div>
+            <div class="card-body text-center">
+                <div class="avatar-circle large mx-auto mb-3">
+                    @(Model.FirstName?.FirstOrDefault().ToString() ?? "")@(Model.LastName?.FirstOrDefault().ToString() ?? "")
+                </div>
+                <h5 class="mb-1">@Model.FirstName @Model.LastName</h5>
+                <p class="text-muted mb-2">@Model.Email</p>
+                @{
+                    var roleColor = Model.Role switch
+                    {
+                        "Admin" => "danger",
+                        "Manager" => "warning",
+                        "Pharmacist" => "success",
+                        "Staff" => "info",
+                        "User" => "primary",
+                        _ => "secondary"
+                    };
+                }
+                <span class="badge bg-@roleColor">@Model.Role</span>
+            </div>
+        </div>
+
+        <!-- Quick Actions Card -->
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a asp-action="Details" asp-route-id="@Model.UserID" class="btn btn-outline-info btn-sm">
+                        <i class="fas fa-eye me-1"></i> View Full Profile
+                    </a>
+                    <button type="button" class="btn btn-outline-warning btn-sm" onclick="resetPassword()">
+                        <i class="fas fa-key me-1"></i> Reset Password
+                    </button>
+                    <a asp-action="Delete" asp-route-id="@Model.UserID" class="btn btn-outline-danger btn-sm">
+                        <i class="fas fa-trash me-1"></i> Delete User
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Role Info Card -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-warning text-dark">
+                <h6 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Role Permissions</h6>
+            </div>
+            <div class="card-body">
+                <div class="role-info">
+                    <div class="mb-3">
+                        <span class="badge bg-danger me-2">Admin</span>
+                        <small>Full system access</small>
+                    </div>
+                    <div class="mb-3">
+                        <span class="badge bg-primary me-2">User</span>
+                        <small>Basic operations</small>
+                    </div>
+                    <div class="mb-3">
+                        <span class="badge bg-warning me-2">Manager</span>
+                        <small>Products, sales, reports</small>
+                    </div>
+                    <div class="mb-3">
+                        <span class="badge bg-success me-2">Pharmacist</span>
+                        <small>Sales & prescriptions</small>
+                    </div>
+                    <div class="mb-0">
+                        <span class="badge bg-info me-2">Staff</span>
+                        <small>Limited access</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .avatar-circle.large {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #007bff, #6c757d);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 28px;
+        }
+    </style>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function resetPassword() {
+            if (confirm('Reset password for this user? They will need to set a new password.')) {
+                alert('Password reset functionality will send reset instructions to the user.');
+            }
+        }
+    </script>
+}

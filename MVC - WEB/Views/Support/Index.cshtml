@@ -1,0 +1,150 @@
+@model MVC_WEB.Models.ViewModels.SupportIndexViewModel
+@{
+    ViewData["Title"] = "Support Tickets";
+}
+
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Support Tickets</h1>
+            <p class="text-muted mb-0">Manage and track your support requests</p>
+        </div>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-1"></i> New Ticket
+        </a>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-1">Total Tickets</h6>
+                            <h3 class="mb-0">@Model.TotalTickets</h3>
+                        </div>
+                        <i class="bi bi-ticket-perforated fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-1">Open Tickets</h6>
+                            <h3 class="mb-0">@Model.OpenTickets</h3>
+                        </div>
+                        <i class="bi bi-exclamation-circle fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-1">Closed Tickets</h6>
+                            <h3 class="mb-0">@Model.ClosedTickets</h3>
+                        </div>
+                        <i class="bi bi-check-circle fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="">All Status</option>
+                        <option value="Open" selected="@(Model.StatusFilter == "Open")">Open</option>
+                        <option value="In Progress" selected="@(Model.StatusFilter == "In Progress")">In Progress</option>
+                        <option value="Resolved" selected="@(Model.StatusFilter == "Resolved")">Resolved</option>
+                        <option value="Closed" selected="@(Model.StatusFilter == "Closed")">Closed</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="bi bi-funnel me-1"></i> Filter
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle me-1"></i> Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tickets Table -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>Tickets</h5>
+        </div>
+        <div class="card-body">
+            @if (Model.Tickets != null && Model.Tickets.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Ticket #</th>
+                                <th>Title</th>
+                                <th>Category</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var ticket in Model.Tickets.OrderByDescending(t => t.CreatedDate))
+                            {
+                                <tr>
+                                    <td><strong>@ticket.TicketNumber</strong></td>
+                                    <td>@ticket.Title</td>
+                                    <td><span class="badge bg-secondary">@ticket.Category</span></td>
+                                    <td>
+                                        <span class="badge bg-@(ticket.Priority == "High" ? "danger" : ticket.Priority == "Normal" ? "warning" : "info")">
+                                            @ticket.Priority
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-@(ticket.Status == "Closed" || ticket.Status == "Resolved" ? "success" : ticket.Status == "In Progress" ? "info" : "warning")">
+                                            @ticket.Status
+                                        </span>
+                                    </td>
+                                    <td>@ticket.CreatedDate.ToString("MMM dd, yyyy")</td>
+                                    <td>
+                                        <a asp-action="Details" asp-route-id="@ticket.TicketID" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center text-muted py-5">
+                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                    <h5>No Tickets Found</h5>
+                    <p>Create a new support ticket to get help.</p>
+                    <a asp-action="Create" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i> Create Ticket
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</div>

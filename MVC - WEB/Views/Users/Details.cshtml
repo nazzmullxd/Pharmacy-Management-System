@@ -1,0 +1,347 @@
+@model MVC_WEB.Models.ViewModels.UserDetailsViewModel
+@{
+    ViewData["Title"] = "User Details";
+}
+
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-user text-primary"></i> User Details</h1>
+            <p class="mb-0">View detailed information about this user</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="Edit" asp-route-id="@Model.User.UserID" class="btn btn-primary">
+                <i class="fas fa-edit"></i> Edit User
+            </a>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Users
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-4">
+        <!-- Profile Card -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body text-center py-4">
+                <div class="avatar-circle large mx-auto mb-3">
+                    @(Model.User.FullName?.Split(' ').Select(n => n.FirstOrDefault()).Take(2).Aggregate("", (acc, c) => acc + c))
+                </div>
+                <h4 class="mb-1">@Model.User.FullName</h4>
+                <p class="text-muted mb-2">
+                    <i class="fas fa-envelope me-1"></i>@Model.User.Email
+                </p>
+                @{
+                    var roleColor = Model.User.Role switch
+                    {
+                        "Admin" => "danger",
+                        "Manager" => "warning",
+                        "Pharmacist" => "success",
+                        "Staff" => "info",
+                        "User" => "primary",
+                        _ => "secondary"
+                    };
+                    var roleIcon = Model.User.Role switch
+                    {
+                        "Admin" => "fa-user-shield",
+                        "Manager" => "fa-user-tie",
+                        "Pharmacist" => "fa-user-md",
+                        "Staff" => "fa-user",
+                        "User" => "fa-user",
+                        _ => "fa-user"
+                    };
+                }
+                <span class="badge bg-@roleColor fs-6">
+                    <i class="fas @roleIcon me-1"></i>@Model.User.Role
+                </span>
+                
+                <hr class="my-4" />
+                
+                <div class="d-grid gap-2">
+                    <a asp-action="Edit" asp-route-id="@Model.User.UserID" class="btn btn-outline-primary">
+                        <i class="fas fa-edit me-1"></i> Edit Profile
+                    </a>
+                    <button type="button" class="btn btn-outline-warning" onclick="resetPassword()">
+                        <i class="fas fa-key me-1"></i> Reset Password
+                    </button>
+                    <a asp-action="Delete" asp-route-id="@Model.User.UserID" class="btn btn-outline-danger">
+                        <i class="fas fa-trash me-1"></i> Delete User
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Card -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h6 class="mb-0"><i class="fas fa-check-circle me-2"></i>Account Status</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span>Status</span>
+                    <span class="badge bg-success">Active</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span>Email Verified</span>
+                    <span class="badge bg-success"><i class="fas fa-check"></i></span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>Two-Factor Auth</span>
+                    <span class="badge bg-secondary">Disabled</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <!-- User Information -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>User Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted small">USER ID</label>
+                        <p class="mb-0 fw-semibold">
+                            <code>@Model.User.UserID</code>
+                        </p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted small">FULL NAME</label>
+                        <p class="mb-0 fw-semibold">@Model.User.FullName</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted small">FIRST NAME</label>
+                        <p class="mb-0">@Model.User.FirstName</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted small">LAST NAME</label>
+                        <p class="mb-0">@Model.User.LastName</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted small">EMAIL ADDRESS</label>
+                        <p class="mb-0">
+                            <a href="mailto:@Model.User.Email" class="text-decoration-none">
+                                <i class="fas fa-envelope me-1"></i>@Model.User.Email
+                            </a>
+                        </p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted small">ROLE</label>
+                        <p class="mb-0">
+                            <span class="badge bg-@roleColor">
+                                <i class="fas @roleIcon me-1"></i>@Model.User.Role
+                            </span>
+                        </p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted small">LAST LOGIN</label>
+                        <p class="mb-0">
+                            @if (Model.User.LastLoginDate != default)
+                            {
+                                <i class="fas fa-clock me-1 text-muted"></i>
+                                @Model.User.LastLoginDate.ToString("MMMM dd, yyyy 'at' hh:mm tt")
+                            }
+                            else
+                            {
+                                <span class="text-muted">Never logged in</span>
+                            }
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Permissions Overview -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Permissions Overview</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.User.Role == "Admin")
+                {
+                    <div class="alert alert-danger mb-3">
+                        <i class="fas fa-crown me-2"></i>
+                        <strong>Administrator:</strong> This user has full system access and can perform all operations.
+                    </div>
+                }
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-3">Module Access</h6>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>Dashboard
+                            </li>
+                            <li class="mb-2">
+                                @if (Model.User.Role == "Admin" || Model.User.Role == "Manager")
+                                {
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                }
+                                else
+                                {
+                                    <i class="fas fa-times-circle text-danger me-2"></i>
+                                }
+                                User Management
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>Products
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>Sales
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>Inventory
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-3">Action Permissions</h6>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>View Records
+                            </li>
+                            <li class="mb-2">
+                                @if (Model.User.Role == "Admin" || Model.User.Role == "Manager" || Model.User.Role == "Pharmacist")
+                                {
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                }
+                                else
+                                {
+                                    <i class="fas fa-times-circle text-danger me-2"></i>
+                                }
+                                Create Records
+                            </li>
+                            <li class="mb-2">
+                                @if (Model.User.Role == "Admin" || Model.User.Role == "Manager")
+                                {
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                }
+                                else
+                                {
+                                    <i class="fas fa-times-circle text-danger me-2"></i>
+                                }
+                                Edit Records
+                            </li>
+                            <li class="mb-2">
+                                @if (Model.User.Role == "Admin")
+                                {
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                }
+                                else
+                                {
+                                    <i class="fas fa-times-circle text-danger me-2"></i>
+                                }
+                                Delete Records
+                            </li>
+                            <li class="mb-2">
+                                @if (Model.User.Role == "Admin" || Model.User.Role == "Manager")
+                                {
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                }
+                                else
+                                {
+                                    <i class="fas fa-times-circle text-danger me-2"></i>
+                                }
+                                Generate Reports
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity Timeline (Placeholder) -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i>Recent Activity</h5>
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-success"></div>
+                        <div class="timeline-content">
+                            <p class="mb-0"><strong>Account Created</strong></p>
+                            <small class="text-muted">System account was created</small>
+                        </div>
+                    </div>
+                    @if (Model.User.LastLoginDate != default)
+                    {
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-info"></div>
+                            <div class="timeline-content">
+                                <p class="mb-0"><strong>Last Login</strong></p>
+                                <small class="text-muted">@Model.User.LastLoginDate.ToString("MMMM dd, yyyy 'at' hh:mm tt")</small>
+                            </div>
+                        </div>
+                    }
+                </div>
+                <div class="text-center mt-3">
+                    <small class="text-muted">Activity tracking will show more details here</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .avatar-circle.large {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #007bff, #6c757d);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 36px;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 20px;
+            border-left: 2px solid #e9ecef;
+            padding-left: 20px;
+            margin-left: 10px;
+        }
+
+        .timeline-item:last-child {
+            padding-bottom: 0;
+            border-left: 2px solid transparent;
+        }
+
+        .timeline-marker {
+            position: absolute;
+            left: -11px;
+            top: 0;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 0 0 2px #e9ecef;
+        }
+
+        .timeline-content {
+            padding-top: 0;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        function resetPassword() {
+            if (confirm('Reset password for @Model.User.FullName? They will receive reset instructions via email.')) {
+                alert('Password reset functionality will send reset instructions to the user.');
+            }
+        }
+    </script>
+}

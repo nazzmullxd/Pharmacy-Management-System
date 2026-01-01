@@ -1,0 +1,108 @@
+@{
+    ViewData["Title"] = "Access Denied";
+    Layout = "_Layout";
+    var role = Context.Session.GetString("role") ?? "User";
+}
+
+<div class="page-header">
+    <div class="d-flex align-items-center">
+        <div class="card-icon warning me-3">
+            <i class="fas fa-lock"></i>
+        </div>
+        <div>
+            <h1 class="text-warning mb-0">Access Denied</h1>
+            <p class="mb-0">You don't have permission to access this resource.</p>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-card">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="mb-4">
+                <h5 class="text-muted">What happened?</h5>
+                <p class="text-secondary">
+                    The page or action you're trying to access requires special permissions that your current role 
+                    (<span class="badge bg-primary">@role</span>) doesn't have.
+                </p>
+            </div>
+
+            <div class="mb-4">
+                <h5 class="text-muted">Why am I seeing this?</h5>
+                <ul class="text-secondary">
+                    <li>This feature is restricted to administrators only</li>
+                    <li>Your account may not have the necessary permissions</li>
+                    <li>The resource may have restricted access policies</li>
+                </ul>
+            </div>
+
+            <div class="mb-4">
+                <h5 class="text-muted">What can you do?</h5>
+                <ul class="text-secondary">
+                    <li>Return to the dashboard and access features available to you</li>
+                    <li>Contact your administrator if you believe you should have access</li>
+                    <li>Submit a support ticket for assistance</li>
+                </ul>
+            </div>
+
+            <div class="d-flex gap-3">
+                <a asp-controller="Dashboard" asp-action="Index" class="btn btn-primary">
+                    <i class="fas fa-home me-2"></i>Go to Dashboard
+                </a>
+                <button onclick="history.back()" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Go Back
+                </button>
+                <a asp-controller="Support" asp-action="Index" class="btn btn-outline-info">
+                    <i class="fas fa-life-ring me-2"></i>Contact Support
+                </a>
+            </div>
+        </div>
+        <div class="col-md-4 text-center d-none d-md-block">
+            <i class="fas fa-user-shield text-muted" style="font-size: 8rem; opacity: 0.2;"></i>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-card mt-4">
+    <h5><i class="fas fa-info-circle text-info me-2"></i>Available Features for Your Role</h5>
+    <p class="text-muted mb-3">Based on your current permissions, you can access:</p>
+    
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-tachometer-alt text-secondary me-2"></i>
+                <span>Dashboard</span>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-users text-secondary me-2"></i>
+                <span>View Customers</span>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-shopping-cart text-secondary me-2"></i>
+                <span>Create Sales</span>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-pills text-secondary me-2"></i>
+                <span>View Products</span>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-boxes text-secondary me-2"></i>
+                <span>View Stock</span>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-chart-line text-secondary me-2"></i>
+                <span>Sales Reports</span>
+            </div>
+        </div>
+    </div>
+</div>

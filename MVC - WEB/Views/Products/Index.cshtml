@@ -1,0 +1,741 @@
+@model MVC_WEB.Models.ViewModels.ProductListViewModel
+@{
+    ViewData["Title"] = ViewData["Title"] ?? "Products Management";
+    var isAdmin = Context.Session.GetString("role") == "Admin";
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <h1><i class="fas fa-pills text-primary"></i> @ViewData["Title"]</h1>
+            <p class="mb-0">Manage your pharmacy's product catalog, inventory, and pricing information</p>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            @if (isAdmin)
+            {
+                <a asp-action="Create" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add New Product
+                </a>
+            }
+            <a asp-action="Categories" class="btn btn-outline-info">
+                <i class="fas fa-tags"></i> Categories
+            </a>
+            <button type="button" class="btn btn-outline-secondary" onclick="exportProducts()">
+                <i class="fas fa-download"></i> Export
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions & Filters -->
+<div class="dashboard-card mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-4">
+            <h6 class="mb-2 text-muted">Quick Actions</h6>
+            <div class="d-flex gap-2 flex-wrap">
+                @if (isAdmin)
+                {
+                    <a asp-action="Create" class="btn btn-sm btn-success">
+                        <i class="fas fa-plus-circle"></i> Add Product
+                    </a>
+                }
+                <a asp-action="Categories" class="btn btn-sm btn-outline-info">
+                    <i class="fas fa-tags"></i> Categories
+                </a>
+                <button class="btn btn-sm btn-outline-secondary" onclick="window.location.reload()">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Filter by Category</label>
+                    <select class="form-select form-select-sm" id="categoryFilter">
+                        <option value="">All Categories</option>
+                        <option value="Antibiotics">Antibiotics</option>
+                        <option value="Pain Relief">Pain Relief</option>
+                        <option value="Vitamins">Vitamins</option>
+                        <option value="Cold & Flu">Cold & Flu</option>
+                        <option value="First Aid">First Aid</option>
+                        <option value="Supplements">Supplements</option>
+                        <option value="Digestive">Digestive</option>
+                        <option value="Diabetes">Diabetes</option>
+                        <option value="Cardiovascular">Cardiovascular</option>
+                        <option value="Respiratory">Respiratory</option>
+                        <option value="Dermatology">Dermatology</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Stock Status</label>
+                    <select class="form-select form-select-sm" id="stockFilter">
+                        <option value="">All Stock</option>
+                        <option value="in-stock">In Stock</option>
+                        <option value="low-stock">Low Stock</option>
+                        <option value="out-of-stock">Out of Stock</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Search Products</label>
+                    <div class="input-group input-group-sm">
+                        <input type="text" class="form-control" id="searchInput" placeholder="Product name, barcode...">
+                        <button class="btn btn-outline-secondary" type="button" id="searchBtn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Products Summary Cards -->
+<div class="kpi-grid mb-4">
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Total Products</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #3498db, #5dade2);">
+                <i class="fas fa-pills"></i>
+            </div>
+        </div>
+        <div class="kpi-value">@Model.TotalProducts</div>
+        <div class="kpi-change positive">
+            <i class="fas fa-chart-bar"></i> Active products
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">In Stock</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #27ae60, #2ecc71);">
+                <i class="fas fa-check-circle"></i>
+            </div>
+        </div>
+        <div class="kpi-value">@Model.InStockCount</div>
+        <div class="kpi-change positive">
+            <i class="fas fa-arrow-up"></i> Available products
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Low Stock</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #f39c12, #f7dc6f);">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+        </div>
+        <div class="kpi-value">@Model.LowStockCount</div>
+        <div class="kpi-change @(Model.LowStockCount > 5 ? "negative" : "")">
+            <i class="fas @(Model.LowStockCount > 5 ? "fa-exclamation-triangle" : "fa-check-circle")"></i> 
+            @(Model.LowStockCount > 5 ? "Needs attention" : "Under control")
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Out of Stock</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #e74c3c, #ec7063);">
+                <i class="fas fa-times-circle"></i>
+            </div>
+        </div>
+        <div class="kpi-value">@Model.OutOfStockCount</div>
+        <div class="kpi-change @(Model.OutOfStockCount > 0 ? "negative" : "positive")">
+            <i class="fas @(Model.OutOfStockCount > 0 ? "fa-exclamation-triangle" : "fa-check-circle")"></i> 
+            @(Model.OutOfStockCount > 0 ? "Immediate attention" : "All stocked")
+        </div>
+    </div>
+</div>
+
+<!-- Products Table -->
+<div class="table-container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0"><i class="fas fa-list text-primary"></i> All Products</h5>
+        <div class="d-flex align-items-center gap-3">
+            <small class="text-muted" id="resultsCount">
+                Showing @Model.TotalProducts products
+            </small>
+            <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-primary" onclick="toggleView('table')" id="tableViewBtn">
+                    <i class="fas fa-table"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="toggleView('card')" id="cardViewBtn">
+                    <i class="fas fa-th-large"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table View -->
+    <div id="tableView" class="table-responsive">
+        <table class="table table-hover" id="productsTable">
+            <thead class="table-light">
+                <tr>
+                    <th class="sortable" data-sort="0">
+                        <i class="fas fa-pills text-muted me-1"></i>Product Name
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="sortable" data-sort="1">
+                        <i class="fas fa-flask text-muted me-1"></i>Generic Name
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="sortable" data-sort="2">
+                        <i class="fas fa-tags text-muted me-1"></i>Category
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="sortable" data-sort="3">
+                        <i class="fas fa-industry text-muted me-1"></i>Manufacturer
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="text-end sortable" data-sort="4">
+                        <i class="fas fa-dollar-sign text-muted me-1"></i>Unit Price
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="text-center sortable" data-sort="5">
+                        <i class="fas fa-cubes text-muted me-1"></i>Stock
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="text-center">
+                        <i class="fas fa-toggle-on text-muted me-1"></i>Status
+                    </th>
+                    <th class="text-center" style="width: 150px;">
+                        <i class="fas fa-cogs text-muted me-1"></i>Actions
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Products != null && Model.Products.Any())
+                {
+                    @foreach (var product in Model.Products)
+                    {
+                        <tr class="product-row" data-product-id="@product.ProductID" 
+                            data-category="@product.Category.ToLower()" 
+                            data-stock="@(product.TotalStock == 0 ? "out-of-stock" : (product.IsLowStock ? "low-stock" : "in-stock"))">
+                            <td data-label="Product">
+                                <div class="product-info">
+                                    <div class="product-name fw-semibold">@product.ProductName</div>
+                                    @if (!string.IsNullOrEmpty(product.Barcode))
+                                    {
+                                        <small class="product-barcode text-muted">
+                                            <i class="fas fa-barcode me-1"></i>@product.Barcode
+                                        </small>
+                                    }
+                                </div>
+                            </td>
+                            <td data-label="Generic Name">
+                                <div class="generic-name">@product.GenericName</div>
+                            </td>
+                            <td data-label="Category">
+                                <span class="badge bg-info category-badge">
+                                    <i class="fas fa-tag me-1"></i>@product.Category
+                                </span>
+                            </td>
+                            <td data-label="Manufacturer">
+                                <div class="manufacturer-name">@product.Manufacturer</div>
+                            </td>
+                            <td class="text-end" data-label="Price">
+                                <strong class="product-price">৳@product.UnitPrice.ToString("F2")</strong>
+                            </td>
+                            <td class="text-center" data-label="Stock">
+                                @if (product.TotalStock == 0)
+                                {
+                                    <span class="badge bg-danger stock-badge">
+                                        <i class="fas fa-times-circle me-1"></i>Out of Stock
+                                    </span>
+                                }
+                                else if (product.IsLowStock)
+                                {
+                                    <span class="badge bg-warning stock-badge">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>@product.TotalStock (Low)
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success stock-badge">
+                                        <i class="fas fa-check-circle me-1"></i>@product.TotalStock
+                                    </span>
+                                }
+                            </td>
+                            <td class="text-center" data-label="Status">
+                                @if (product.IsActive)
+                                {
+                                    <span class="badge bg-success status-badge">
+                                        <i class="fas fa-check-circle me-1"></i>Active
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary status-badge">
+                                        <i class="fas fa-pause-circle me-1"></i>Inactive
+                                    </span>
+                                }
+                            </td>
+                            <td data-label="Actions">
+                                <div class="action-buttons d-flex gap-1 justify-content-center">
+                                    <a asp-action="Details" asp-route-id="@product.ProductID" 
+                                       class="btn btn-sm btn-outline-info" 
+                                       title="View Details"
+                                       data-bs-toggle="tooltip">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    @if (isAdmin)
+                                    {
+                                        <a asp-action="Edit" asp-route-id="@product.ProductID" 
+                                           class="btn btn-sm btn-outline-primary" 
+                                           title="Edit Product"
+                                           data-bs-toggle="tooltip">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                                                    type="button" 
+                                                    data-bs-toggle="dropdown" 
+                                                    aria-expanded="false"
+                                                    title="More Actions">
+                                                <i class="fas fa-ellipsis-v"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                <li>
+                                                    <a class="dropdown-item" asp-action="Details" asp-route-id="@product.ProductID">
+                                                        <i class="fas fa-eye me-2"></i>View Details
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a class="dropdown-item" asp-action="Edit" asp-route-id="@product.ProductID">
+                                                        <i class="fas fa-edit me-2"></i>Edit Product
+                                                    </a>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li>
+                                                    <a class="dropdown-item" asp-controller="Stock" asp-action="Batches" asp-route-productId="@product.ProductID">
+                                                        <i class="fas fa-boxes me-2"></i>Manage Batches
+                                                    </a>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li>
+                                                    <a class="dropdown-item text-danger" asp-action="Delete" asp-route-id="@product.ProductID">
+                                                        <i class="fas fa-trash me-2"></i>Delete Product
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr id="emptyRow">
+                        <td colspan="8" class="text-center py-5">
+                            <div class="empty-state">
+                                <i class="fas fa-pills fa-3x text-muted mb-3"></i>
+                                <h6 class="text-muted">No products found</h6>
+                                <p class="text-muted mb-3">Get started by adding your first product to the catalog</p>
+                                @if (isAdmin)
+                                {
+                                    <a asp-action="Create" class="btn btn-primary">
+                                        <i class="fas fa-plus"></i> Add First Product
+                                    </a>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Card View -->
+    <div id="cardView" style="display: none;" class="row">
+        @if (Model.Products != null && Model.Products.Any())
+        {
+            @foreach (var product in Model.Products)
+            {
+                <div class="col-lg-6 col-xl-4 mb-3 product-card-wrapper" 
+                     data-product-id="@product.ProductID"
+                     data-category="@product.Category.ToLower()"
+                     data-stock="@(product.TotalStock == 0 ? "out-of-stock" : (product.IsLowStock ? "low-stock" : "in-stock"))">
+                    <div class="card product-card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0 product-name-card">@product.ProductName</h6>
+                            @if (product.IsActive)
+                            {
+                                <span class="badge bg-success">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Inactive</span>
+                            }
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <p class="mb-1 generic-name-card"><strong>@product.GenericName</strong></p>
+                                    <small class="text-muted category-card">@product.Category</small>
+                                </div>
+                                <h5 class="text-primary mb-0">৳@product.UnitPrice.ToString("F2")</h5>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                @if (product.TotalStock == 0)
+                                {
+                                    <span class="badge bg-danger">Out of Stock</span>
+                                }
+                                else if (product.IsLowStock)
+                                {
+                                    <span class="badge bg-warning">@product.TotalStock (Low)</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">@product.TotalStock in stock</span>
+                                }
+                                <small class="text-muted manufacturer-card">by @product.Manufacturer</small>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <div class="d-flex gap-1">
+                                <a asp-action="Details" asp-route-id="@product.ProductID" class="btn btn-sm btn-outline-info flex-fill">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                                @if (isAdmin)
+                                {
+                                    <a asp-action="Edit" asp-route-id="@product.ProductID" class="btn btn-sm btn-outline-primary flex-fill">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .product-card {
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .product-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+        }
+
+        .dashboard-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .kpi-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e9ecef;
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .kpi-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .kpi-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .kpi-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.25rem;
+        }
+
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #212529;
+            margin-bottom: 0.5rem;
+        }
+
+        .kpi-change {
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .kpi-change.positive { color: #28a745; }
+        .kpi-change.negative { color: #dc3545; }
+
+        .sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .sortable:hover {
+            background-color: #f8f9fa;
+        }
+
+        /* Mobile responsive */
+        @@media (max-width: 768px) {
+            .page-header .d-flex {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+
+        // Filter functionality
+        document.getElementById('categoryFilter').addEventListener('change', filterProducts);
+        document.getElementById('stockFilter').addEventListener('change', filterProducts);
+        document.getElementById('searchInput').addEventListener('input', debounce(filterProducts, 300));
+        document.getElementById('searchBtn').addEventListener('click', filterProducts);
+
+        function filterProducts() {
+            const categoryFilter = document.getElementById('categoryFilter').value.toLowerCase();
+            const stockFilter = document.getElementById('stockFilter').value.toLowerCase();
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
+            // Filter table rows
+            const rows = document.querySelectorAll('#productsTable tbody tr.product-row');
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const category = row.getAttribute('data-category') || '';
+                const stock = row.getAttribute('data-stock') || '';
+                const productName = row.querySelector('.product-name')?.textContent.toLowerCase() || '';
+                const genericName = row.querySelector('.generic-name')?.textContent.toLowerCase() || '';
+                const barcode = row.querySelector('.product-barcode')?.textContent.toLowerCase() || '';
+                const manufacturer = row.querySelector('.manufacturer-name')?.textContent.toLowerCase() || '';
+
+                let shouldShow = true;
+
+                if (categoryFilter && !category.includes(categoryFilter)) {
+                    shouldShow = false;
+                }
+
+                if (stockFilter && stock !== stockFilter) {
+                    shouldShow = false;
+                }
+
+                if (searchTerm) {
+                    const searchableText = productName + ' ' + genericName + ' ' + barcode + ' ' + manufacturer;
+                    if (!searchableText.includes(searchTerm)) {
+                        shouldShow = false;
+                    }
+                }
+
+                row.style.display = shouldShow ? '' : 'none';
+                if (shouldShow) visibleCount++;
+            });
+
+            // Filter card view
+            const cards = document.querySelectorAll('.product-card-wrapper');
+            cards.forEach(card => {
+                const category = card.getAttribute('data-category') || '';
+                const stock = card.getAttribute('data-stock') || '';
+                const productName = card.querySelector('.product-name-card')?.textContent.toLowerCase() || '';
+                const genericName = card.querySelector('.generic-name-card')?.textContent.toLowerCase() || '';
+
+                let shouldShow = true;
+
+                if (categoryFilter && !category.includes(categoryFilter)) {
+                    shouldShow = false;
+                }
+
+                if (stockFilter && stock !== stockFilter) {
+                    shouldShow = false;
+                }
+
+                if (searchTerm && !productName.includes(searchTerm) && !genericName.includes(searchTerm)) {
+                    shouldShow = false;
+                }
+
+                card.style.display = shouldShow ? '' : 'none';
+            });
+
+            document.getElementById('resultsCount').textContent = `Showing ${visibleCount} products`;
+        }
+
+        // View toggle
+        function toggleView(viewType) {
+            const tableView = document.getElementById('tableView');
+            const cardView = document.getElementById('cardView');
+            const tableBtn = document.getElementById('tableViewBtn');
+            const cardBtn = document.getElementById('cardViewBtn');
+
+            if (viewType === 'table') {
+                tableView.style.display = 'block';
+                cardView.style.display = 'none';
+                tableBtn.classList.add('btn-primary');
+                tableBtn.classList.remove('btn-outline-secondary');
+                cardBtn.classList.add('btn-outline-secondary');
+                cardBtn.classList.remove('btn-primary');
+            } else {
+                tableView.style.display = 'none';
+                cardView.style.display = 'flex';
+                cardView.classList.add('row');
+                cardBtn.classList.add('btn-primary');
+                cardBtn.classList.remove('btn-outline-secondary');
+                tableBtn.classList.add('btn-outline-secondary');
+                tableBtn.classList.remove('btn-primary');
+            }
+
+            localStorage.setItem('productsViewPreference', viewType);
+        }
+
+        // Restore view preference
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedView = localStorage.getItem('productsViewPreference') || 'table';
+            toggleView(savedView);
+        });
+
+        // Export functionality
+        function exportProducts() {
+            const visibleRows = Array.from(document.querySelectorAll('#productsTable tbody tr.product-row'))
+                .filter(row => row.style.display !== 'none');
+
+            if (visibleRows.length === 0) {
+                alert('No data to export');
+                return;
+            }
+
+            let csv = 'Product Name,Generic Name,Category,Manufacturer,Unit Price,Stock,Status\n';
+            visibleRows.forEach(row => {
+                const name = row.querySelector('.product-name')?.textContent.trim() || '';
+                const generic = row.querySelector('.generic-name')?.textContent.trim() || '';
+                const category = row.querySelector('.category-badge')?.textContent.trim() || '';
+                const manufacturer = row.querySelector('.manufacturer-name')?.textContent.trim() || '';
+                const price = row.querySelector('.product-price')?.textContent.trim() || '';
+                const stock = row.querySelector('.stock-badge')?.textContent.trim() || '';
+                const status = row.querySelector('.status-badge')?.textContent.trim() || '';
+                csv += `"${name}","${generic}","${category}","${manufacturer}","${price}","${stock}","${status}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'products_export_' + new Date().toISOString().split('T')[0] + '.csv';
+            a.click();
+        }
+
+        // Debounce function
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Sort functionality
+        document.querySelectorAll('.sortable').forEach(header => {
+            header.addEventListener('click', function() {
+                const columnIndex = parseInt(this.getAttribute('data-sort'));
+
+                let sortDirection = 'asc';
+                if (this.classList.contains('sort-asc')) {
+                    sortDirection = 'desc';
+                    this.classList.remove('sort-asc');
+                    this.classList.add('sort-desc');
+                } else {
+                    sortDirection = 'asc';
+                    this.classList.remove('sort-desc');
+                    this.classList.add('sort-asc');
+                }
+
+                document.querySelectorAll('.sortable').forEach(h => {
+                    if (h !== this) {
+                        h.classList.remove('sort-asc', 'sort-desc');
+                    }
+                });
+
+                sortTable(columnIndex, sortDirection);
+            });
+        });
+
+        function sortTable(columnIndex, direction) {
+            const tbody = document.querySelector('#productsTable tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr.product-row'));
+
+            rows.sort((a, b) => {
+                let aVal, bVal;
+
+                if (columnIndex === 4) {
+                    // Price column - numeric sort
+                    aVal = parseFloat(a.querySelector('.product-price')?.textContent.replace(/[^\d.]/g, '') || '0');
+                    bVal = parseFloat(b.querySelector('.product-price')?.textContent.replace(/[^\d.]/g, '') || '0');
+                } else if (columnIndex === 5) {
+                    // Stock column - numeric sort
+                    aVal = parseInt(a.querySelector('.stock-badge')?.textContent.replace(/\D/g, '') || '0');
+                    bVal = parseInt(b.querySelector('.stock-badge')?.textContent.replace(/\D/g, '') || '0');
+                } else {
+                    aVal = a.cells[columnIndex]?.textContent.trim() || '';
+                    bVal = b.cells[columnIndex]?.textContent.trim() || '';
+                }
+
+                if (typeof aVal === 'number') {
+                    return direction === 'asc' ? aVal - bVal : bVal - aVal;
+                }
+
+                const comparison = aVal.toString().localeCompare(bVal.toString());
+                return direction === 'asc' ? comparison : -comparison;
+            });
+
+            rows.forEach(row => tbody.appendChild(row));
+        }
+    </script>
+}

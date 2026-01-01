@@ -1,0 +1,464 @@
+@model MVC_WEB.Models.ViewModels.SalesCreateViewModel
+@{
+    ViewData["Title"] = "Create Sale";
+}
+
+<!-- Page Header -->
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">
+            <i class="fas fa-plus-circle text-primary"></i> Create New Sale
+        </h1>
+        <p class="text-muted mb-0">Add products and complete the sale transaction</p>
+    </div>
+    <div>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Sales
+        </a>
+    </div>
+</div>
+
+<!-- Success/Error Messages -->
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<form asp-action="Create" method="post" id="saleForm">
+    @Html.AntiForgeryToken()
+    
+    <!-- Customer & Product Selection Row -->
+    <div class="row g-4 mb-4">
+        <!-- Customer Selection -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user text-primary me-2"></i>Customer Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Select Customer</label>
+                        <select asp-for="SelectedCustomerID" class="form-select" id="customerSelect" onchange="updateCustomerName()">
+                            <option value="">-- Walk-in Customer --</option>
+                            @foreach (var customer in Model.Customers)
+                            {
+                                <option value="@customer.CustomerID" 
+                                        data-name="@customer.CustomerName"
+                                        selected="@(Model.SelectedCustomerID == customer.CustomerID)">
+                                    @customer.CustomerName
+                                    @if (!string.IsNullOrEmpty(customer.ContactNumber) && customer.ContactNumber != "N/A")
+                                    {
+                                        <text> - @customer.ContactNumber</text>
+                                    }
+                                </option>
+                            }
+                        </select>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle"></i> Select existing customer or leave empty for walk-in
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Or Enter Customer Name</label>
+                        <input asp-for="Sale.CustomerName" class="form-control" placeholder="Enter customer name for new customer">
+                        <input type="hidden" asp-for="Sale.CustomerID" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Selection -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-pills text-primary me-2"></i>Add Product
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Select Product</label>
+                        <select asp-for="ProductIdToAdd" class="form-select" id="productSelect" onchange="updateProductInfo()">
+                            <option value="">-- Select Product --</option>
+                            @foreach (var product in Model.Products)
+                            {
+                                <option value="@product.ProductID" 
+                                        data-stock="@product.TotalStock" 
+                                        data-price="@product.UnitPrice"
+                                        data-name="@product.ProductName"
+                                        class="@(product.TotalStock <= 0 ? "text-danger" : "")">
+                                    @product.ProductName - $@product.UnitPrice.ToString("N2") 
+                                    (Stock: @product.TotalStock)
+                                    @if (product.TotalStock <= 0)
+                                    {
+                                        <text> - OUT OF STOCK</text>
+                                    }
+                                    else if (product.IsLowStock)
+                                    {
+                                        <text> - LOW STOCK</text>
+                                    }
+                                </option>
+                            }
+                        </select>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Quantity</label>
+                            <div class="input-group">
+                                <button class="btn btn-outline-secondary" type="button" onclick="adjustQuantity(-1)">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <input asp-for="QuantityToAdd" type="number" min="1" class="form-control text-center" id="quantityInput">
+                                <button class="btn btn-outline-secondary" type="button" onclick="adjustQuantity(1)">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Available Stock</label>
+                            <div class="form-control bg-light" id="stockInfo">
+                                <span class="text-muted">Select product</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" asp-action="AddItem" class="btn btn-success w-100" id="addItemBtn">
+                        <i class="fas fa-cart-plus"></i> Add to Cart
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cart Items -->
+    @if (Model.Sale.SaleItems != null && Model.Sale.SaleItems.Any())
+    {
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-shopping-cart text-primary me-2"></i>Cart Items
+                    <span class="badge bg-primary ms-2">@Model.TotalItems</span>
+                </h5>
+                <span class="text-success fw-bold">Total: $@Model.Sale.TotalAmount.ToString("N2")</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 30%;">
+                                    <i class="fas fa-pills text-muted me-1"></i>Product
+                                </th>
+                                <th class="text-center" style="width: 12%;">
+                                    <i class="fas fa-sort-numeric-up text-muted me-1"></i>Qty
+                                </th>
+                                <th class="text-end" style="width: 15%;">
+                                    <i class="fas fa-dollar-sign text-muted me-1"></i>Unit Price
+                                </th>
+                                <th class="text-end" style="width: 15%;">
+                                    <i class="fas fa-percentage text-muted me-1"></i>Discount
+                                </th>
+                                <th class="text-end" style="width: 15%;">
+                                    <i class="fas fa-calculator text-muted me-1"></i>Total
+                                </th>
+                                <th style="width: 8%;">Batch</th>
+                                <th class="text-center" style="width: 5%;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (int i = 0; i < Model.Sale.SaleItems.Count; i++)
+                            {
+                                var item = Model.Sale.SaleItems[i];
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold">@item.ProductName</div>
+                                        <small class="text-muted">
+                                            <i class="fas fa-barcode me-1"></i>ID: @item.ProductID.ToString().Substring(0, 8)
+                                        </small>
+                                        <input type="hidden" name="Sale.SaleItems[@i].ProductID" value="@item.ProductID" />
+                                        <input type="hidden" name="Sale.SaleItems[@i].ProductName" value="@item.ProductName" />
+                                        <input type="hidden" name="Sale.SaleItems[@i].SaleItemID" value="@item.SaleItemID" />
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="input-group input-group-sm" style="width: 100px; margin: 0 auto;">
+                                            <input type="number" name="Sale.SaleItems[@i].Quantity" 
+                                                   value="@item.Quantity" min="1" 
+                                                   class="form-control text-center item-quantity"
+                                                   data-index="@i"
+                                                   onchange="recalculateItemTotal(@i)" />
+                                        </div>
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" name="Sale.SaleItems[@i].UnitPrice" 
+                                                   value="@item.UnitPrice" step="0.01" min="0"
+                                                   class="form-control text-end item-price"
+                                                   data-index="@i"
+                                                   onchange="recalculateItemTotal(@i)" />
+                                        </div>
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" name="Sale.SaleItems[@i].Discount" 
+                                                   value="@item.Discount" step="0.01" min="0"
+                                                   class="form-control text-end item-discount"
+                                                   data-index="@i"
+                                                   onchange="recalculateItemTotal(@i)" />
+                                        </div>
+                                    </td>
+                                    <td class="text-end">
+                                        <strong class="text-success item-total" data-index="@i">
+                                            $@item.TotalPrice.ToString("N2")
+                                        </strong>
+                                        <input type="hidden" name="Sale.SaleItems[@i].TotalPrice" value="@item.TotalPrice" class="hidden-total" data-index="@i" />
+                                    </td>
+                                    <td>
+                                        <input type="text" name="Sale.SaleItems[@i].BatchNumber" 
+                                               value="@item.BatchNumber"
+                                               class="form-control form-control-sm" 
+                                               placeholder="Batch #" />
+                                    </td>
+                                    <td class="text-center">
+                                        <button type="submit" asp-action="RemoveItem" asp-route-index="@i" 
+                                                class="btn btn-sm btn-outline-danger"
+                                                onclick="return confirm('Remove this item from the cart?')">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr class="fw-bold">
+                                <td colspan="4" class="text-end">
+                                    <div class="d-flex justify-content-end align-items-center gap-4">
+                                        <span>Subtotal:</span>
+                                        <span>Discount:</span>
+                                        <span class="fs-5">Total:</span>
+                                    </div>
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-flex flex-column align-items-end gap-1">
+                                        <span id="subtotalAmount">$@Model.Subtotal.ToString("N2")</span>
+                                        <span class="text-danger" id="discountAmount">-$@Model.TotalDiscount.ToString("N2")</span>
+                                        <span class="fs-5 text-success" id="grandTotal">$@Model.Sale.TotalAmount.ToString("N2")</span>
+                                    </div>
+                                </td>
+                                <td colspan="2"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment & Notes Section -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-credit-card text-primary me-2"></i>Payment Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Payment Status</label>
+                            <select asp-for="Sale.PaymentStatus" class="form-select">
+                                <option value="Paid">💳 Paid (Full Payment)</option>
+                                <option value="Pending">⏳ Pending (Pay Later)</option>
+                                <option value="Partial">💰 Partial Payment</option>
+                            </select>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle"></i> Select the current payment status for this sale
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-sticky-note text-primary me-2"></i>Additional Notes
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Sale Notes</label>
+                            <textarea asp-for="Sale.Note" class="form-control" rows="3" 
+                                      placeholder="Add any special instructions or notes about this sale..."></textarea>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle"></i> Optional notes for future reference
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-shopping-cart fa-4x text-muted mb-3"></i>
+                <h5 class="text-muted">No Items in Cart</h5>
+                <p class="text-muted mb-4">Start by adding products to create your sale order</p>
+                <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('productSelect').focus()">
+                    <i class="fas fa-search"></i> Browse Products
+                </button>
+            </div>
+        </div>
+    }
+
+    <!-- Validation Summary -->
+    <div asp-validation-summary="All" class="alert alert-danger" style="display: none;"></div>
+
+    <!-- Action Buttons -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex gap-2">
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </div>
+                
+                @if (Model.Sale.SaleItems != null && Model.Sale.SaleItems.Any())
+                {
+                    <div class="d-flex gap-2 align-items-center">
+                        <div class="text-end me-3">
+                            <div class="small text-muted">Order Total</div>
+                            <div class="h4 mb-0 text-success fw-bold" id="finalTotal">$@Model.Sale.TotalAmount.ToString("N2")</div>
+                        </div>
+                        <button type="submit" class="btn btn-success btn-lg px-4">
+                            <i class="fas fa-check-circle"></i> Complete Sale
+                        </button>
+                        <div class="dropdown">
+                            <button class="btn btn-outline-success dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <button class="dropdown-item" type="submit" name="handler" value="SaveAndPrint">
+                                        <i class="fas fa-print me-2"></i>Complete & Print
+                                    </button>
+                                </li>
+                                <li>
+                                    <button class="dropdown-item" type="submit" name="handler" value="SaveAndNew">
+                                        <i class="fas fa-plus me-2"></i>Complete & New Sale
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        function updateCustomerName() {
+            var select = document.getElementById('customerSelect');
+            var option = select.options[select.selectedIndex];
+            var nameInput = document.querySelector('[name="Sale.CustomerName"]');
+            var idInput = document.querySelector('[name="Sale.CustomerID"]');
+            
+            if (option && option.value) {
+                nameInput.value = option.getAttribute('data-name') || '';
+                idInput.value = option.value;
+            } else {
+                nameInput.value = '';
+                idInput.value = '';
+            }
+        }
+
+        function updateProductInfo() {
+            var select = document.getElementById('productSelect');
+            var option = select.options[select.selectedIndex];
+            var stockInfo = document.getElementById('stockInfo');
+            var addBtn = document.getElementById('addItemBtn');
+            
+            if (option && option.value) {
+                var stock = parseInt(option.getAttribute('data-stock')) || 0;
+                var price = parseFloat(option.getAttribute('data-price')) || 0;
+                
+                if (stock <= 0) {
+                    stockInfo.innerHTML = '<span class="text-danger"><i class="fas fa-exclamation-triangle"></i> Out of Stock</span>';
+                    addBtn.disabled = true;
+                } else if (stock <= 10) {
+                    stockInfo.innerHTML = '<span class="text-warning"><i class="fas fa-exclamation-circle"></i> ' + stock + ' units (Low)</span>';
+                    addBtn.disabled = false;
+                } else {
+                    stockInfo.innerHTML = '<span class="text-success"><i class="fas fa-check-circle"></i> ' + stock + ' units</span>';
+                    addBtn.disabled = false;
+                }
+            } else {
+                stockInfo.innerHTML = '<span class="text-muted">Select product</span>';
+                addBtn.disabled = false;
+            }
+        }
+
+        function adjustQuantity(delta) {
+            var input = document.getElementById('quantityInput');
+            var newValue = Math.max(1, parseInt(input.value || 1) + delta);
+            input.value = newValue;
+        }
+
+        function recalculateItemTotal(index) {
+            var quantity = parseFloat(document.querySelector('.item-quantity[data-index="' + index + '"]').value) || 0;
+            var price = parseFloat(document.querySelector('.item-price[data-index="' + index + '"]').value) || 0;
+            var discount = parseFloat(document.querySelector('.item-discount[data-index="' + index + '"]').value) || 0;
+            
+            var total = (quantity * price) - discount;
+            if (total < 0) total = 0;
+            
+            document.querySelector('.item-total[data-index="' + index + '"]').textContent = '$' + total.toFixed(2);
+            document.querySelector('.hidden-total[data-index="' + index + '"]').value = total;
+            
+            recalculateGrandTotal();
+        }
+
+        function recalculateGrandTotal() {
+            var subtotal = 0;
+            var totalDiscount = 0;
+            
+            document.querySelectorAll('.item-quantity').forEach(function(qtyInput) {
+                var index = qtyInput.getAttribute('data-index');
+                var qty = parseFloat(qtyInput.value) || 0;
+                var price = parseFloat(document.querySelector('.item-price[data-index="' + index + '"]').value) || 0;
+                var discount = parseFloat(document.querySelector('.item-discount[data-index="' + index + '"]').value) || 0;
+                
+                subtotal += qty * price;
+                totalDiscount += discount;
+            });
+            
+            var grandTotal = subtotal - totalDiscount;
+            if (grandTotal < 0) grandTotal = 0;
+            
+            document.getElementById('subtotalAmount').textContent = '$' + subtotal.toFixed(2);
+            document.getElementById('discountAmount').textContent = '-$' + totalDiscount.toFixed(2);
+            document.getElementById('grandTotal').textContent = '$' + grandTotal.toFixed(2);
+            document.getElementById('finalTotal').textContent = '$' + grandTotal.toFixed(2);
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateProductInfo();
+        });
+    </script>
+}

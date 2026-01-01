@@ -1,0 +1,267 @@
+@model MVC_WEB.Models.ViewModels.ProductDetailsViewModel
+@{
+    ViewData["Title"] = "Product Details";
+    var isAdmin = Context.Session.GetString("role") == "Admin";
+}
+
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-pills text-primary"></i> Product Details</h1>
+            <p class="mb-0">View detailed information about this product</p>
+        </div>
+        <div class="d-flex gap-2">
+            @if (isAdmin)
+            {
+                <a asp-action="Edit" asp-route-id="@Model.Product.ProductID" class="btn btn-primary">
+                    <i class="fas fa-edit"></i> Edit Product
+                </a>
+            }
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Products
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-4">
+        <!-- Product Card -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body text-center py-4">
+                <div class="product-icon mb-3">
+                    <i class="fas fa-pills fa-5x text-primary"></i>
+                </div>
+                <h4 class="mb-1">@Model.Product.ProductName</h4>
+                <p class="text-muted mb-2">@Model.Product.GenericName</p>
+                <span class="badge bg-info mb-2">@Model.Product.Category</span>
+                
+                @if (Model.Product.IsActive)
+                {
+                    <span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>Active</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary"><i class="fas fa-pause-circle me-1"></i>Inactive</span>
+                }
+                
+                <hr class="my-4" />
+                
+                <div class="row text-center">
+                    <div class="col-6 border-end">
+                        @if (Model.Product.TotalStock == 0)
+                        {
+                            <h4 class="mb-0 text-danger">0</h4>
+                            <small class="text-muted">Out of Stock</small>
+                        }
+                        else if (Model.Product.IsLowStock)
+                        {
+                            <h4 class="mb-0 text-warning">@Model.Product.TotalStock</h4>
+                            <small class="text-muted">Low Stock</small>
+                        }
+                        else
+                        {
+                            <h4 class="mb-0 text-success">@Model.Product.TotalStock</h4>
+                            <small class="text-muted">In Stock</small>
+                        }
+                    </div>
+                    <div class="col-6">
+                        <h4 class="mb-0 text-primary">৳@Model.Product.DefaultRetailPrice.ToString("F2")</h4>
+                        <small class="text-muted">Retail Price</small>
+                    </div>
+                </div>
+                
+                @if (isAdmin)
+                {
+                    <hr class="my-4" />
+                    
+                    <div class="d-grid gap-2">
+                        <a asp-action="Edit" asp-route-id="@Model.Product.ProductID" class="btn btn-outline-primary">
+                            <i class="fas fa-edit me-1"></i> Edit Product
+                        </a>
+                        <a asp-controller="Stock" asp-action="Batches" asp-route-productId="@Model.Product.ProductID" class="btn btn-outline-info">
+                            <i class="fas fa-boxes me-1"></i> Manage Batches
+                        </a>
+                        <a asp-action="Delete" asp-route-id="@Model.Product.ProductID" class="btn btn-outline-danger">
+                            <i class="fas fa-trash me-1"></i> Delete Product
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Stock Alert -->
+        @if (Model.Product.TotalStock == 0)
+        {
+            <div class="alert alert-danger">
+                <i class="fas fa-times-circle me-2"></i>
+                <strong>Out of Stock!</strong>
+                <p class="mb-0 small">This product is currently out of stock and unavailable for sale.</p>
+            </div>
+        }
+        else if (Model.Product.IsLowStock)
+        {
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Low Stock Alert!</strong>
+                <p class="mb-0 small">Current stock (@Model.Product.TotalStock) is at or below the threshold (@Model.Product.LowStockThreshold).</p>
+            </div>
+        }
+    </div>
+
+    <div class="col-lg-8">
+        <!-- Product Information -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Product Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted small">PRODUCT ID</label>
+                        <p class="mb-0"><code>@Model.Product.ProductID</code></p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted small">PRODUCT NAME</label>
+                        <p class="mb-0 fw-semibold">@Model.Product.ProductName</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted small">GENERIC NAME</label>
+                        <p class="mb-0">@Model.Product.GenericName</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted small">MANUFACTURER</label>
+                        <p class="mb-0">
+                            <i class="fas fa-industry me-1 text-muted"></i>@Model.Product.Manufacturer
+                        </p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted small">CATEGORY</label>
+                        <p class="mb-0">
+                            <span class="badge bg-info">@Model.Product.Category</span>
+                        </p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted small">BARCODE</label>
+                        <p class="mb-0">
+                            @if (!string.IsNullOrEmpty(Model.Product.Barcode))
+                            {
+                                <i class="fas fa-barcode me-1 text-muted"></i>@Model.Product.Barcode
+                            }
+                            else
+                            {
+                                <span class="text-muted">Not set</span>
+                            }
+                        </p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted small">LOW STOCK THRESHOLD</label>
+                        <p class="mb-0">
+                            <i class="fas fa-exclamation-triangle me-1 text-warning"></i>@Model.Product.LowStockThreshold units
+                        </p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted small">CREATED DATE</label>
+                        <p class="mb-0">
+                            <i class="fas fa-calendar me-1 text-muted"></i>@Model.Product.CreatedDate.ToString("MMMM dd, yyyy")
+                        </p>
+                    </div>
+                    @if (!string.IsNullOrEmpty(Model.Product.Description))
+                    {
+                        <div class="col-12">
+                            <label class="form-label text-muted small">DESCRIPTION</label>
+                            <p class="mb-0">@Model.Product.Description</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Pricing Information -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-dollar-sign me-2"></i>Pricing Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 text-center mb-3">
+                        <div class="p-3 bg-light rounded">
+                            <h6 class="text-muted mb-2">Unit Price (Cost)</h6>
+                            <h3 class="mb-0 text-secondary">৳@Model.Product.UnitPrice.ToString("F2")</h3>
+                            <small class="text-muted">Purchase price</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-center mb-3">
+                        <div class="p-3 bg-light rounded">
+                            <h6 class="text-muted mb-2">Retail Price</h6>
+                            <h3 class="mb-0 text-success">৳@Model.Product.DefaultRetailPrice.ToString("F2")</h3>
+                            @{
+                                var retailMargin = Model.Product.UnitPrice > 0 
+                                    ? ((Model.Product.DefaultRetailPrice - Model.Product.UnitPrice) / Model.Product.UnitPrice * 100).ToString("F1")
+                                    : "0";
+                            }
+                            <small class="text-success">+@retailMargin% margin</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-center mb-3">
+                        <div class="p-3 bg-light rounded">
+                            <h6 class="text-muted mb-2">Wholesale Price</h6>
+                            <h3 class="mb-0 text-info">৳@Model.Product.DefaultWholeSalePrice.ToString("F2")</h3>
+                            @{
+                                var wholesaleMargin = Model.Product.UnitPrice > 0 
+                                    ? ((Model.Product.DefaultWholeSalePrice - Model.Product.UnitPrice) / Model.Product.UnitPrice * 100).ToString("F1")
+                                    : "0";
+                            }
+                            <small class="text-info">+@wholesaleMargin% margin</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stock Information -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-cubes me-2"></i>Stock Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 text-center mb-3">
+                        <div class="p-3 rounded @(Model.Product.TotalStock == 0 ? "bg-danger text-white" : Model.Product.IsLowStock ? "bg-warning" : "bg-success text-white")">
+                            <h6 class="mb-2">Current Stock</h6>
+                            <h2 class="mb-0">@Model.Product.TotalStock</h2>
+                            <small>units</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-center mb-3">
+                        <div class="p-3 bg-light rounded">
+                            <h6 class="text-muted mb-2">Stock Threshold</h6>
+                            <h2 class="mb-0 text-warning">@Model.Product.LowStockThreshold</h2>
+                            <small class="text-muted">minimum units</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-center mb-3">
+                        <div class="p-3 bg-light rounded">
+                            <h6 class="text-muted mb-2">Stock Value</h6>
+                            <h2 class="mb-0 text-primary">৳@((Model.Product.TotalStock * Model.Product.UnitPrice).ToString("F2"))</h2>
+                            <small class="text-muted">at cost</small>
+                        </div>
+                    </div>
+                </div>
+                
+                @if (isAdmin)
+                {
+                    <hr />
+                    <div class="d-flex gap-2 justify-content-center">
+                        <a asp-controller="Stock" asp-action="Batches" asp-route-productId="@Model.Product.ProductID" class="btn btn-outline-info">
+                            <i class="fas fa-boxes me-1"></i> View Batches
+                        </a>
+                        <a asp-controller="Stock" asp-action="Adjustments" class="btn btn-outline-warning">
+                            <i class="fas fa-sliders-h me-1"></i> Stock Adjustment
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

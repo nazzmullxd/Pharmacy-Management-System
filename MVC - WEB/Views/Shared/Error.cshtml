@@ -1,0 +1,67 @@
+﻿@model MVC_WEB.Models.ErrorViewModel
+@{
+    ViewData["Title"] = "Error";
+    Layout = "_Layout";
+}
+
+<div class="page-header">
+    <div class="d-flex align-items-center">
+        <div class="card-icon danger me-3">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div>
+            <h1 class="text-danger mb-0">Oops! Something went wrong</h1>
+            <p class="mb-0">An error occurred while processing your request.</p>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-card">
+    <div class="row">
+        <div class="col-md-8">
+            @if (Model?.ShowRequestId == true)
+            {
+                <div class="mb-4">
+                    <h5 class="text-muted">Request Details</h5>
+                    <p>
+                        <strong>Request ID:</strong> 
+                        <code class="bg-light p-2 rounded">@Model.RequestId</code>
+                    </p>
+                </div>
+            }
+
+            <div class="mb-4">
+                <h5 class="text-muted">What happened?</h5>
+                <p class="text-secondary">
+                    The server encountered an unexpected condition that prevented it from fulfilling your request. 
+                    This could be due to a temporary issue or a problem with the requested resource.
+                </p>
+            </div>
+
+            <div class="mb-4">
+                <h5 class="text-muted">What can you do?</h5>
+                <ul class="text-secondary">
+                    <li>Go back and try again</li>
+                    <li>Return to the dashboard</li>
+                    <li>Contact support if the problem persists</li>
+                </ul>
+            </div>
+
+            <div class="d-flex gap-3">
+                <a asp-controller="Dashboard" asp-action="Index" class="btn btn-primary">
+                    <i class="fas fa-home me-2"></i>Go to Dashboard
+                </a>
+                <button onclick="history.back()" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Go Back
+                </button>
+                <a asp-controller="Support" asp-action="Index" class="btn btn-outline-info">
+                    <i class="fas fa-life-ring me-2"></i>Contact Support
+                </a>
+            </div>
+        </div>
+        <div class="col-md-4 text-center d-none d-md-block">
+            <i class="fas fa-bug text-muted" style="font-size: 8rem; opacity: 0.2;"></i>
+        </div>
+    </div>
+</div>
+

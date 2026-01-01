@@ -1,0 +1,121 @@
+@model MVC_WEB.Models.ViewModels.CustomerDeleteViewModel
+@{
+    ViewData["Title"] = "Delete Customer";
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-user-times text-danger"></i> Delete Customer</h1>
+            <p class="mb-0">Permanently remove this customer from the system</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Customers
+        </a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card shadow-sm border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Confirm Deletion</h5>
+            </div>
+            <div class="card-body text-center py-4">
+                <div class="customer-icon mb-3">
+                    <i class="fas fa-user-circle fa-4x text-danger"></i>
+                </div>
+                
+                <h4 class="mb-1">@Model.Customer.CustomerName</h4>
+                <p class="text-muted mb-2">@Model.Customer.ContactNumber</p>
+                
+                @if (!string.IsNullOrEmpty(Model.Customer.Email))
+                {
+                    <p class="text-muted mb-3">@Model.Customer.Email</p>
+                }
+
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <strong>Warning:</strong> This action cannot be undone. All data associated with this customer will be permanently deleted.
+                </div>
+
+                @if (Model.Customer.TotalPurchases > 0)
+                {
+                    <div class="alert alert-danger">
+                        <i class="fas fa-shopping-cart me-2"></i>
+                        <strong>Purchase History:</strong> This customer has <strong>৳@Model.Customer.TotalPurchases?.ToString("F2")</strong> in total purchases. Deleting this customer may affect your sales records.
+                    </div>
+                }
+
+                <p class="text-muted">
+                    Are you sure you want to delete <strong>@Model.Customer.CustomerName</strong>?
+                </p>
+
+                <form asp-action="Delete" method="post" class="mt-4">
+                    <input type="hidden" name="id" value="@Model.Customer.CustomerID" />
+                    <div class="d-flex gap-2 justify-content-center">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash me-1"></i> Yes, Delete Customer
+                        </button>
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="fas fa-times me-1"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Customer Details Summary -->
+        <div class="card shadow-sm mt-4">
+            <div class="card-header bg-secondary text-white">
+                <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Customer Details</h6>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm table-borderless mb-0">
+                    <tr>
+                        <td class="text-muted" width="40%">Customer ID:</td>
+                        <td><code>@Model.Customer.CustomerID.ToString().Substring(0, 8)...</code></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Full Name:</td>
+                        <td>@Model.Customer.CustomerName</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Contact Number:</td>
+                        <td>@Model.Customer.ContactNumber</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Email:</td>
+                        <td>@(Model.Customer.Email ?? "Not provided")</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Address:</td>
+                        <td>@(Model.Customer.Address ?? "Not provided")</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Total Purchases:</td>
+                        <td class="text-success fw-bold">৳@(Model.Customer.TotalPurchases?.ToString("F2") ?? "0.00")</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Last Purchase:</td>
+                        <td>
+                            @if (Model.Customer.LastPurchaseDate.HasValue)
+                            {
+                                @Model.Customer.LastPurchaseDate.Value.ToString("MMM dd, yyyy")
+                            }
+                            else
+                            {
+                                <span class="text-muted">Never</span>
+                            }
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Registered:</td>
+                        <td>@Model.Customer.CreatedDate.ToString("MMM dd, yyyy")</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,116 @@
+@model MVC_WEB.Models.ViewModels.SupplierDeleteViewModel
+@{
+    ViewData["Title"] = "Delete Supplier";
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-trash text-danger"></i> Delete Supplier</h1>
+            <p class="mb-0">Permanently remove this supplier from the system</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Suppliers
+        </a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card shadow-sm border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Confirm Deletion</h5>
+            </div>
+            <div class="card-body text-center py-4">
+                <div class="supplier-icon mb-3">
+                    <i class="fas fa-building fa-4x text-danger"></i>
+                </div>
+                
+                <h4 class="mb-1">@Model.Supplier.SupplierName</h4>
+                @if (!string.IsNullOrEmpty(Model.Supplier.ContactPerson))
+                {
+                    <p class="text-muted mb-2">@Model.Supplier.ContactPerson</p>
+                }
+                @if (!string.IsNullOrEmpty(Model.Supplier.Email))
+                {
+                    <p class="text-muted mb-3">@Model.Supplier.Email</p>
+                }
+
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <strong>Warning:</strong> This action cannot be undone. All data associated with this supplier will be permanently deleted.
+                </div>
+
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Note:</strong> Consider deactivating the supplier instead if you may need this data in the future.
+                </div>
+
+                <p class="text-muted">
+                    Are you sure you want to delete <strong>@Model.Supplier.SupplierName</strong>?
+                </p>
+
+                <form asp-action="Delete" method="post" class="mt-4">
+                    <input type="hidden" name="id" value="@Model.Supplier.SupplierID" />
+                    <div class="d-flex gap-2 justify-content-center">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash me-1"></i> Yes, Delete Supplier
+                        </button>
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="fas fa-times me-1"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Supplier Details Summary -->
+        <div class="card shadow-sm mt-4">
+            <div class="card-header bg-secondary text-white">
+                <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Supplier Details</h6>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm table-borderless mb-0">
+                    <tr>
+                        <td class="text-muted" width="40%">Supplier ID:</td>
+                        <td><code>@Model.Supplier.SupplierID.ToString().Substring(0, 8)...</code></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Supplier Name:</td>
+                        <td>@Model.Supplier.SupplierName</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Contact Person:</td>
+                        <td>@(Model.Supplier.ContactPerson ?? "Not specified")</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Phone:</td>
+                        <td>@(Model.Supplier.PhoneNumber ?? "Not provided")</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Email:</td>
+                        <td>@(Model.Supplier.Email ?? "Not provided")</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Status:</td>
+                        <td>
+                            @if (Model.Supplier.IsActive)
+                            {
+                                <span class="badge bg-success">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Inactive</span>
+                            }
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Created:</td>
+                        <td>@Model.Supplier.CreatedDate.ToString("MMM dd, yyyy")</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

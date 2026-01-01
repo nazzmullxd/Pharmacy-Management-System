@@ -1,0 +1,129 @@
+@model MVC_WEB.Models.ViewModels.ProductDeleteViewModel
+@{
+    ViewData["Title"] = "Delete Product";
+}
+
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-trash text-danger"></i> Delete Product</h1>
+            <p class="mb-0">Permanently remove this product from the catalog</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Products
+        </a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card shadow-sm border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Confirm Deletion</h5>
+            </div>
+            <div class="card-body text-center py-4">
+                <div class="product-icon mb-3">
+                    <i class="fas fa-pills fa-4x text-danger"></i>
+                </div>
+                
+                <h4 class="mb-1">@Model.Product.ProductName</h4>
+                <p class="text-muted mb-2">@Model.Product.GenericName</p>
+                <span class="badge bg-info mb-3">@Model.Product.Category</span>
+
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <strong>Warning:</strong> This action cannot be undone. All data associated with this product will be permanently deleted.
+                </div>
+
+                @if (Model.Product.TotalStock > 0)
+                {
+                    <div class="alert alert-danger">
+                        <i class="fas fa-boxes me-2"></i>
+                        <strong>Stock Alert:</strong> This product has <strong>@Model.Product.TotalStock units</strong> in stock. Consider transferring or adjusting stock before deletion.
+                    </div>
+                }
+
+                <p class="text-muted">
+                    Are you sure you want to delete <strong>@Model.Product.ProductName</strong>?
+                </p>
+
+                <form asp-action="Delete" method="post" class="mt-4">
+                    <input type="hidden" name="id" value="@Model.Product.ProductID" />
+                    <div class="d-flex gap-2 justify-content-center">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash me-1"></i> Yes, Delete Product
+                        </button>
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="fas fa-times me-1"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Product Details Summary -->
+        <div class="card shadow-sm mt-4">
+            <div class="card-header bg-secondary text-white">
+                <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Product Details</h6>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm table-borderless mb-0">
+                    <tr>
+                        <td class="text-muted" width="40%">Product ID:</td>
+                        <td><code>@Model.Product.ProductID.ToString().Substring(0, 8)...</code></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Product Name:</td>
+                        <td>@Model.Product.ProductName</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Generic Name:</td>
+                        <td>@Model.Product.GenericName</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Category:</td>
+                        <td><span class="badge bg-info">@Model.Product.Category</span></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Manufacturer:</td>
+                        <td>@Model.Product.Manufacturer</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Current Stock:</td>
+                        <td>
+                            @if (Model.Product.TotalStock == 0)
+                            {
+                                <span class="badge bg-danger">Out of Stock</span>
+                            }
+                            else if (Model.Product.IsLowStock)
+                            {
+                                <span class="badge bg-warning">@Model.Product.TotalStock (Low)</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">@Model.Product.TotalStock</span>
+                            }
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Unit Price:</td>
+                        <td>৳@Model.Product.UnitPrice.ToString("F2")</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Status:</td>
+                        <td>
+                            @if (Model.Product.IsActive)
+                            {
+                                <span class="badge bg-success">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Inactive</span>
+                            }
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

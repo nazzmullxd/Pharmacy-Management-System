@@ -1,0 +1,192 @@
+@model MVC_WEB.Models.ViewModels.ProductListViewModel
+@{
+    ViewData["Title"] = "Low Stock Products";
+    var isAdmin = Context.Session.GetString("role") == "Admin";
+}
+
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-exclamation-triangle text-warning"></i> Low Stock Products</h1>
+            <p class="mb-0">Products that need restocking - below minimum threshold</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> All Products
+            </a>
+            @if (isAdmin)
+            {
+                <a asp-controller="Purchases" asp-action="Create" class="btn btn-success">
+                    <i class="fas fa-shopping-cart"></i> Create Purchase Order
+                </a>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Alert Summary -->
+@if (Model.Products.Any())
+{
+    <div class="alert alert-warning shadow-sm">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-exclamation-circle fa-2x me-3"></i>
+            <div>
+                <h5 class="mb-1">Attention Required!</h5>
+                <p class="mb-0"><strong>@Model.Products.Count()</strong> products are at or below their low stock threshold and need to be restocked.</p>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-success shadow-sm">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-check-circle fa-2x me-3"></i>
+            <div>
+                <h5 class="mb-1">All Good!</h5>
+                <p class="mb-0">No products are currently below their low stock threshold.</p>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Low Stock Products Table -->
+@if (Model.Products.Any())
+{
+    <div class="card shadow-sm">
+        <div class="card-header bg-warning">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-list me-2"></i>Low Stock Items</h5>
+                <span class="badge bg-dark">@Model.Products.Count() items</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Product</th>
+                            <th>Category</th>
+                            <th class="text-center">Current Stock</th>
+                            <th class="text-center">Threshold</th>
+                            <th class="text-center">Shortage</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var product in Model.Products.OrderBy(p => p.TotalStock))
+                        {
+                            var shortage = product.LowStockThreshold - product.TotalStock;
+                            var urgencyClass = product.TotalStock == 0 ? "table-danger" : "table-warning";
+                            
+                            <tr class="@urgencyClass">
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="product-icon me-3">
+                                            <i class="fas fa-pills fa-lg text-muted"></i>
+                                        </div>
+                                        <div>
+                                            <a asp-action="Details" asp-route-id="@product.ProductID" class="text-decoration-none fw-semibold">
+                                                @product.ProductName
+                                            </a>
+                                            <br />
+                                            <small class="text-muted">@product.GenericName</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">@product.Category</span>
+                                </td>
+                                <td class="text-center">
+                                    @if (product.TotalStock == 0)
+                                    {
+                                        <span class="badge bg-danger fs-6">0</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning text-dark fs-6">@product.TotalStock</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <span class="text-muted">@product.LowStockThreshold</span>
+                                </td>
+                                <td class="text-center">
+                                    @if (shortage > 0)
+                                    {
+                                        <span class="text-danger fw-bold">-@shortage</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">0</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    @if (product.TotalStock == 0)
+                                    {
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-times-circle me-1"></i>Out of Stock
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>Low Stock
+                                        </span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group">
+                                        <a asp-action="Details" asp-route-id="@product.ProductID" class="btn btn-sm btn-outline-info" title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        @if (isAdmin)
+                                        {
+                                            <a asp-action="Edit" asp-route-id="@product.ProductID" class="btn btn-sm btn-outline-primary" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a asp-controller="Stock" asp-action="Batches" asp-route-productId="@product.ProductID" class="btn btn-sm btn-outline-success" title="Manage Stock">
+                                                <i class="fas fa-boxes"></i>
+                                            </a>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Summary Cards -->
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card border-danger shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-times-circle fa-2x text-danger mb-2"></i>
+                    <h3 class="mb-0">@Model.Products.Count(p => p.TotalStock == 0)</h3>
+                    <p class="text-muted mb-0">Out of Stock</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-warning shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-exclamation-triangle fa-2x text-warning mb-2"></i>
+                    <h3 class="mb-0">@Model.Products.Count(p => p.TotalStock > 0)</h3>
+                    <p class="text-muted mb-0">Low Stock</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-info shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-calculator fa-2x text-info mb-2"></i>
+                    <h3 class="mb-0">@Model.Products.Sum(p => Math.Max(0, p.LowStockThreshold - p.TotalStock))</h3>
+                    <p class="text-muted mb-0">Total Units Needed</p>
+                </div>
+            </div>
+        </div>
+    </div>
+}

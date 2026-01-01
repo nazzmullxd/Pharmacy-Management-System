@@ -1,0 +1,166 @@
+@model MVC_WEB.Models.ViewModels.ReportsIndexViewModel
+@{
+    ViewData["Title"] = "Reports Dashboard";
+}
+
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Reports Dashboard</h1>
+            <p class="text-muted mb-0">View and generate reports for your pharmacy</p>
+        </div>
+    </div>
+
+    <!-- Quick Stats Row -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-1">Today's Sales</h6>
+                            <h3 class="mb-0">$@((Model.TodaysSales ?? 0).ToString("N2"))</h3>
+                        </div>
+                        <i class="bi bi-currency-dollar fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-1">Low Stock Items</h6>
+                            <h3 class="mb-0">@Model.LowStockItems</h3>
+                        </div>
+                        <i class="bi bi-exclamation-triangle fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-1">Expiring Items</h6>
+                            <h3 class="mb-0">@Model.ExpiringItems</h3>
+                        </div>
+                        <i class="bi bi-calendar-x fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-1">Total Customers</h6>
+                            <h3 class="mb-0">@Model.TotalCustomers</h3>
+                        </div>
+                        <i class="bi bi-people fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Categories -->
+    <div class="row">
+        <!-- Sales Reports -->
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="bi bi-graph-up-arrow text-primary" style="font-size: 3rem;"></i>
+                    </div>
+                    <h5 class="card-title">Sales Reports</h5>
+                    <p class="card-text text-muted">View sales analytics, trends, and revenue reports.</p>
+                    <a asp-action="Sales" class="btn btn-primary">
+                        <i class="bi bi-eye me-1"></i> View Report
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        @if (Context.Session.GetString("role") == "Admin")
+        {
+            <!-- Stock Reports (Admin Only) -->
+            <div class="col-md-6 col-lg-3 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <i class="bi bi-box-seam text-success" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5 class="card-title">Stock Reports</h5>
+                        <p class="card-text text-muted">Inventory levels, stock movements, and alerts.</p>
+                        <a asp-action="Stock" class="btn btn-success">
+                            <i class="bi bi-eye me-1"></i> View Report
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Financial Reports (Admin Only) -->
+            <div class="col-md-6 col-lg-3 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <i class="bi bi-cash-stack text-warning" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5 class="card-title">Financial Reports</h5>
+                        <p class="card-text text-muted">Profit/Loss analysis and financial performance.</p>
+                        <a asp-action="ProfitLoss" class="btn btn-warning">
+                            <i class="bi bi-eye me-1"></i> View Report
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Regulatory Reports (Admin Only) -->
+            <div class="col-md-6 col-lg-3 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <i class="bi bi-shield-check text-danger" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5 class="card-title">Regulatory Reports</h5>
+                        <p class="card-text text-muted">Antibiotic register and compliance tracking.</p>
+                        <a asp-action="Antibiotic" class="btn btn-danger">
+                            <i class="bi bi-eye me-1"></i> View Report
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Recent Activity Section -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Quick Actions</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <a asp-action="Sales" asp-route-type="daily" class="btn btn-outline-primary w-100 mb-2">
+                        <i class="bi bi-calendar-day me-2"></i>Daily Sales Report
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a asp-action="Sales" asp-route-type="weekly" class="btn btn-outline-primary w-100 mb-2">
+                        <i class="bi bi-calendar-week me-2"></i>Weekly Sales Report
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a asp-action="Sales" asp-route-type="monthly" class="btn btn-outline-primary w-100 mb-2">
+                        <i class="bi bi-calendar-month me-2"></i>Monthly Sales Report
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

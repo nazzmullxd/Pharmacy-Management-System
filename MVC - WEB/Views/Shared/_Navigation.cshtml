@@ -1,0 +1,149 @@
+@* Sidebar Navigation Partial - RBAC Enabled *@
+@{
+    var role = Context.Session.GetString("role") ?? "User";
+    var isAdmin = string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase);
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+}
+
+<ul class="list-unstyled components">
+    <!-- Dashboard - All Users -->
+    <li class="@(currentController == "Dashboard" ? "active" : "")">
+        <a asp-controller="Dashboard" asp-action="Index" class="nav-link">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>Dashboard</span>
+        </a>
+    </li>
+
+    <!-- Pharmacy Info -->
+    <li class="@(currentController == "Pharmacy" ? "active" : "")">
+        <a href="#pharmacySubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle nav-link">
+            <i class="fas fa-building"></i>
+            <span>Pharmacy Info</span>
+        </a>
+        <ul class="collapse list-unstyled" id="pharmacySubmenu">
+            <li><a asp-controller="Pharmacy" asp-action="Info" class="nav-link"><i class="fas fa-info-circle"></i>Information</a></li>
+            @if (isAdmin)
+            {
+                <li><a asp-controller="Pharmacy" asp-action="Settings" class="nav-link"><i class="fas fa-cog"></i>Settings</a></li>
+            }
+        </ul>
+    </li>
+
+    <!-- Customers - All Users can view, Admin can manage -->
+    <li class="@(currentController == "Customers" ? "active" : "")">
+        <a asp-controller="Customers" asp-action="Index" class="nav-link">
+            <i class="fas fa-users"></i>
+            <span>Customers</span>
+        </a>
+    </li>
+
+    <!-- Sales - All Users -->
+    <li class="@(currentController == "Sales" ? "active" : "")">
+        <a href="#salesSubmenu" data-bs-toggle="collapse" aria-expanded="@(currentController == "Sales" ? "true" : "false")" class="dropdown-toggle nav-link">
+            <i class="fas fa-shopping-cart"></i>
+            <span>Sales</span>
+        </a>
+        <ul class="collapse list-unstyled @(currentController == "Sales" ? "show" : "")" id="salesSubmenu">
+            <li><a asp-controller="Sales" asp-action="Orders" class="nav-link @(currentAction == "Orders" ? "active" : "")"><i class="fas fa-list"></i>Sale Orders</a></li>
+            <li><a asp-controller="Sales" asp-action="Invoices" class="nav-link @(currentAction == "Invoices" ? "active" : "")"><i class="fas fa-file-invoice"></i>Invoices</a></li>
+            <li><a asp-controller="Sales" asp-action="New" class="nav-link @(currentAction == "New" ? "active" : "")"><i class="fas fa-plus"></i>New Sale</a></li>
+        </ul>
+    </li>
+
+    <!-- Stock Management -->
+    <li class="@(currentController == "Stock" ? "active" : "")">
+        <a href="#stockSubmenu" data-bs-toggle="collapse" aria-expanded="@(currentController == "Stock" ? "true" : "false")" class="dropdown-toggle nav-link">
+            <i class="fas fa-boxes"></i>
+            <span>Stock Management</span>
+        </a>
+        <ul class="collapse list-unstyled @(currentController == "Stock" ? "show" : "")" id="stockSubmenu">
+            <li><a asp-controller="Stock" asp-action="Items" class="nav-link @(currentAction == "Items" ? "active" : "")"><i class="fas fa-cubes"></i>Stock Items</a></li>
+            <li><a asp-controller="Stock" asp-action="Batches" class="nav-link @(currentAction == "Batches" ? "active" : "")"><i class="fas fa-layer-group"></i>Batch Wise Items</a></li>
+            @if (isAdmin)
+            {
+                <li><a asp-controller="Stock" asp-action="Adjustments" class="nav-link @(currentAction == "Adjustments" ? "active" : "")"><i class="fas fa-edit"></i>Stock Adjustments</a></li>
+            }
+            <li><a asp-controller="Stock" asp-action="Expiring" class="nav-link @(currentAction == "Expiring" ? "active" : "")"><i class="fas fa-exclamation-triangle"></i>Expiring Stocks</a></li>
+        </ul>
+    </li>
+
+    <!-- Products -->
+    <li class="@(currentController == "Products" ? "active" : "")">
+        <a href="#productsSubmenu" data-bs-toggle="collapse" aria-expanded="@(currentController == "Products" ? "true" : "false")" class="dropdown-toggle nav-link">
+            <i class="fas fa-pills"></i>
+            <span>Products</span>
+        </a>
+        <ul class="collapse list-unstyled @(currentController == "Products" ? "show" : "")" id="productsSubmenu">
+            <li><a asp-controller="Products" asp-action="Index" class="nav-link @(currentAction == "Index" ? "active" : "")"><i class="fas fa-th-list"></i>All Products</a></li>
+            <li><a asp-controller="Products" asp-action="Categories" class="nav-link @(currentAction == "Categories" ? "active" : "")"><i class="fas fa-tags"></i>Categories</a></li>
+            @if (isAdmin)
+            {
+                <li><a asp-controller="Products" asp-action="Create" class="nav-link @(currentAction == "Create" ? "active" : "")"><i class="fas fa-plus"></i>Add Product</a></li>
+            }
+        </ul>
+    </li>
+
+    <!-- Purchases - Admin Only -->
+    @if (isAdmin)
+    {
+        <li class="@(currentController == "Purchases" ? "active" : "")">
+            <a href="#purchaseSubmenu" data-bs-toggle="collapse" aria-expanded="@(currentController == "Purchases" ? "true" : "false")" class="dropdown-toggle nav-link">
+                <i class="fas fa-truck"></i>
+                <span>Purchases</span>
+            </a>
+            <ul class="collapse list-unstyled @(currentController == "Purchases" ? "show" : "")" id="purchaseSubmenu">
+                <li><a asp-controller="Purchases" asp-action="Orders" class="nav-link @(currentAction == "Orders" ? "active" : "")"><i class="fas fa-list"></i>Purchase Orders</a></li>
+                <li><a asp-controller="Purchases" asp-action="New" class="nav-link @(currentAction == "New" ? "active" : "")"><i class="fas fa-plus"></i>New Purchase</a></li>
+                <li><a asp-controller="Suppliers" asp-action="Index" class="nav-link"><i class="fas fa-truck-loading"></i>Suppliers</a></li>
+            </ul>
+        </li>
+    }
+
+    <!-- Suppliers - View for all when not Admin (Admin sees it under Purchases) -->
+    @if (!isAdmin)
+    {
+        <li class="@(currentController == "Suppliers" ? "active" : "")">
+            <a asp-controller="Suppliers" asp-action="Index" class="nav-link">
+                <i class="fas fa-truck-loading"></i>
+                <span>Suppliers</span>
+            </a>
+        </li>
+    }
+
+    <!-- Reports -->
+    <li class="@(currentController == "Reports" ? "active" : "")">
+        <a href="#reportsSubmenu" data-bs-toggle="collapse" aria-expanded="@(currentController == "Reports" ? "true" : "false")" class="dropdown-toggle nav-link">
+            <i class="fas fa-chart-bar"></i>
+            <span>Reports</span>
+        </a>
+        <ul class="collapse list-unstyled @(currentController == "Reports" ? "show" : "")" id="reportsSubmenu">
+            <li><a asp-controller="Reports" asp-action="Sales" class="nav-link @(currentAction == "Sales" ? "active" : "")"><i class="fas fa-chart-line"></i>Sales Reports</a></li>
+            @if (isAdmin)
+            {
+                <li><a asp-controller="Reports" asp-action="Stock" class="nav-link @(currentAction == "Stock" ? "active" : "")"><i class="fas fa-warehouse"></i>Stock Reports</a></li>
+                <li><a asp-controller="Reports" asp-action="ProfitLoss" class="nav-link @(currentAction == "ProfitLoss" ? "active" : "")"><i class="fas fa-balance-scale"></i>Profit & Loss</a></li>
+                <li><a asp-controller="Reports" asp-action="Antibiotic" class="nav-link @(currentAction == "Antibiotic" ? "active" : "")"><i class="fas fa-prescription"></i>Antibiotic Register</a></li>
+            }
+        </ul>
+    </li>
+
+    <!-- Support - All Users -->
+    <li class="@(currentController == "Support" ? "active" : "")">
+        <a asp-controller="Support" asp-action="Index" class="nav-link">
+            <i class="fas fa-life-ring"></i>
+            <span>Support</span>
+        </a>
+    </li>
+
+    <!-- User Management - Admin Only -->
+    @if (isAdmin)
+    {
+        <li class="@(currentController == "Users" ? "active" : "")">
+            <a asp-controller="Users" asp-action="Index" class="nav-link">
+                <i class="fas fa-user-cog"></i>
+                <span>User Management</span>
+            </a>
+        </li>
+    }
+</ul>

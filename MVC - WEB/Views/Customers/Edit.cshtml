@@ -1,0 +1,161 @@
+@model MVC_WEB.Models.ViewModels.CustomerEditViewModel
+@{
+    ViewData["Title"] = "Edit Customer";
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-user-edit text-primary"></i> Edit Customer</h1>
+            <p class="mb-0">Update customer information and details</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="Details" asp-route-id="@Model.CustomerID" class="btn btn-outline-info">
+                <i class="fas fa-eye"></i> View Details
+            </a>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Customers
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Main Form Section -->
+    <div class="col-lg-8">
+        <form asp-action="Edit" method="post" class="customer-form">
+            <input type="hidden" asp-for="CustomerID" />
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+            
+            <!-- Customer Information Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user me-2"></i>Customer Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="CustomerName" class="form-label">
+                                <i class="fas fa-user text-muted me-1"></i>Full Name <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="CustomerName" class="form-control" placeholder="Enter customer's full name" />
+                            <span asp-validation-for="CustomerName" class="text-danger small"></span>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label asp-for="ContactNumber" class="form-label">
+                                <i class="fas fa-phone text-muted me-1"></i>Contact Number <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="ContactNumber" class="form-control" placeholder="e.g., +880 1234 567890" />
+                            <span asp-validation-for="ContactNumber" class="text-danger small"></span>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label asp-for="Email" class="form-label">
+                                <i class="fas fa-envelope text-muted me-1"></i>Email Address
+                            </label>
+                            <input asp-for="Email" type="email" class="form-control" placeholder="customer@example.com" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label asp-for="Address" class="form-label">
+                                <i class="fas fa-map-marker-alt text-muted me-1"></i>Address
+                            </label>
+                            <textarea asp-for="Address" class="form-control" rows="3" placeholder="Enter full address"></textarea>
+                            <span asp-validation-for="Address" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i> Save Changes
+                </button>
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="fas fa-times me-1"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Sidebar Information -->
+    <div class="col-lg-4">
+        <!-- Customer Summary Card -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-user me-2"></i>Customer Summary
+                </h6>
+            </div>
+            <div class="card-body text-center">
+                <div class="customer-icon mb-3">
+                    <i class="fas fa-user-circle fa-4x text-primary"></i>
+                </div>
+                <h5 class="mb-1">@Model.CustomerName</h5>
+                <p class="text-muted mb-3">@Model.ContactNumber</p>
+                
+                <hr />
+                
+                <div class="row text-center">
+                    <div class="col-6 border-end">
+                        <h5 class="mb-0 text-success">৳@(Model.TotalPurchases?.ToString("F2") ?? "0.00")</h5>
+                        <small class="text-muted">Total Purchases</small>
+                    </div>
+                    <div class="col-6">
+                        <h5 class="mb-0 text-info">
+                            @if (Model.LastPurchaseDate.HasValue)
+                            {
+                                @Model.LastPurchaseDate.Value.ToString("MMM dd")
+                            }
+                            else
+                            {
+                                <span class="text-muted">N/A</span>
+                            }
+                        </h5>
+                        <small class="text-muted">Last Purchase</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions Card -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-bolt me-2"></i>Quick Actions
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a asp-action="Details" asp-route-id="@Model.CustomerID" class="btn btn-outline-info btn-sm">
+                        <i class="fas fa-eye me-1"></i> View Full Details
+                    </a>
+                    <a asp-controller="Sales" asp-action="Create" asp-route-customerId="@Model.CustomerID" class="btn btn-outline-success btn-sm">
+                        <i class="fas fa-shopping-cart me-1"></i> Create New Sale
+                    </a>
+                    <a asp-controller="Sales" asp-action="Index" asp-route-customerId="@Model.CustomerID" class="btn btn-outline-warning btn-sm">
+                        <i class="fas fa-history me-1"></i> Purchase History
+                    </a>
+                    <a asp-action="Delete" asp-route-id="@Model.CustomerID" class="btn btn-outline-danger btn-sm">
+                        <i class="fas fa-trash me-1"></i> Delete Customer
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert alert-secondary">
+            <i class="fas fa-calendar me-2"></i>
+            <strong>Registered:</strong> @Model.CreatedDate.ToString("MMMM dd, yyyy")
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

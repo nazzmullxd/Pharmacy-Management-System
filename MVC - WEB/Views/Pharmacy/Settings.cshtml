@@ -1,0 +1,169 @@
+@model MVC_WEB.Models.ViewModels.PharmacySettingsViewModel
+@{
+    ViewData["Title"] = "Pharmacy Settings";
+}
+
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Pharmacy Settings</h1>
+            <p class="text-muted mb-0">Configure your pharmacy details and business settings</p>
+        </div>
+        <a asp-action="Info" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Back to Info
+        </a>
+    </div>
+
+    <form asp-action="Settings" method="post">
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+        <div class="row">
+            <!-- Basic Information -->
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-building me-2"></i>Basic Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label asp-for="PharmacyName" class="form-label">Pharmacy Name <span class="text-danger">*</span></label>
+                            <input asp-for="PharmacyName" class="form-control" />
+                            <span asp-validation-for="PharmacyName" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="LicenseNumber" class="form-label">License Number <span class="text-danger">*</span></label>
+                            <input asp-for="LicenseNumber" class="form-control" />
+                            <span asp-validation-for="LicenseNumber" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="LicenseExpiry" class="form-label">License Expiry Date</label>
+                            <input asp-for="LicenseExpiry" type="date" class="form-control" />
+                            <span asp-validation-for="LicenseExpiry" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="OwnerName" class="form-label">Owner/Manager Name</label>
+                            <input asp-for="OwnerName" class="form-control" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Information -->
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-telephone me-2"></i>Contact Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label asp-for="PhoneNumber" class="form-label">Phone Number</label>
+                            <input asp-for="PhoneNumber" class="form-control" />
+                            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label">Email Address</label>
+                            <input asp-for="Email" type="email" class="form-control" />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Address" class="form-label">Street Address</label>
+                            <input asp-for="Address" class="form-control" />
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="City" class="form-label">City</label>
+                                <input asp-for="City" class="form-control" />
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label asp-for="State" class="form-label">State</label>
+                                <input asp-for="State" class="form-control" />
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label asp-for="ZipCode" class="form-label">ZIP Code</label>
+                                <input asp-for="ZipCode" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Business Settings -->
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-gear me-2"></i>Business Settings</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="TaxRate" class="form-label">Tax Rate (%)</label>
+                                <input asp-for="TaxRate" type="number" step="0.01" class="form-control" />
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="InvoicePrefix" class="form-label">Invoice Prefix</label>
+                                <input asp-for="InvoicePrefix" class="form-control" />
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="LowStockThreshold" class="form-label">Low Stock Threshold</label>
+                                <input asp-for="LowStockThreshold" type="number" class="form-control" />
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="ExpiryAlertDays" class="form-label">Expiry Alert Days</label>
+                                <input asp-for="ExpiryAlertDays" type="number" class="form-control" />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input asp-for="RequirePrescriptionForAntibiotics" class="form-check-input" type="checkbox" />
+                                <label asp-for="RequirePrescriptionForAntibiotics" class="form-check-label">
+                                    Require Prescription for Antibiotics
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Receipt Settings -->
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-receipt me-2"></i>Receipt Settings</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label asp-for="ReceiptFooter" class="form-label">Receipt Footer Message</label>
+                            <textarea asp-for="ReceiptFooter" class="form-control" rows="4" placeholder="Thank you for your purchase!"></textarea>
+                            <small class="text-muted">This message will appear at the bottom of receipts.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Save Button -->
+        <div class="text-end mb-4">
+            <a asp-action="Info" class="btn btn-outline-secondary me-2">Cancel</a>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-save me-1"></i> Save Settings
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

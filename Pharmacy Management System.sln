@@ -22,6 +22,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DB Backup", "DB Backup", "{
 		..\..\..\..\..\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER02\MSSQL\Backup\[Pharmacy Management System].bak = ..\..\..\..\..\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER02\MSSQL\Backup\[Pharmacy Management System].bak
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MVC - WEB", "MVC - WEB\MVC - WEB.csproj", "{A07DE18E-9E01-4DBB-86B5-710B97B6F40D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -40,6 +42,10 @@ Global
 		{792C6DCC-97A9-4AA2-A8C1-3D4B31DBC98A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{792C6DCC-97A9-4AA2-A8C1-3D4B31DBC98A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{792C6DCC-97A9-4AA2-A8C1-3D4B31DBC98A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A07DE18E-9E01-4DBB-86B5-710B97B6F40D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A07DE18E-9E01-4DBB-86B5-710B97B6F40D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A07DE18E-9E01-4DBB-86B5-710B97B6F40D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A07DE18E-9E01-4DBB-86B5-710B97B6F40D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

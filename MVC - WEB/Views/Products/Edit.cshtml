@@ -1,0 +1,288 @@
+@model MVC_WEB.Models.ViewModels.ProductEditViewModel
+@{
+    ViewData["Title"] = "Edit Product";
+}
+
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-edit text-primary"></i> Edit Product</h1>
+            <p class="mb-0">Update product information and pricing</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Products
+            </a>
+            <a asp-action="Details" asp-route-id="@Model.ProductID" class="btn btn-outline-info">
+                <i class="fas fa-eye"></i> View Details
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <form asp-action="Edit" method="post" class="product-form">
+            <input type="hidden" asp-for="ProductID" />
+            <input type="hidden" asp-for="TotalStock" />
+            
+            <!-- Basic Information Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Basic Information</h5>
+                </div>
+                <div class="card-body">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="ProductName" class="form-label">
+                                <i class="fas fa-pills text-muted me-1"></i>Product Name <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="ProductName" class="form-control" placeholder="Enter product name" />
+                            <span asp-validation-for="ProductName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="GenericName" class="form-label">
+                                <i class="fas fa-flask text-muted me-1"></i>Generic Name <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="GenericName" class="form-control" placeholder="Enter generic name" />
+                            <span asp-validation-for="GenericName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Manufacturer" class="form-label">
+                                <i class="fas fa-industry text-muted me-1"></i>Manufacturer <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Manufacturer" class="form-control" placeholder="Enter manufacturer name" />
+                            <span asp-validation-for="Manufacturer" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Category" class="form-label">
+                                <i class="fas fa-tags text-muted me-1"></i>Category <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="Category" class="form-select">
+                                <option value="">Select Category</option>
+                                @foreach (var category in Model.Categories)
+                                {
+                                    <option value="@category" selected="@(Model.Category == category)">@category</option>
+                                }
+                            </select>
+                            <span asp-validation-for="Category" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Barcode" class="form-label">
+                                <i class="fas fa-barcode text-muted me-1"></i>Barcode
+                            </label>
+                            <div class="input-group">
+                                <input asp-for="Barcode" class="form-control" placeholder="Scan or enter barcode" />
+                                <button type="button" class="btn btn-outline-secondary" onclick="generateBarcode()">
+                                    <i class="fas fa-magic"></i>
+                                </button>
+                            </div>
+                            <span asp-validation-for="Barcode" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="LowStockThreshold" class="form-label">
+                                <i class="fas fa-exclamation-triangle text-warning me-1"></i>Low Stock Threshold
+                            </label>
+                            <input asp-for="LowStockThreshold" class="form-control" type="number" min="0" />
+                            <span asp-validation-for="LowStockThreshold" class="text-danger small"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Description" class="form-label">
+                                <i class="fas fa-align-left text-muted me-1"></i>Description
+                            </label>
+                            <textarea asp-for="Description" class="form-control" rows="3" placeholder="Enter product description"></textarea>
+                            <span asp-validation-for="Description" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pricing Information Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-dollar-sign me-2"></i>Pricing Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label asp-for="UnitPrice" class="form-label">
+                                Unit Price (Cost) <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">৳</span>
+                                <input asp-for="UnitPrice" class="form-control" type="number" step="0.01" min="0.01" />
+                            </div>
+                            <span asp-validation-for="UnitPrice" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="DefaultRetailPrice" class="form-label">
+                                Retail Price <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">৳</span>
+                                <input asp-for="DefaultRetailPrice" class="form-control" type="number" step="0.01" min="0.01" />
+                            </div>
+                            <span asp-validation-for="DefaultRetailPrice" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="DefaultWholeSalePrice" class="form-label">
+                                Wholesale Price <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">৳</span>
+                                <input asp-for="DefaultWholeSalePrice" class="form-control" type="number" step="0.01" min="0.01" />
+                            </div>
+                            <span asp-validation-for="DefaultWholeSalePrice" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <!-- Profit Margin Calculator -->
+                    <div class="mt-4 p-3 bg-light rounded">
+                        <h6 class="mb-3"><i class="fas fa-calculator me-2"></i>Profit Margin Preview</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="d-flex justify-content-between">
+                                    <span>Retail Profit Margin:</span>
+                                    <strong id="retailMargin" class="text-success">0%</strong>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex justify-content-between">
+                                    <span>Wholesale Profit Margin:</span>
+                                    <strong id="wholesaleMargin" class="text-info">0%</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="fas fa-toggle-on me-2"></i>Product Status</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-check form-switch">
+                        <input asp-for="IsActive" class="form-check-input" type="checkbox" role="switch" id="isActiveSwitch" />
+                        <label class="form-check-label" for="isActiveSwitch">
+                            <strong>Product is Active</strong>
+                            <p class="text-muted mb-0 small">Active products are visible and available for sale</p>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i> Save Changes
+                </button>
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="fas fa-times me-1"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Product Summary Card -->
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-secondary text-white">
+                <h6 class="mb-0"><i class="fas fa-pills me-2"></i>Product Summary</h6>
+            </div>
+            <div class="card-body text-center">
+                <div class="product-icon mb-3">
+                    <i class="fas fa-pills fa-4x text-primary"></i>
+                </div>
+                <h5 class="mb-1">@Model.ProductName</h5>
+                <p class="text-muted mb-2">@Model.GenericName</p>
+                <span class="badge bg-info mb-3">@Model.Category</span>
+                
+                <hr />
+                
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h5 class="mb-0 @(Model.TotalStock <= Model.LowStockThreshold ? "text-warning" : "text-success")">
+                            @Model.TotalStock
+                        </h5>
+                        <small class="text-muted">In Stock</small>
+                    </div>
+                    <div class="col-6">
+                        <h5 class="mb-0 text-primary">৳@Model.UnitPrice.ToString("F2")</h5>
+                        <small class="text-muted">Unit Price</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions Card -->
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a asp-action="Details" asp-route-id="@Model.ProductID" class="btn btn-outline-info btn-sm">
+                        <i class="fas fa-eye me-1"></i> View Full Details
+                    </a>
+                    <a asp-controller="Stock" asp-action="Batches" asp-route-productId="@Model.ProductID" class="btn btn-outline-warning btn-sm">
+                        <i class="fas fa-boxes me-1"></i> Manage Batches
+                    </a>
+                    <a asp-action="Delete" asp-route-id="@Model.ProductID" class="btn btn-outline-danger btn-sm">
+                        <i class="fas fa-trash me-1"></i> Delete Product
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stock Alert -->
+        @if (Model.TotalStock <= Model.LowStockThreshold)
+        {
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Low Stock Alert!</strong>
+                <p class="mb-0 small">Current stock (@Model.TotalStock) is at or below the threshold (@Model.LowStockThreshold).</p>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Generate random barcode
+        function generateBarcode() {
+            const barcode = 'PRD' + Date.now().toString().slice(-10);
+            document.getElementById('Barcode').value = barcode;
+        }
+
+        // Calculate profit margins
+        function calculateMargins() {
+            const unitPrice = parseFloat(document.getElementById('UnitPrice').value) || 0;
+            const retailPrice = parseFloat(document.getElementById('DefaultRetailPrice').value) || 0;
+            const wholesalePrice = parseFloat(document.getElementById('DefaultWholeSalePrice').value) || 0;
+
+            if (unitPrice > 0) {
+                const retailMargin = ((retailPrice - unitPrice) / unitPrice * 100).toFixed(1);
+                const wholesaleMargin = ((wholesalePrice - unitPrice) / unitPrice * 100).toFixed(1);
+
+                document.getElementById('retailMargin').textContent = retailMargin + '%';
+                document.getElementById('wholesaleMargin').textContent = wholesaleMargin + '%';
+
+                document.getElementById('retailMargin').className = retailMargin > 0 ? 'text-success' : 'text-danger';
+                document.getElementById('wholesaleMargin').className = wholesaleMargin > 0 ? 'text-info' : 'text-danger';
+            }
+        }
+
+        // Initialize margin calculation on page load
+        document.addEventListener('DOMContentLoaded', calculateMargins);
+
+        // Attach event listeners for price inputs
+        document.getElementById('UnitPrice').addEventListener('input', calculateMargins);
+        document.getElementById('DefaultRetailPrice').addEventListener('input', calculateMargins);
+        document.getElementById('DefaultWholeSalePrice').addEventListener('input', calculateMargins);
+    </script>
+}

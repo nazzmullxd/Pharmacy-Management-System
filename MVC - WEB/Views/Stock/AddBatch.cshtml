@@ -1,0 +1,160 @@
+@model MVC_WEB.Models.ViewModels.StockAddBatchViewModel
+@{
+    ViewData["Title"] = "Add New Batch";
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-plus-circle text-success"></i> Add New Batch</h1>
+            <p class="mb-0">Create a new product batch to track inventory by batch number and expiry date</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="Batches" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Batches
+            </a>
+            <a asp-action="Index" class="btn btn-outline-info">
+                <i class="fas fa-boxes"></i> Stock Overview
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <form asp-action="AddBatch" method="post" id="addBatchForm">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+            
+            <!-- Product & Supplier Section -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Batch Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="ProductID" class="form-label">
+                                <i class="fas fa-pills text-muted me-1"></i>Product <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="ProductID" class="form-select" required>
+                                <option value="">-- Select Product --</option>
+                                @foreach (var product in Model.Products)
+                                {
+                                    <option value="@product.ProductID">@product.ProductName</option>
+                                }
+                            </select>
+                            <span asp-validation-for="ProductID" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="SupplierID" class="form-label">
+                                <i class="fas fa-industry text-muted me-1"></i>Supplier <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="SupplierID" class="form-select" required>
+                                <option value="">-- Select Supplier --</option>
+                                @foreach (var supplier in Model.Suppliers)
+                                {
+                                    <option value="@supplier.SupplierID">@supplier.SupplierName</option>
+                                }
+                            </select>
+                            <span asp-validation-for="SupplierID" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Batch Details Section -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-layer-group me-2"></i>Batch Details
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label asp-for="BatchNumber" class="form-label">
+                                <i class="fas fa-barcode text-muted me-1"></i>Batch Number <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="BatchNumber" class="form-control" placeholder="e.g., BATCH-2026-001" />
+                            <span asp-validation-for="BatchNumber" class="text-danger small"></span>
+                            <small class="text-muted">Unique identifier for this batch</small>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="ExpiryDate" class="form-label">
+                                <i class="fas fa-calendar text-muted me-1"></i>Expiry Date <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="ExpiryDate" type="date" class="form-control" />
+                            <span asp-validation-for="ExpiryDate" class="text-danger small"></span>
+                            <small class="text-muted">Product expiration date</small>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="QuantityInStock" class="form-label">
+                                <i class="fas fa-warehouse text-muted me-1"></i>Initial Quantity <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="QuantityInStock" type="number" class="form-control" min="1" placeholder="Enter quantity" />
+                            <span asp-validation-for="QuantityInStock" class="text-danger small"></span>
+                            <small class="text-muted">Number of units in this batch</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-success btn-lg">
+                    <i class="fas fa-save me-2"></i>Add Batch
+                </button>
+                <button type="reset" class="btn btn-outline-secondary">
+                    <i class="fas fa-undo me-2"></i>Reset Form
+                </button>
+                <a asp-action="Batches" class="btn btn-outline-danger">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Guidelines Card -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-warning text-dark">
+                <h6 class="mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>Batch Guidelines
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="small text-muted mb-0">
+                    <li class="mb-2"><strong>Batch Number:</strong> Use a unique identifier from the supplier's packaging</li>
+                    <li class="mb-2"><strong>Product:</strong> Select the product this batch belongs to</li>
+                    <li class="mb-2"><strong>Supplier:</strong> The supplier who provided this batch</li>
+                    <li class="mb-2"><strong>Expiry Date:</strong> Check the packaging for accurate expiry date</li>
+                    <li class="mb-0"><strong>Quantity:</strong> Count the exact units received</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Quick Tips -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Quick Tips
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="small text-muted mb-0">
+                    <li class="mb-2">Always verify batch numbers against supplier documentation</li>
+                    <li class="mb-2">Double-check expiry dates to avoid data entry errors</li>
+                    <li class="mb-2">Count items carefully before entering quantity</li>
+                    <li class="mb-0">FEFO (First Expired, First Out) principle should guide inventory usage</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

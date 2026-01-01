@@ -1,0 +1,254 @@
+@model MVC_WEB.Models.ViewModels.ProfitLossReportViewModel
+@{
+    ViewData["Title"] = "Profit & Loss Report";
+}
+
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Profit & Loss Report</h1>
+            <p class="text-muted mb-0">Financial performance analysis</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Back to Reports
+        </a>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-1">Total Revenue</h6>
+                            <h3 class="mb-0">$@Model.TotalRevenue.ToString("N2")</h3>
+                        </div>
+                        <i class="bi bi-currency-dollar fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-1">Total Cost</h6>
+                            <h3 class="mb-0">$@Model.TotalCost.ToString("N2")</h3>
+                        </div>
+                        <i class="bi bi-cash-stack fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-1">Gross Profit</h6>
+                            <h3 class="mb-0">$@Model.GrossProfit.ToString("N2")</h3>
+                        </div>
+                        <i class="bi bi-graph-up-arrow fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-1">Profit Margin</h6>
+                            <h3 class="mb-0">@Model.ProfitMargin.ToString("N1")%</h3>
+                        </div>
+                        <i class="bi bi-percent fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-funnel me-2"></i>Report Period</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Period</label>
+                    <select name="period" class="form-select">
+                        <option value="">All Time</option>
+                        <option value="today" selected="@(Model.PeriodFilter == "today")">Today</option>
+                        <option value="week" selected="@(Model.PeriodFilter == "week")">This Week</option>
+                        <option value="month" selected="@(Model.PeriodFilter == "month")">This Month</option>
+                        <option value="quarter" selected="@(Model.PeriodFilter == "quarter")">This Quarter</option>
+                        <option value="year" selected="@(Model.PeriodFilter == "year")">This Year</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Report Type</label>
+                    <select name="reportType" class="form-select">
+                        <option value="">Summary</option>
+                        <option value="detailed" selected="@(Model.ReportType == "detailed")">Detailed</option>
+                        <option value="comparison" selected="@(Model.ReportType == "comparison")">Period Comparison</option>
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="bi bi-search me-1"></i> Generate Report
+                    </button>
+                    <a asp-action="ProfitLoss" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle me-1"></i> Reset
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Profit/Loss Breakdown -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-pie-chart me-2"></i>Cost & Profit Breakdown</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Revenue</span>
+                            <strong>$@Model.TotalRevenue.ToString("N2")</strong>
+                        </div>
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar bg-primary" role="progressbar" style="width: 100%;">
+                                100%
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Cost of Goods</span>
+                            <strong>$@Model.TotalCost.ToString("N2")</strong>
+                        </div>
+                        <div class="progress" style="height: 25px;">
+                            @{
+                                var costPercent = Model.TotalRevenue > 0 ? (Model.TotalCost / Model.TotalRevenue * 100) : 0;
+                            }
+                            <div class="progress-bar bg-danger" role="progressbar" style="width: @costPercent%;">
+                                @costPercent.ToString("N1")%
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Gross Profit</span>
+                            <strong class="text-success">$@Model.GrossProfit.ToString("N2")</strong>
+                        </div>
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: @Model.ProfitMargin%;">
+                                @Model.ProfitMargin.ToString("N1")%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Financial Summary -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-calculator me-2"></i>Financial Summary</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tbody>
+                            <tr class="border-bottom">
+                                <td><strong>Total Revenue</strong></td>
+                                <td class="text-end">$@Model.TotalRevenue.ToString("N2")</td>
+                            </tr>
+                            <tr class="border-bottom">
+                                <td class="text-danger">Less: Cost of Goods Sold</td>
+                                <td class="text-end text-danger">($@Model.TotalCost.ToString("N2"))</td>
+                            </tr>
+                            <tr class="border-bottom">
+                                <td><strong>Gross Profit</strong></td>
+                                <td class="text-end"><strong>$@Model.GrossProfit.ToString("N2")</strong></td>
+                            </tr>
+                            <tr class="border-bottom">
+                                <td>Operating Expenses</td>
+                                <td class="text-end text-muted">$0.00</td>
+                            </tr>
+                            <tr class="table-success">
+                                <td><strong class="text-success">Net Profit</strong></td>
+                                <td class="text-end"><strong class="text-success">$@Model.GrossProfit.ToString("N2")</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="alert alert-info mt-3">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <small>Operating expenses are calculated separately. The gross profit shown is based on sales revenue minus estimated cost of goods sold.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Indicators -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-speedometer2 me-2"></i>Key Performance Indicators</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4 text-center border-end">
+                    <div class="py-3">
+                        <h2 class="mb-1 @(Model.ProfitMargin >= 30 ? "text-success" : Model.ProfitMargin >= 15 ? "text-warning" : "text-danger")">
+                            @Model.ProfitMargin.ToString("N1")%
+                        </h2>
+                        <p class="text-muted mb-0">Profit Margin</p>
+                        <small class="@(Model.ProfitMargin >= 30 ? "text-success" : Model.ProfitMargin >= 15 ? "text-warning" : "text-danger")">
+                            @if (Model.ProfitMargin >= 30)
+                            {
+                                <i class="bi bi-check-circle me-1"></i>@:Excellent
+                            }
+                            else if (Model.ProfitMargin >= 15)
+                            {
+                                <i class="bi bi-exclamation-circle me-1"></i>@:Good
+                            }
+                            else
+                            {
+                                <i class="bi bi-x-circle me-1"></i>@:Needs Improvement
+                            }
+                        </small>
+                    </div>
+                </div>
+                <div class="col-md-4 text-center border-end">
+                    <div class="py-3">
+                        @{
+                            var avgTransactionValue = Model.Sales.Any() ? Model.TotalRevenue / Model.Sales.Count() : 0;
+                        }
+                        <h2 class="mb-1 text-primary">$@avgTransactionValue.ToString("N2")</h2>
+                        <p class="text-muted mb-0">Average Transaction Value</p>
+                        <small class="text-muted">@Model.Sales.Count() total transactions</small>
+                    </div>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="py-3">
+                        <h2 class="mb-1 text-info">
+                            @((100 - costPercent).ToString("N1"))%
+                        </h2>
+                        <p class="text-muted mb-0">Gross Margin</p>
+                        <small class="text-muted">Revenue retained after COGS</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

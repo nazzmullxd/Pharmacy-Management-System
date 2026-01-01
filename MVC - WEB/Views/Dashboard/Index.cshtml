@@ -1,0 +1,662 @@
+@model MVC_WEB.Models.ViewModels.DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+@section Styles {
+<style>
+    :root {
+        --kpi-gap: 1rem;
+        --kpi-padding: 1rem;
+        --kpi-radius: 1rem;
+        --transition-fast: .25s;
+    }
+
+    /* Density (default) */
+    .dashboard-root.compact-density {
+        --kpi-gap: .65rem;
+        --kpi-padding: .65rem;
+    }
+
+    .dashboard-root.compact-density .kpi-card .kpi-value {
+        font-size: 1.35rem;
+    }
+
+    .dashboard-root.compact-density table.table-sm td,
+    .dashboard-root.compact-density table.table-sm th {
+        padding: .35rem .5rem;
+        font-size: .72rem;
+    }
+
+    /* KPI Cards Enhancement */
+    .kpi-icon-bubble {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #4e73df;
+        color: #fff;
+        font-size: 1.2rem;
+        box-shadow: 0 8px 20px -8px rgba(0,0,0,.4);
+        margin-bottom: 15px;
+    }
+
+    .kpi-label {
+        font-size: .7rem;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        font-weight: 600;
+        color: #6c757d;
+        margin-bottom: .5rem;
+    }
+
+    .kpi-trend {
+        font-size: 0.75rem;
+        margin-top: 0.5rem;
+    }
+
+    /* Table refinement */
+    table thead th {
+        font-size: .66rem;
+        letter-spacing: .07em;
+        text-transform: uppercase;
+        font-weight: 600;
+        background: #f5f7fa;
+        border-bottom: 1px solid #e3e7ec !important;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    table tbody tr {
+        transition: background .18s, transform .18s;
+    }
+
+    table tbody tr:hover {
+        background: #f1f5fb;
+    }
+
+    table tbody td {
+        font-size: .8rem;
+        vertical-align: middle;
+        border-color: #eef1f5;
+    }
+
+    tbody tr:not(:last-child) td {
+        border-bottom: 1px dashed #e0e5ea;
+    }
+
+    /* Skeleton loading */
+    .skeleton {
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(90deg,#eceff3 25%,#f5f7fa 37%,#eceff3 63%);
+        background-size: 400% 100%;
+        animation: shimmer 1.25s infinite linear;
+        border-radius: .5rem;
+    }
+    @@keyframes shimmer {
+        0% { background-position: 100% 0; }
+        100% { background-position: 0 0; }
+    }
+
+    .skeleton-line {
+        height: 16px;
+        margin-bottom: 8px;
+    }
+
+    .skeleton-line.sm {
+        height: 10px;
+        width: 60%;
+    }
+
+    .skeleton-kpi {
+        height: 46px;
+    }
+
+    .loading .hide-on-loading {
+        visibility: hidden;
+    }
+
+    .loading .skeleton-group {
+        display: block;
+    }
+
+    .skeleton-group {
+        display: none;
+    }
+
+    /* Responsive table -> cards on mobile */
+    @@media (max-width: 768px) {
+        .responsive-table table,
+        .responsive-table thead,
+        .responsive-table tbody,
+        .responsive-table th,
+        .responsive-table td,
+        .responsive-table tr {
+            display: block;
+        }
+
+        .responsive-table thead {
+            display: none;
+        }
+
+        .responsive-table tbody tr {
+            background: #fff;
+            margin: 0 0 .85rem 0;
+            border: 1px solid #e4e9ef;
+            border-radius: .75rem;
+            padding: .55rem .7rem;
+            box-shadow: 0 4px 12px -6px rgba(0,0,0,.12);
+        }
+
+        .responsive-table tbody td {
+            border: none !important;
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: .35rem 0 !important;
+            font-size: .78rem;
+        }
+
+        .responsive-table tbody td:before {
+            content: attr(data-label);
+            font-weight: 600;
+            color: #556075;
+            flex: 1;
+            text-align: left;
+        }
+    }
+
+    /* Empty state */
+    .empty-state {
+        padding: 3rem 1.25rem;
+        text-align: center;
+        color: #6c757d;
+    }
+
+    .empty-state i {
+        display: block;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state p {
+        margin: 0;
+        font-size: .9rem;
+    }
+
+    /* Admin Panel Buttons */
+    .admin-btn {
+        transition: all 0.3s ease;
+    }
+
+    .admin-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    }
+</style>
+}
+
+<div class="dashboard-root loading" id="dashboardRoot">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h1><i class="fas fa-tachometer-alt text-primary"></i> Dashboard Overview</h1>
+                <p class="mb-0">Welcome back, <strong>@Model.UserFullName</strong> | Role: <span class="badge @(Model.IsAdmin ? "bg-danger" : "bg-primary")">@Model.Role</span></p>
+            </div>
+            <div class="d-flex gap-2">
+                <button type="button" id="densityToggle" class="btn btn-outline-secondary btn-sm" title="Toggle density">
+                    <i class="fas fa-compress-alt"></i> Compact View
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions Card -->
+    <div class="dashboard-card mb-4 hide-on-loading">
+        <h5 class="mb-3">
+            <i class="fas fa-bolt text-warning"></i> Quick Actions
+        </h5>
+        <div class="row g-3">
+            <div class="col-6 col-md-3">
+                <a asp-controller="Sales" asp-action="New" class="btn btn-outline-success w-100">
+                    <i class="fas fa-plus-circle me-1"></i> New Sale
+                </a>
+            </div>
+            @if (Model.IsAdmin)
+            {
+                <div class="col-6 col-md-3">
+                    <a asp-controller="Products" asp-action="Create" class="btn btn-outline-primary w-100">
+                        <i class="fas fa-pills me-1"></i> Add Product
+                    </a>
+                </div>
+                <div class="col-6 col-md-3">
+                    <a asp-controller="Stock" asp-action="Adjustments" class="btn btn-outline-info w-100">
+                        <i class="fas fa-warehouse me-1"></i> Stock Adjust
+                    </a>
+                </div>
+                <div class="col-6 col-md-3">
+                    <a asp-controller="Purchases" asp-action="New" class="btn btn-outline-secondary w-100">
+                        <i class="fas fa-truck me-1"></i> New Purchase
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="col-6 col-md-3">
+                    <a asp-controller="Customers" asp-action="Create" class="btn btn-outline-primary w-100">
+                        <i class="fas fa-user-plus me-1"></i> Add Customer
+                    </a>
+                </div>
+                <div class="col-6 col-md-3">
+                    <a asp-controller="Reports" asp-action="Sales" class="btn btn-outline-info w-100">
+                        <i class="fas fa-chart-bar me-1"></i> View Reports
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="row g-3 mb-4">
+        <!-- KPI skeletons -->
+        @for (int i = 0; i < 4; i++)
+        {
+            <div class="col-6 col-lg-3 skeleton-group">
+                <div class="dashboard-card">
+                    <div class="skeleton skeleton-kpi"></div>
+                </div>
+            </div>
+        }
+        
+        <!-- Real KPI content -->
+        <div class="col-6 col-lg-3 hide-on-loading">
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <div class="kpi-title">Today's Orders</div>
+                    <div class="kpi-icon" style="background: linear-gradient(45deg, #3498db, #5dade2);">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                </div>
+                <div class="kpi-value">@Model.TodayOrders</div>
+                <div class="kpi-trend">
+                    <i class="fas fa-calendar-day text-info"></i>
+                    <small class="text-muted">Active sales today</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-lg-3 hide-on-loading">
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <div class="kpi-title">Monthly Orders</div>
+                    <div class="kpi-icon" style="background: linear-gradient(45deg, #27ae60, #2ecc71);">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                </div>
+                <div class="kpi-value">@Model.ThisMonthOrders</div>
+                <div class="kpi-trend">
+                    <i class="fas fa-calendar-alt text-success"></i>
+                    <small class="text-muted">This month performance</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-lg-3 hide-on-loading">
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <div class="kpi-title">Stock Value</div>
+                    <div class="kpi-icon" style="background: linear-gradient(45deg, #9b59b6, #bb6bd9);">
+                        <i class="fas fa-boxes"></i>
+                    </div>
+                </div>
+                <div class="kpi-value">৳@Model.StockValue.ToString("N0")</div>
+                <div class="kpi-trend">
+                    <i class="fas fa-warehouse text-info"></i>
+                    <small class="text-muted">Total inventory value</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-lg-3 hide-on-loading">
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <div class="kpi-title">Outstanding Dues</div>
+                    <div class="kpi-icon" style="background: linear-gradient(45deg, #e74c3c, #ec7063);">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                    </div>
+                </div>
+                <div class="kpi-value @(Model.OutstandingDues > 0 ? "text-danger" : "")">৳@Model.OutstandingDues.ToString("N0")</div>
+                <div class="kpi-trend">
+                    <i class="fas fa-clock text-warning"></i>
+                    <small class="text-muted">Pending payments</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Panel - Only visible to Admins -->
+    @if (Model.IsAdmin)
+    {
+        <div class="dashboard-card mb-4 hide-on-loading">
+            <h5 class="mb-3">
+                <i class="fas fa-user-shield text-primary"></i> Admin Panel
+            </h5>
+            <div class="row g-3">
+                <div class="col-sm-6 col-lg-3">
+                    <a class="btn btn-primary w-100 d-flex flex-column align-items-center py-3 admin-btn" asp-controller="Users" asp-action="Index">
+                        <i class="fas fa-users-cog fs-4 mb-2"></i>
+                        <span class="fw-semibold">User Management</span>
+                        <small class="text-light opacity-75">Manage users & roles</small>
+                    </a>
+                </div>
+                <div class="col-sm-6 col-lg-3">
+                    <a class="btn btn-success w-100 d-flex flex-column align-items-center py-3 admin-btn" asp-controller="Reports" asp-action="Index">
+                        <i class="fas fa-chart-line fs-4 mb-2"></i>
+                        <span class="fw-semibold">Reports</span>
+                        <small class="text-light opacity-75">View analytics & reports</small>
+                    </a>
+                </div>
+                <div class="col-sm-6 col-lg-3">
+                    <a class="btn btn-info w-100 d-flex flex-column align-items-center py-3 admin-btn" asp-controller="Pharmacy" asp-action="Settings">
+                        <i class="fas fa-sliders-h fs-4 mb-2"></i>
+                        <span class="fw-semibold">Settings</span>
+                        <small class="text-light opacity-75">System configuration</small>
+                    </a>
+                </div>
+                <div class="col-sm-6 col-lg-3">
+                    <a class="btn btn-warning w-100 d-flex flex-column align-items-center py-3 admin-btn" asp-controller="Suppliers" asp-action="Index">
+                        <i class="fas fa-truck fs-4 mb-2"></i>
+                        <span class="fw-semibold">Suppliers</span>
+                        <small class="text-dark opacity-75">Manage suppliers</small>
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Data Grids Row 1 -->
+    <div class="row">
+        <!-- Top Selling Products -->
+        <div class="col-lg-6 mb-4">
+            <!-- Skeleton -->
+            <div class="dashboard-card skeleton-group">
+                <h5><div class="skeleton skeleton-line" style="height:18px;width:160px;"></div></h5>
+                <div>
+                    @for (int i = 0; i < 5; i++)
+                    {
+                        <div class="skeleton skeleton-line" style="width:@(70 + i * 5)%"></div>
+                    }
+                </div>
+            </div>
+            <!-- Real -->
+            <div class="table-container h-100 hide-on-loading">
+                <h5><i class="fas fa-trophy text-warning"></i> Top Selling Products</h5>
+                <div class="responsive-table">
+                    @if (!Model.TopSellingProducts.Any())
+                    {
+                        <div class="empty-state">
+                            <i class="fas fa-chart-line fa-2x text-muted"></i>
+                            <p class="text-muted">No sales data available yet.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive" style="max-height: 300px;">
+                            <table class="table table-hover table-sm mb-0">
+                                <thead>
+                                    <tr>
+                                        <th><i class="fas fa-hashtag me-1"></i>#</th>
+                                        <th><i class="fas fa-pills me-1"></i>Product</th>
+                                        <th><i class="fas fa-sort-numeric-up me-1"></i>Qty Sold</th>
+                                        <th><i class="fas fa-dollar-sign me-1"></i>Revenue</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{ var rank = 1; }
+                                    @foreach (var product in Model.TopSellingProducts.Take(5))
+                                    {
+                                        <tr>
+                                            <td data-label="#"><span class="badge bg-primary rounded-pill">@rank</span></td>
+                                            <td data-label="Product" class="fw-semibold">@product.ProductName</td>
+                                            <td data-label="Qty Sold"><span class="badge bg-info">@product.TotalQuantitySold</span></td>
+                                            <td data-label="Revenue" class="text-success fw-bold">৳@product.TotalRevenue.ToString("N2")</td>
+                                        </tr>
+                                        rank++;
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+                <a asp-controller="Products" asp-action="Index" class="btn btn-outline-primary btn-sm mt-2">
+                    <i class="fas fa-arrow-right"></i> View All Products
+                </a>
+            </div>
+        </div>
+
+        <!-- Top Stock Products -->
+        <div class="col-lg-6 mb-4">
+            <!-- Skeleton -->
+            <div class="dashboard-card skeleton-group">
+                <h5><div class="skeleton skeleton-line" style="height:18px;width:150px;"></div></h5>
+                <div>
+                    @for (int i = 0; i < 5; i++)
+                    {
+                        <div class="skeleton skeleton-line" style="width:@(65 + i * 6)%"></div>
+                    }
+                </div>
+            </div>
+            <!-- Real -->
+            <div class="table-container h-100 hide-on-loading">
+                <h5><i class="fas fa-boxes text-success"></i> Top Stock Products</h5>
+                <div class="responsive-table">
+                    @if (!Model.TopStockProducts.Any())
+                    {
+                        <div class="empty-state">
+                            <i class="fas fa-warehouse fa-2x text-muted"></i>
+                            <p class="text-muted">No stock data available yet.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive" style="max-height: 300px;">
+                            <table class="table table-hover table-sm mb-0">
+                                <thead>
+                                    <tr>
+                                        <th><i class="fas fa-pills me-1"></i>Product</th>
+                                        <th><i class="fas fa-cubes me-1"></i>Stock</th>
+                                        <th><i class="fas fa-dollar-sign me-1"></i>Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var product in Model.TopStockProducts.Take(5))
+                                    {
+                                        var value = product.TotalStock * product.UnitPrice;
+                                        var isLowStock = product.TotalStock <= product.LowStockThreshold;
+                                        <tr>
+                                            <td data-label="Product" class="fw-semibold">@product.ProductName</td>
+                                            <td data-label="Stock">
+                                                <span class="badge @(isLowStock ? "bg-warning text-dark" : "bg-success")">
+                                                    @product.TotalStock
+                                                </span>
+                                            </td>
+                                            <td data-label="Value" class="text-primary fw-bold">৳@value.ToString("N2")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+                <a asp-controller="Stock" asp-action="Items" class="btn btn-outline-primary btn-sm mt-2">
+                    <i class="fas fa-arrow-right"></i> View All Stock
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Grids Row 2 -->
+    <div class="row">
+        <!-- Recent Sales -->
+        <div class="col-lg-6 mb-4">
+            <div class="table-container h-100 hide-on-loading">
+                <h5><i class="fas fa-history text-secondary"></i> Recent Sales</h5>
+                <div class="responsive-table">
+                    @if (!Model.RecentSales.Any())
+                    {
+                        <div class="empty-state">
+                            <i class="fas fa-receipt fa-2x text-muted"></i>
+                            <p class="text-muted">No recent sales to display.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive" style="max-height: 300px;">
+                            <table class="table table-sm table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th><i class="fas fa-hashtag me-1"></i>ID</th>
+                                        <th><i class="fas fa-calendar me-1"></i>Date</th>
+                                        <th><i class="fas fa-dollar-sign me-1"></i>Total</th>
+                                        <th><i class="fas fa-credit-card me-1"></i>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var sale in Model.RecentSales)
+                                    {
+                                        var isPending = sale.PaymentStatus?.Equals("Pending", StringComparison.OrdinalIgnoreCase) == true;
+                                        <tr>
+                                            <td data-label="ID"><span class="badge bg-secondary">@sale.SaleID.ToString().Substring(0, 8)...</span></td>
+                                            <td data-label="Date" class="fw-semibold">@sale.SaleDate.ToString("MMM dd, yyyy")</td>
+                                            <td data-label="Total" class="text-success fw-bold">৳@sale.TotalAmount.ToString("N2")</td>
+                                            <td data-label="Status">
+                                                <span class="badge @(isPending ? "bg-warning text-dark" : "bg-success")">
+                                                    <i class="fas @(isPending ? "fa-clock" : "fa-check") me-1"></i>
+                                                    @sale.PaymentStatus
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+                <a asp-controller="Sales" asp-action="Orders" class="btn btn-outline-primary btn-sm mt-2">
+                    <i class="fas fa-arrow-right"></i> View All Sales
+                </a>
+            </div>
+        </div>
+
+        <!-- Expiring Products -->
+        <div class="col-lg-6 mb-4">
+            <div class="table-container h-100 hide-on-loading">
+                <h5><i class="fas fa-exclamation-triangle text-danger"></i> Expiring Products (30 Days)</h5>
+                <div class="responsive-table">
+                    @if (!Model.ExpiringProducts.Any())
+                    {
+                        <div class="empty-state">
+                            <i class="fas fa-check-circle fa-2x text-success"></i>
+                            <p class="text-muted">No products nearing expiry - Great!</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive" style="max-height: 300px;">
+                            <table class="table table-sm table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th><i class="fas fa-pills me-1"></i>Product</th>
+                                        <th><i class="fas fa-barcode me-1"></i>Batch</th>
+                                        <th><i class="fas fa-calendar-times me-1"></i>Expiry</th>
+                                        <th><i class="fas fa-hourglass-half me-1"></i>Days</th>
+                                        <th><i class="fas fa-cubes me-1"></i>Qty</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.ExpiringProducts.Take(5))
+                                    {
+                                        var days = item.DaysUntilExpiry;
+                                        string badgeClass = days <= 7 ? "bg-danger" : days <= 15 ? "bg-warning text-dark" : "bg-secondary";
+                                        string icon = days <= 7 ? "fa-exclamation-triangle" : days <= 15 ? "fa-exclamation" : "fa-clock";
+                                        string rowClass = days <= 7 ? "table-danger" : days <= 15 ? "table-warning" : "";
+                                        <tr class="@rowClass">
+                                            <td data-label="Product" class="fw-semibold">@item.ProductName</td>
+                                            <td data-label="Batch"><code class="bg-light text-dark px-2 py-1 rounded">@item.BatchNumber</code></td>
+                                            <td data-label="Expiry" class="fw-semibold">@item.ExpiryDate.ToString("MMM dd, yyyy")</td>
+                                            <td data-label="Days">
+                                                <span class="badge @badgeClass">
+                                                    <i class="fas @icon me-1"></i>@days
+                                                </span>
+                                            </td>
+                                            <td data-label="Qty" class="fw-semibold">@item.QuantityInStock</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+                <a asp-controller="Stock" asp-action="Expiring" class="btn btn-outline-warning btn-sm mt-2">
+                    <i class="fas fa-arrow-right"></i> View All Expiring
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function() {
+            const root = document.getElementById('dashboardRoot');
+            const toggle = document.getElementById('densityToggle');
+            const LS_KEY = 'dashboard-density';
+
+            // Reveal content (remove loading state)
+            window.addEventListener('DOMContentLoaded', () => {
+                setTimeout(() => {
+                    root.classList.remove('loading');
+                }, 400);
+            });
+
+            // Restore density preference
+            const saved = localStorage.getItem(LS_KEY);
+            if (saved === 'compact') {
+                root.classList.add('compact-density');
+                toggle.classList.add('active');
+                toggle.innerHTML = '<i class="fas fa-expand-alt"></i> Normal View';
+            }
+
+            toggle.addEventListener('click', () => {
+                root.classList.toggle('compact-density');
+                const isCompact = root.classList.contains('compact-density');
+                toggle.classList.toggle('active', isCompact);
+                toggle.innerHTML = isCompact 
+                    ? '<i class="fas fa-expand-alt"></i> Normal View'
+                    : '<i class="fas fa-compress-alt"></i> Compact View';
+                localStorage.setItem(LS_KEY, isCompact ? 'compact' : 'regular');
+            });
+
+            // Add loading animation to action buttons
+            document.querySelectorAll('.dashboard-card a[href], .table-container a[href]').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    if (this.href && !this.href.includes('#')) {
+                        const icon = this.querySelector('i');
+                        if (icon) {
+                            const originalClass = icon.className;
+                            icon.className = 'fas fa-spinner fa-spin';
+                            setTimeout(() => {
+                                icon.className = originalClass;
+                            }, 2000);
+                        }
+                    }
+                });
+            });
+        })();
+    </script>
+}
+

@@ -1,0 +1,319 @@
+@model MVC_WEB.Models.ViewModels.PurchasesEditViewModel
+@{
+    ViewData["Title"] = $"Edit Purchase Order - {Model.Order.OrderNumber}";
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-edit text-primary"></i> Edit Purchase Order</h1>
+            <p class="mb-0">Modify order details for <strong>@Model.Order.OrderNumber</strong></p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Purchases
+            </a>
+            <a asp-action="Details" asp-route-id="@Model.Order.PurchaseOrderID" class="btn btn-outline-info">
+                <i class="fas fa-eye"></i> View Details
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Main Form -->
+    <div class="col-lg-8">
+        <form asp-action="Edit" method="post">
+            @Html.AntiForgeryToken()
+            
+            <!-- Hidden fields -->
+            <input asp-for="Order.PurchaseOrderID" type="hidden" />
+            <input asp-for="Order.OrderNumber" type="hidden" />
+            <input asp-for="Order.CreatedBy" type="hidden" />
+            <input asp-for="Order.Status" type="hidden" />
+            <input asp-for="Order.PaymentStatus" type="hidden" />
+            
+            <!-- Order Information Card -->
+            <div class="dashboard-card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle text-primary me-2"></i>Order Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Order Number</label>
+                            <input type="text" class="form-control" value="@Model.Order.OrderNumber" readonly />
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Order.SupplierID" class="form-label required">Supplier</label>
+                            <select asp-for="Order.SupplierID" class="form-select">
+                                <option value="">-- Select Supplier --</option>
+                                @foreach (var s in Model.Suppliers)
+                                {
+                                    <option value="@s.SupplierID" selected="@(s.SupplierID == Model.Order.SupplierID)">@s.SupplierName</option>
+                                }
+                            </select>
+                            <span asp-validation-for="Order.SupplierID" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Order.OrderDate" class="form-label">Order Date</label>
+                            <input asp-for="Order.OrderDate" type="date" class="form-control" />
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Order.ExpectedDeliveryDate" class="form-label">Expected Delivery</label>
+                            <input asp-for="Order.ExpectedDeliveryDate" type="date" class="form-control" />
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Order.Notes" class="form-label">Notes</label>
+                            <textarea asp-for="Order.Notes" class="form-control" rows="3" 
+                                      placeholder="Additional notes..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Information -->
+            <div class="dashboard-card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-credit-card text-success me-2"></i>Payment Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label asp-for="Order.TotalAmount" class="form-label">Total Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input asp-for="Order.TotalAmount" type="number" step="0.01" class="form-control" readonly />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Order.PaidAmount" class="form-label">Paid Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input asp-for="Order.PaidAmount" type="number" step="0.01" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Order.DueAmount" class="form-label">Due Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input asp-for="Order.DueAmount" type="number" step="0.01" class="form-control" readonly />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Items -->
+            <div class="dashboard-card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list text-info me-2"></i>Order Items
+                    </h5>
+                    <span class="badge bg-primary">@Model.Order.OrderItems.Count item(s)</span>
+                </div>
+                <div class="card-body">
+                    @if (Model.Order.OrderItems.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Product</th>
+                                        <th class="text-center">Quantity</th>
+                                        <th class="text-end">Unit Price</th>
+                                        <th class="text-end">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (int i = 0; i < Model.Order.OrderItems.Count; i++)
+                                    {
+                                        <tr>
+                                            <td>
+                                                @Model.Order.OrderItems[i].ProductName
+                                                <input type="hidden" asp-for="Order.OrderItems[i].PurchaseOrderItemID" />
+                                                <input type="hidden" asp-for="Order.OrderItems[i].ProductID" />
+                                                <input type="hidden" asp-for="Order.OrderItems[i].ProductName" />
+                                            </td>
+                                            <td class="text-center">
+                                                <input asp-for="Order.OrderItems[i].OrderedQuantity" type="number" min="1" class="form-control form-control-sm text-center" style="width: 80px; margin: 0 auto;" />
+                                            </td>
+                                            <td class="text-end">
+                                                <input asp-for="Order.OrderItems[i].UnitPrice" type="number" step="0.01" min="0" class="form-control form-control-sm text-end" style="width: 100px; margin-left: auto;" />
+                                            </td>
+                                            <td class="text-end fw-bold">
+                                                @Model.Order.OrderItems[i].TotalPrice.ToString("C")
+                                                <input type="hidden" asp-for="Order.OrderItems[i].TotalPrice" />
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot class="table-light">
+                                    <tr>
+                                        <td colspan="3" class="text-end fw-bold">Total:</td>
+                                        <td class="text-end fw-bold text-success">@Model.Order.TotalAmount.ToString("C")</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4 text-muted">
+                            <i class="fas fa-box-open fa-3x mb-3"></i>
+                            <p>No items in this order</p>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="dashboard-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <a asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                        <div class="d-flex gap-2">
+                            <button type="reset" class="btn btn-outline-warning">
+                                <i class="fas fa-undo"></i> Reset
+                            </button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div asp-validation-summary="All" class="alert alert-danger mt-3" style="display:none;"></div>
+        </form>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Current Status -->
+        <div class="dashboard-card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-info-circle text-primary me-2"></i>Current Status
+                </h6>
+            </div>
+            <div class="card-body">
+                @{
+                    var statusClass = Model.Order.Status?.ToLower() switch
+                    {
+                        "pending" => "bg-warning",
+                        "approved" => "bg-info",
+                        "processed" => "bg-success",
+                        "delivered" => "bg-success",
+                        "cancelled" => "bg-danger",
+                        _ => "bg-secondary"
+                    };
+                }
+                <div class="text-center mb-3">
+                    <span class="badge @statusClass fs-6 px-3 py-2">
+                        @(Model.Order.Status ?? "Unknown")
+                    </span>
+                </div>
+                <div class="text-center">
+                    <small class="text-muted">Payment Status:</small>
+                    @{
+                        var paymentClass = Model.Order.PaymentStatus?.ToLower() switch
+                        {
+                            "paid" => "bg-success",
+                            "partial" => "bg-warning",
+                            _ => "bg-secondary"
+                        };
+                    }
+                    <span class="badge @paymentClass">@(Model.Order.PaymentStatus ?? "Pending")</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="dashboard-card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-bolt text-warning me-2"></i>Quick Actions
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a asp-action="Details" asp-route-id="@Model.Order.PurchaseOrderID" class="btn btn-outline-info btn-sm">
+                        <i class="fas fa-eye"></i> View Details
+                    </a>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.print()">
+                        <i class="fas fa-print"></i> Print Order
+                    </button>
+                    @if (Model.Order.Status?.ToLower() == "pending")
+                    {
+                        <form asp-action="ProcessOrder" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="orderId" value="@Model.Order.PurchaseOrderID" />
+                            <button type="submit" class="btn btn-success btn-sm w-100" onclick="return confirm('Process this order?')">
+                                <i class="fas fa-check-circle"></i> Process Order
+                            </button>
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Help -->
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-question-circle text-info me-2"></i>Help
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="small text-muted mb-0">
+                    <li>Modify quantities and prices as needed</li>
+                    <li>Update payment information</li>
+                    <li>Add notes for reference</li>
+                    <li>Click "Save Changes" to update</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .required::after {
+            content: " *";
+            color: #e74c3c;
+        }
+        
+        .dashboard-card .card-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+    </style>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        // Recalculate due amount when paid amount changes
+        document.querySelector('[name="Order.PaidAmount"]').addEventListener('input', function() {
+            const total = parseFloat(document.querySelector('[name="Order.TotalAmount"]').value) || 0;
+            const paid = parseFloat(this.value) || 0;
+            document.querySelector('[name="Order.DueAmount"]').value = (total - paid).toFixed(2);
+        });
+        
+        // Show validation summary if errors exist
+        document.addEventListener('DOMContentLoaded', function() {
+            const summary = document.querySelector('[asp-validation-summary]');
+            if (summary && summary.children.length > 0) {
+                summary.style.display = 'block';
+            }
+        });
+    </script>
+}

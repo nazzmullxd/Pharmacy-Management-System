@@ -1,0 +1,191 @@
+@model MVC_WEB.Models.ViewModels.SettingsViewModel
+@{
+    ViewData["Title"] = "Settings";
+}
+
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Settings</h1>
+            <p class="text-muted mb-0">Manage your application preferences</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Sidebar Navigation -->
+        <div class="col-md-3 mb-4">
+            <div class="card">
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        <a href="#general" class="list-group-item list-group-item-action active" data-bs-toggle="list">
+                            <i class="bi bi-gear me-2"></i>General
+                        </a>
+                        <a href="#notifications" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                            <i class="bi bi-bell me-2"></i>Notifications
+                        </a>
+                        <a href="#display" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                            <i class="bi bi-palette me-2"></i>Display
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Content -->
+        <div class="col-md-9">
+            <div class="tab-content">
+                <!-- General Settings -->
+                <div class="tab-pane fade show active" id="general">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-gear me-2"></i>General Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <form asp-action="SaveGeneral" method="post">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Language</label>
+                                        <select name="Language" class="form-select">
+                                            <option value="en" selected="@(Model.General.Language == "en")">English</option>
+                                            <option value="es" selected="@(Model.General.Language == "es")">Spanish</option>
+                                            <option value="fr" selected="@(Model.General.Language == "fr")">French</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Timezone</label>
+                                        <select name="Timezone" class="form-select">
+                                            <option value="UTC" selected="@(Model.General.Timezone == "UTC")">UTC</option>
+                                            <option value="EST" selected="@(Model.General.Timezone == "EST")">Eastern Time (EST)</option>
+                                            <option value="PST" selected="@(Model.General.Timezone == "PST")">Pacific Time (PST)</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Date Format</label>
+                                        <select name="DateFormat" class="form-select">
+                                            <option value="MM/dd/yyyy" selected="@(Model.General.DateFormat == "MM/dd/yyyy")">MM/DD/YYYY</option>
+                                            <option value="dd/MM/yyyy" selected="@(Model.General.DateFormat == "dd/MM/yyyy")">DD/MM/YYYY</option>
+                                            <option value="yyyy-MM-dd" selected="@(Model.General.DateFormat == "yyyy-MM-dd")">YYYY-MM-DD</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Currency</label>
+                                        <select name="Currency" class="form-select">
+                                            <option value="USD" selected="@(Model.General.Currency == "USD")">USD ($)</option>
+                                            <option value="EUR" selected="@(Model.General.Currency == "EUR")">EUR (€)</option>
+                                            <option value="GBP" selected="@(Model.General.Currency == "GBP")">GBP (£)</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="text-end">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-save me-1"></i> Save Changes
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notification Settings -->
+                <div class="tab-pane fade" id="notifications">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-bell me-2"></i>Notification Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <form asp-action="SaveNotifications" method="post">
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="EmailNotifications" id="emailNotifications" checked="@Model.Notifications.EmailNotifications" value="true">
+                                        <label class="form-check-label" for="emailNotifications">Email Notifications</label>
+                                    </div>
+                                    <small class="text-muted">Receive important updates via email</small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="LowStockAlerts" id="lowStockAlerts" checked="@Model.Notifications.LowStockAlerts" value="true">
+                                        <label class="form-check-label" for="lowStockAlerts">Low Stock Alerts</label>
+                                    </div>
+                                    <small class="text-muted">Get notified when products are running low</small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="ExpiryAlerts" id="expiryAlerts" checked="@Model.Notifications.ExpiryAlerts" value="true">
+                                        <label class="form-check-label" for="expiryAlerts">Expiry Alerts</label>
+                                    </div>
+                                    <small class="text-muted">Get notified about expiring products</small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="SaleNotifications" id="saleNotifications" checked="@Model.Notifications.SaleNotifications" value="true">
+                                        <label class="form-check-label" for="saleNotifications">Sale Notifications</label>
+                                    </div>
+                                    <small class="text-muted">Get notified for each sale transaction</small>
+                                </div>
+
+                                <div class="text-end">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-save me-1"></i> Save Changes
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Display Settings -->
+                <div class="tab-pane fade" id="display">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-palette me-2"></i>Display Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <form asp-action="SaveDisplay" method="post">
+                                <div class="mb-3">
+                                    <label class="form-label">Theme</label>
+                                    <select name="Theme" class="form-select">
+                                        <option value="light" selected="@(Model.Display.Theme == "light")">Light</option>
+                                        <option value="dark" selected="@(Model.Display.Theme == "dark")">Dark</option>
+                                        <option value="auto" selected="@(Model.Display.Theme == "auto")">Auto (System)</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Items Per Page</label>
+                                    <select name="ItemsPerPage" class="form-select">
+                                        <option value="10" selected="@(Model.Display.ItemsPerPage == 10)">10</option>
+                                        <option value="25" selected="@(Model.Display.ItemsPerPage == 25)">25</option>
+                                        <option value="50" selected="@(Model.Display.ItemsPerPage == 50)">50</option>
+                                        <option value="100" selected="@(Model.Display.ItemsPerPage == 100)">100</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="ShowDashboardStats" id="showDashboardStats" checked="@Model.Display.ShowDashboardStats" value="true">
+                                        <label class="form-check-label" for="showDashboardStats">Show Dashboard Statistics</label>
+                                    </div>
+                                    <small class="text-muted">Display KPI cards on the dashboard</small>
+                                </div>
+
+                                <div class="text-end">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-save me-1"></i> Save Changes
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,128 @@
+@model MVC_WEB.Models.ViewModels.CustomerCreateViewModel
+@{
+    ViewData["Title"] = "Add Customer";
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-user-plus text-success"></i> Add Customer</h1>
+            <p class="mb-0">Create a new customer profile for the pharmacy system</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Customers
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Main Form Section -->
+    <div class="col-lg-8">
+        <form asp-action="Create" method="post" class="customer-form">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+            
+            <!-- Customer Information Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user me-2"></i>Customer Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="CustomerName" class="form-label">
+                                <i class="fas fa-user text-muted me-1"></i>Full Name <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="CustomerName" class="form-control" placeholder="Enter customer's full name" autofocus />
+                            <span asp-validation-for="CustomerName" class="text-danger small"></span>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label asp-for="ContactNumber" class="form-label">
+                                <i class="fas fa-phone text-muted me-1"></i>Contact Number <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="ContactNumber" class="form-control" placeholder="e.g., +880 1234 567890" />
+                            <span asp-validation-for="ContactNumber" class="text-danger small"></span>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label asp-for="Email" class="form-label">
+                                <i class="fas fa-envelope text-muted me-1"></i>Email Address
+                            </label>
+                            <input asp-for="Email" type="email" class="form-control" placeholder="customer@example.com" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label asp-for="Address" class="form-label">
+                                <i class="fas fa-map-marker-alt text-muted me-1"></i>Address
+                            </label>
+                            <textarea asp-for="Address" class="form-control" rows="3" placeholder="Enter full address"></textarea>
+                            <span asp-validation-for="Address" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-save me-1"></i> Save Customer
+                </button>
+                <button type="reset" class="btn btn-outline-secondary">
+                    <i class="fas fa-undo me-1"></i> Reset Form
+                </button>
+                <a asp-action="Index" class="btn btn-outline-danger">
+                    <i class="fas fa-times me-1"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Sidebar Information -->
+    <div class="col-lg-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-warning text-dark">
+                <h6 class="mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>Customer Guidelines
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="small text-muted mb-0">
+                    <li class="mb-2"><strong>Full Name:</strong> Enter complete legal name for identification</li>
+                    <li class="mb-2"><strong>Contact:</strong> Primary phone number for communication</li>
+                    <li class="mb-2"><strong>Email:</strong> Valid email for receipts and notifications</li>
+                    <li class="mb-0"><strong>Address:</strong> Complete address for delivery services</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-shield-alt me-2"></i>Data Privacy
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="small text-muted mb-0">
+                    <li class="mb-2">Customer information is securely stored</li>
+                    <li class="mb-2">Data used only for pharmacy services</li>
+                    <li class="mb-0">Customer consent assumed for service delivery</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong>Tip:</strong> After creating a customer, you can immediately create a sale for them.
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

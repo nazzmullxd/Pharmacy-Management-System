@@ -1,0 +1,277 @@
+@model MVC_WEB.Models.ViewModels.StockReportViewModel
+@{
+    ViewData["Title"] = "Stock Report";
+}
+
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Stock Report</h1>
+            <p class="text-muted mb-0">Inventory levels and stock analytics</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Back to Reports
+        </a>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-1">Total Products</h6>
+                            <h3 class="mb-0">@Model.Products.Count()</h3>
+                        </div>
+                        <i class="bi bi-box-seam fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-1">Total Batches</h6>
+                            <h3 class="mb-0">@Model.Batches.Count()</h3>
+                        </div>
+                        <i class="bi bi-boxes fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-1">Low Stock Items</h6>
+                            <h3 class="mb-0">@Model.LowStockCount</h3>
+                        </div>
+                        <i class="bi bi-exclamation-triangle fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-1">Stock Value</h6>
+                            <h3 class="mb-0">$@Model.TotalStockValue.ToString("N2")</h3>
+                        </div>
+                        <i class="bi bi-cash fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-funnel me-2"></i>Filters</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Stock Status</label>
+                    <select name="stockFilter" class="form-select">
+                        <option value="">All Items</option>
+                        <option value="low" selected="@(Model.StockFilter == "low")">Low Stock Only</option>
+                        <option value="out" selected="@(Model.StockFilter == "out")">Out of Stock</option>
+                        <option value="adequate" selected="@(Model.StockFilter == "adequate")">Adequate Stock</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Expiry Status</label>
+                    <select name="expiryFilter" class="form-select">
+                        <option value="">All Items</option>
+                        <option value="expired" selected="@(Model.ExpiryFilter == "expired")">Expired</option>
+                        <option value="30days" selected="@(Model.ExpiryFilter == "30days")">Expiring in 30 days</option>
+                        <option value="90days" selected="@(Model.ExpiryFilter == "90days")">Expiring in 90 days</option>
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="bi bi-search me-1"></i> Apply Filter
+                    </button>
+                    <a asp-action="Stock" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle me-1"></i> Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Low Stock Alerts -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-warning text-white">
+                    <h5 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Low Stock Alerts</h5>
+                </div>
+                <div class="card-body">
+                    @{
+                        var lowStockProducts = Model.Products.Where(p => p.IsLowStock).ToList();
+                    }
+                    @if (lowStockProducts.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th class="text-center">Current</th>
+                                        <th class="text-center">Threshold</th>
+                                        <th class="text-center">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var product in lowStockProducts.Take(10))
+                                    {
+                                        <tr>
+                                            <td>@product.ProductName</td>
+                                            <td class="text-center">@product.TotalStock</td>
+                                            <td class="text-center">@product.LowStockThreshold</td>
+                                            <td class="text-center">
+                                                @if (product.TotalStock == 0)
+                                                {
+                                                    <span class="badge bg-danger">Out of Stock</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-warning">Low</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center text-success py-4">
+                            <i class="bi bi-check-circle fs-1 d-block mb-2"></i>
+                            <p>All products have adequate stock levels</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Expiring Items -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="bi bi-calendar-x me-2"></i>Expiring Items</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.ExpiringItems != null && Model.ExpiringItems.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Batch</th>
+                                        <th class="text-center">Qty</th>
+                                        <th>Expiry Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.ExpiringItems.Take(10))
+                                    {
+                                        var daysToExpiry = (item.ExpiryDate - DateTime.Today).Days;
+                                        <tr class="@(daysToExpiry <= 0 ? "table-danger" : daysToExpiry <= 30 ? "table-warning" : "")">
+                                            <td>@item.ProductName</td>
+                                            <td>@item.BatchNumber</td>
+                                            <td class="text-center">@item.QuantityInStock</td>
+                                            <td>
+                                                @item.ExpiryDate.ToString("MMM dd, yyyy")
+                                                @if (daysToExpiry <= 0)
+                                                {
+                                                    <span class="badge bg-danger ms-1">Expired</span>
+                                                }
+                                                else if (daysToExpiry <= 30)
+                                                {
+                                                    <span class="badge bg-warning ms-1">@daysToExpiry days</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center text-success py-4">
+                            <i class="bi bi-check-circle fs-1 d-block mb-2"></i>
+                            <p>No items expiring soon</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stock Distribution -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-pie-chart me-2"></i>Stock Distribution</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="text-center mb-3">
+                        <h4 class="text-primary mb-1">@Model.Products.Count(p => !p.IsLowStock && p.TotalStock > 0)</h4>
+                        <small class="text-muted">Adequate Stock</small>
+                    </div>
+                    <div class="progress mb-4" style="height: 20px;">
+                        @{
+                            var totalProducts = Model.Products.Count();
+                            var adequatePercent = totalProducts > 0 ? ((decimal)Model.Products.Count(p => !p.IsLowStock && p.TotalStock > 0) / totalProducts * 100) : 0;
+                        }
+                        <div class="progress-bar bg-success" role="progressbar" style="width: @adequatePercent%;">
+                            @adequatePercent.ToString("N0")%
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center mb-3">
+                        <h4 class="text-warning mb-1">@Model.Products.Count(p => p.IsLowStock && p.TotalStock > 0)</h4>
+                        <small class="text-muted">Low Stock</small>
+                    </div>
+                    <div class="progress mb-4" style="height: 20px;">
+                        @{
+                            var lowPercent = totalProducts > 0 ? ((decimal)Model.Products.Count(p => p.IsLowStock && p.TotalStock > 0) / totalProducts * 100) : 0;
+                        }
+                        <div class="progress-bar bg-warning" role="progressbar" style="width: @lowPercent%;">
+                            @lowPercent.ToString("N0")%
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center mb-3">
+                        <h4 class="text-danger mb-1">@Model.Products.Count(p => p.TotalStock == 0)</h4>
+                        <small class="text-muted">Out of Stock</small>
+                    </div>
+                    <div class="progress mb-4" style="height: 20px;">
+                        @{
+                            var outPercent = totalProducts > 0 ? ((decimal)Model.Products.Count(p => p.TotalStock == 0) / totalProducts * 100) : 0;
+                        }
+                        <div class="progress-bar bg-danger" role="progressbar" style="width: @outPercent%;">
+                            @outPercent.ToString("N0")%
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

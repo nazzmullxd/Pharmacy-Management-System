@@ -1,0 +1,529 @@
+@model MVC_WEB.Models.ViewModels.CustomerListViewModel
+@{
+    ViewData["Title"] = "Customer Management";
+    var isAdmin = Context.Session.GetString("role") == "Admin";
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-users text-primary"></i> Customer Management</h1>
+            <p class="mb-0">Manage your pharmacy's customer database and build stronger customer relationships</p>
+        </div>
+        <div class="d-flex gap-2">
+            @if (isAdmin)
+            {
+                <a asp-action="Create" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add Customer
+                </a>
+            }
+            <button type="button" class="btn btn-outline-secondary" onclick="exportCustomers()">
+                <i class="fas fa-download"></i> Export
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions & Filters -->
+<div class="dashboard-card mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-4">
+            <h6 class="mb-2 text-muted">Quick Actions</h6>
+            <div class="d-flex gap-2 flex-wrap">
+                @if (isAdmin)
+                {
+                    <a asp-action="Create" class="btn btn-sm btn-success">
+                        <i class="fas fa-user-plus"></i> Add Customer
+                    </a>
+                }
+                <a asp-controller="Sales" asp-action="Create" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-shopping-cart"></i> New Sale
+                </a>
+                <button class="btn btn-sm btn-outline-secondary" onclick="location.reload()">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Filter by Status</label>
+                    <select class="form-select form-select-sm" id="statusFilter" onchange="filterCustomers()">
+                        <option value="">All Customers</option>
+                        <option value="active">Active Customers</option>
+                        <option value="new">New This Month</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Sort By</label>
+                    <select class="form-select form-select-sm" id="sortFilter" onchange="sortCustomers()">
+                        <option value="name">Name A-Z</option>
+                        <option value="recent">Recently Added</option>
+                        <option value="purchases">Total Purchases</option>
+                        <option value="last-purchase">Last Purchase</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Search Customers</label>
+                    <form asp-action="Search" method="get" class="input-group input-group-sm">
+                        <input type="text" name="query" class="form-control" id="searchInput" placeholder="Name, phone, email..." value="@Model.SearchQuery">
+                        <button class="btn btn-outline-secondary" type="submit" id="searchBtn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Customer Summary Cards -->
+<div class="kpi-grid mb-4">
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Total Customers</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #3498db, #5dade2);">
+                <i class="fas fa-users"></i>
+            </div>
+        </div>
+        <div class="kpi-value">@Model.TotalCustomers</div>
+        <div class="kpi-change positive">
+            <i class="fas fa-chart-bar"></i> Registered customers
+        </div>
+        <div class="kpi-progress mt-2">
+            <div class="progress" style="height: 4px;">
+                <div class="progress-bar bg-info" role="progressbar" style="width: 90%" aria-valuenow="90" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Active Customers</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #27ae60, #2ecc71);">
+                <i class="fas fa-user-check"></i>
+            </div>
+        </div>
+        <div class="kpi-value">@Model.ActiveCustomers</div>
+        <div class="kpi-change positive">
+            <i class="fas fa-arrow-up"></i> Active this month
+        </div>
+        <div class="kpi-progress mt-2">
+            <div class="progress" style="height: 4px;">
+                @{
+                    var activePercentage = Model.TotalCustomers > 0 ? (Model.ActiveCustomers * 100 / Model.TotalCustomers) : 0;
+                }
+                <div class="progress-bar bg-success" role="progressbar" style="width: @activePercentage%" aria-valuenow="@activePercentage" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">New This Month</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #9b59b6, #bb8fce);">
+                <i class="fas fa-user-plus"></i>
+            </div>
+        </div>
+        <div class="kpi-value">@Model.NewCustomers</div>
+        <div class="kpi-change positive">
+            <i class="fas fa-calendar-plus"></i> New registrations
+        </div>
+        @if (isAdmin)
+        {
+            <div class="mt-2">
+                <a asp-action="Create" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-plus"></i> Add Customer
+                </a>
+            </div>
+        }
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <div class="kpi-title">Customer Sales</div>
+            <div class="kpi-icon" style="background: linear-gradient(45deg, #e67e22, #f39c12);">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+        </div>
+        <div class="kpi-value">৳@Model.TotalCustomerSales.ToString("N0")</div>
+        <div class="kpi-change positive">
+            <i class="fas fa-chart-line"></i> Total revenue
+        </div>
+        <div class="mt-2">
+            <a asp-controller="Reports" asp-action="Index" class="btn btn-sm btn-warning">
+                <i class="fas fa-chart-pie"></i> View Report
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Customers Table -->
+<div class="table-container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0"><i class="fas fa-list text-primary"></i> Customer Directory</h5>
+        <div class="d-flex align-items-center gap-3">
+            <small class="text-muted">
+                Showing @Model.Customers.Count customers
+            </small>
+            <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-secondary active" onclick="toggleView('table')" id="tableViewBtn">
+                    <i class="fas fa-table"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="toggleView('card')" id="cardViewBtn">
+                    <i class="fas fa-th-large"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table View -->
+    <div id="tableView" class="table-responsive">
+        <table class="table table-hover" id="customersTable">
+            <thead class="table-light">
+                <tr>
+                    <th class="sortable" data-sort="name">
+                        <i class="fas fa-user text-muted me-1"></i>Customer Name
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th>
+                        <i class="fas fa-phone text-muted me-1"></i>Contact
+                    </th>
+                    <th>
+                        <i class="fas fa-envelope text-muted me-1"></i>Email
+                    </th>
+                    <th>
+                        <i class="fas fa-map-marker-alt text-muted me-1"></i>Address
+                    </th>
+                    <th class="sortable" data-sort="date">
+                        <i class="fas fa-calendar text-muted me-1"></i>Registration
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th class="text-end sortable" data-sort="purchases">
+                        <i class="fas fa-dollar-sign text-muted me-1"></i>Total Purchases
+                        <i class="fas fa-sort text-muted ms-1"></i>
+                    </th>
+                    <th>
+                        <i class="fas fa-shopping-cart text-muted me-1"></i>Last Purchase
+                    </th>
+                    <th class="text-center" style="width: 180px;">
+                        <i class="fas fa-cogs text-muted me-1"></i>Actions
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Customers.Any())
+                {
+                    @foreach (var customer in Model.Customers)
+                    {
+                        var isActive = customer.LastPurchaseDate.HasValue && customer.LastPurchaseDate >= DateTime.UtcNow.AddDays(-30);
+                        
+                        <tr class="customer-row" data-customer-id="@customer.CustomerID">
+                            <td>
+                                <div class="customer-info">
+                                    <div class="customer-name fw-semibold">@customer.CustomerName</div>
+                                    <small class="customer-id text-muted">
+                                        <i class="fas fa-id-card me-1"></i>ID: @customer.CustomerID.ToString().Substring(0, 8).ToUpper()
+                                    </small>
+                                </div>
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(customer.ContactNumber))
+                                {
+                                    <div class="contact-number">@customer.ContactNumber</div>
+                                    <small class="text-muted"><i class="fas fa-phone me-1"></i>Phone</small>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">No contact</span>
+                                }
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(customer.Email))
+                                {
+                                    <a href="mailto:@customer.Email" class="customer-email text-decoration-none">@customer.Email</a>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">No email</span>
+                                }
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(customer.Address))
+                                {
+                                    <div class="customer-address" title="@customer.Address">
+                                        @(customer.Address.Length > 30 ? customer.Address.Substring(0, 30) + "..." : customer.Address)
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">No address</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="registration-date">@customer.CreatedDate.ToString("MMM dd, yyyy")</div>
+                                <small class="text-muted">
+                                    <i class="fas fa-clock me-1"></i>@customer.CreatedDate.ToString("hh:mm tt")
+                                </small>
+                            </td>
+                            <td class="text-end">
+                                <strong class="purchase-amount">৳@(customer.TotalPurchases?.ToString("F2") ?? "0.00")</strong>
+                            </td>
+                            <td>
+                                @if (customer.LastPurchaseDate.HasValue)
+                                {
+                                    <div class="last-purchase-date">@customer.LastPurchaseDate.Value.ToString("MMM dd, yyyy")</div>
+                                    <small class="text-muted">
+                                        <i class="fas fa-clock me-1"></i>@customer.LastPurchaseDate.Value.ToString("hh:mm tt")
+                                    </small>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">No purchases</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="action-buttons d-flex gap-1 justify-content-center">
+                                    <a asp-action="Details" asp-route-id="@customer.CustomerID" 
+                                       class="btn btn-sm btn-outline-info" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    @if (isAdmin)
+                                    {
+                                        <a asp-action="Edit" asp-route-id="@customer.CustomerID" 
+                                           class="btn btn-sm btn-outline-primary" title="Edit Customer">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a asp-controller="Sales" asp-action="Create" asp-route-customerId="@customer.CustomerID" 
+                                           class="btn btn-sm btn-outline-success" title="New Sale">
+                                            <i class="fas fa-shopping-cart"></i>
+                                        </a>
+                                    }
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                                                type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li><a class="dropdown-item" asp-action="Details" asp-route-id="@customer.CustomerID">
+                                                <i class="fas fa-eye me-2"></i>View Details
+                                            </a></li>
+                                            @if (isAdmin)
+                                            {
+                                                <li><a class="dropdown-item" asp-action="Edit" asp-route-id="@customer.CustomerID">
+                                                    <i class="fas fa-edit me-2"></i>Edit Customer
+                                                </a></li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><a class="dropdown-item" asp-controller="Sales" asp-action="Create" asp-route-customerId="@customer.CustomerID">
+                                                    <i class="fas fa-shopping-cart me-2"></i>Create Sale
+                                                </a></li>
+                                                <li><a class="dropdown-item" asp-controller="Sales" asp-action="Index" asp-route-customerId="@customer.CustomerID">
+                                                    <i class="fas fa-history me-2"></i>Purchase History
+                                                </a></li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><button class="dropdown-item text-danger" onclick="confirmDelete('@customer.CustomerID', '@customer.CustomerName')">
+                                                    <i class="fas fa-trash me-2"></i>Delete Customer
+                                                </button></li>
+                                            }
+                                        </ul>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8" class="text-center py-5">
+                            <div class="empty-state">
+                                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                                <h6 class="text-muted">No customers found</h6>
+                                <p class="text-muted mb-3">Start building your customer base by adding your first customer</p>
+                                @if (isAdmin)
+                                {
+                                    <a asp-action="Create" class="btn btn-primary">
+                                        <i class="fas fa-plus"></i> Add First Customer
+                                    </a>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Card View (Alternative View) -->
+    <div id="cardView" style="display: none;" class="row">
+        @if (Model.Customers.Any())
+        {
+            @foreach (var customer in Model.Customers)
+            {
+                var isActive = customer.LastPurchaseDate.HasValue && customer.LastPurchaseDate >= DateTime.UtcNow.AddDays(-30);
+                
+                <div class="col-lg-6 col-xl-4 mb-3">
+                    <div class="card customer-card h-100 shadow-sm">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">@customer.CustomerName</h6>
+                            @if (isActive)
+                            {
+                                <span class="badge bg-success">Active</span>
+                            }
+                            else if (customer.LastPurchaseDate.HasValue)
+                            {
+                                <span class="badge bg-warning">Inactive</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">New</span>
+                            }
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <p class="mb-1"><strong>@customer.ContactNumber</strong></p>
+                                    <small class="text-muted">@customer.Email</small>
+                                </div>
+                                <h5 class="text-success mb-0">৳@(customer.TotalPurchases?.ToString("F2") ?? "0.00")</h5>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar me-1"></i>Joined @customer.CreatedDate.ToString("MMM yyyy")
+                                </small>
+                                @if (customer.LastPurchaseDate.HasValue)
+                                {
+                                    <small class="text-muted">
+                                        <i class="fas fa-shopping-cart me-1"></i>@customer.LastPurchaseDate.Value.ToString("MMM dd")
+                                    </small>
+                                }
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <div class="d-flex gap-1 justify-content-center">
+                                <a asp-action="Details" asp-route-id="@customer.CustomerID" class="btn btn-sm btn-outline-info">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                @if (isAdmin)
+                                {
+                                    <a asp-action="Edit" asp-route-id="@customer.CustomerID" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a asp-controller="Sales" asp-action="Create" asp-route-customerId="@customer.CustomerID" class="btn btn-sm btn-outline-success">
+                                        <i class="fas fa-shopping-cart"></i>
+                                    </a>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="confirmDelete('@customer.CustomerID', '@customer.CustomerName')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirm Delete
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete customer <strong id="deleteCustomerName"></strong>?</p>
+                <p class="text-muted small">This action cannot be undone. All customer data will be permanently removed.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="post" style="display: inline;">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i>Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Toggle between table and card view
+        function toggleView(view) {
+            const tableView = document.getElementById('tableView');
+            const cardView = document.getElementById('cardView');
+            const tableBtn = document.getElementById('tableViewBtn');
+            const cardBtn = document.getElementById('cardViewBtn');
+
+            if (view === 'table') {
+                tableView.style.display = 'block';
+                cardView.style.display = 'none';
+                tableBtn.classList.add('active');
+                cardBtn.classList.remove('active');
+            } else {
+                tableView.style.display = 'none';
+                cardView.style.display = 'flex';
+                cardBtn.classList.add('active');
+                tableBtn.classList.remove('active');
+            }
+        }
+
+        // Confirm delete
+        function confirmDelete(customerId, customerName) {
+            document.getElementById('deleteCustomerName').textContent = customerName;
+            document.getElementById('deleteForm').action = '@Url.Action("Delete", "Customers")/' + customerId;
+            new bootstrap.Modal(document.getElementById('deleteModal')).show();
+        }
+
+        // Export customers to CSV
+        function exportCustomers() {
+            const table = document.getElementById('customersTable');
+            const rows = table.querySelectorAll('tr');
+            let csv = [];
+
+            rows.forEach(row => {
+                const cols = row.querySelectorAll('td, th');
+                const rowData = [];
+                cols.forEach((col, index) => {
+                    if (index < 7) { // Exclude actions column
+                        rowData.push('"' + col.innerText.replace(/"/g, '""') + '"');
+                    }
+                });
+                csv.push(rowData.join(','));
+            });
+
+            const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'customers_' + new Date().toISOString().split('T')[0] + '.csv';
+            a.click();
+        }
+
+        // Filter customers
+        function filterCustomers() {
+            const filter = document.getElementById('statusFilter').value;
+            const rows = document.querySelectorAll('#customersTable tbody tr');
+            
+            rows.forEach(row => {
+                // Implement client-side filtering logic here
+                // For now, show all rows
+                row.style.display = '';
+            });
+        }
+
+        // Sort customers
+        function sortCustomers() {
+            const sort = document.getElementById('sortFilter').value;
+            // Implement sorting logic or redirect to server-side sort
+        }
+    </script>
+}

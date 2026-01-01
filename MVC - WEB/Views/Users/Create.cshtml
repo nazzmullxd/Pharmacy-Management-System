@@ -1,0 +1,277 @@
+@model MVC_WEB.Models.ViewModels.UserCreateViewModel
+@{
+    ViewData["Title"] = "Add New User";
+}
+
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-user-plus text-primary"></i> Add New User</h1>
+            <p class="mb-0">Create a new system user account</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Users
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-user-edit me-2"></i>User Information</h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="Create" method="post" id="createUserForm">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="FirstName" class="form-label">
+                                <i class="fas fa-user text-muted me-1"></i>First Name <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="FirstName" class="form-control" placeholder="Enter first name" autofocus />
+                            <span asp-validation-for="FirstName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="LastName" class="form-label">
+                                <i class="fas fa-user text-muted me-1"></i>Last Name <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="LastName" class="form-control" placeholder="Enter last name" />
+                            <span asp-validation-for="LastName" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label">
+                            <i class="fas fa-envelope text-muted me-1"></i>Email Address <span class="text-danger">*</span>
+                        </label>
+                        <input asp-for="Email" class="form-control" placeholder="user@example.com" type="email" />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                        <small class="text-muted">This will be used for login and notifications</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Role" class="form-label">
+                            <i class="fas fa-shield-alt text-muted me-1"></i>Role <span class="text-danger">*</span>
+                        </label>
+                        <select asp-for="Role" class="form-select">
+                            <option value="">-- Select Role --</option>
+                            @foreach (var role in Model.AvailableRoles)
+                            {
+                                <option value="@role">@role</option>
+                            }
+                        </select>
+                        <span asp-validation-for="Role" class="text-danger small"></span>
+                        <small class="text-muted">Role determines user permissions in the system</small>
+                    </div>
+
+                    <hr class="my-4" />
+
+                    <h6 class="text-muted mb-3"><i class="fas fa-lock me-2"></i>Password</h6>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="Password" class="form-label">
+                                Password <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <input asp-for="Password" class="form-control" type="password" id="password" placeholder="Enter password" />
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('password')">
+                                    <i class="fas fa-eye" id="password-eye"></i>
+                                </button>
+                            </div>
+                            <span asp-validation-for="Password" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="ConfirmPassword" class="form-label">
+                                Confirm Password <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <input asp-for="ConfirmPassword" class="form-control" type="password" id="confirmPassword" placeholder="Confirm password" />
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirmPassword')">
+                                    <i class="fas fa-eye" id="confirmPassword-eye"></i>
+                                </button>
+                            </div>
+                            <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <!-- Password strength indicator -->
+                    <div class="mb-3">
+                        <small class="text-muted">Password Strength:</small>
+                        <div class="progress" style="height: 5px;">
+                            <div class="progress-bar" id="passwordStrength" role="progressbar" style="width: 0%"></div>
+                        </div>
+                        <small id="passwordStrengthText" class="text-muted"></small>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i> Create User
+                        </button>
+                        <button type="reset" class="btn btn-outline-secondary">
+                            <i class="fas fa-undo me-1"></i> Reset
+                        </button>
+                        <a asp-action="Index" class="btn btn-outline-danger">
+                            <i class="fas fa-times me-1"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Role Info Card -->
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Role Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="role-info">
+                    <div class="mb-3">
+                        <span class="badge bg-danger me-2">Admin</span>
+                        <small>Full system access, can manage users and settings</small>
+                    </div>
+                    <div class="mb-3">
+                        <span class="badge bg-primary me-2">User</span>
+                        <small>Basic access to sales and inventory</small>
+                    </div>
+                    <div class="mb-3">
+                        <span class="badge bg-warning me-2">Manager</span>
+                        <small>Can manage products, sales, and view reports</small>
+                    </div>
+                    <div class="mb-3">
+                        <span class="badge bg-success me-2">Pharmacist</span>
+                        <small>Can process sales and manage prescriptions</small>
+                    </div>
+                    <div class="mb-0">
+                        <span class="badge bg-info me-2">Staff</span>
+                        <small>Limited access to basic operations</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Password Requirements Card -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-secondary text-white">
+                <h6 class="mb-0"><i class="fas fa-key me-2"></i>Password Requirements</h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2" id="req-length">
+                        <i class="fas fa-circle text-muted me-2" style="font-size: 8px;"></i>
+                        Minimum 6 characters
+                    </li>
+                    <li class="mb-2" id="req-upper">
+                        <i class="fas fa-circle text-muted me-2" style="font-size: 8px;"></i>
+                        Uppercase letter recommended
+                    </li>
+                    <li class="mb-2" id="req-lower">
+                        <i class="fas fa-circle text-muted me-2" style="font-size: 8px;"></i>
+                        Lowercase letter recommended
+                    </li>
+                    <li class="mb-2" id="req-number">
+                        <i class="fas fa-circle text-muted me-2" style="font-size: 8px;"></i>
+                        Number recommended
+                    </li>
+                    <li class="mb-0" id="req-special">
+                        <i class="fas fa-circle text-muted me-2" style="font-size: 8px;"></i>
+                        Special character recommended
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Toggle password visibility
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(inputId + '-eye');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        // Password strength checker
+        document.getElementById('password').addEventListener('input', function() {
+            const password = this.value;
+            let strength = 0;
+            let strengthText = '';
+            let strengthClass = '';
+            
+            // Check requirements
+            const hasLength = password.length >= 6;
+            const hasUpper = /[A-Z]/.test(password);
+            const hasLower = /[a-z]/.test(password);
+            const hasNumber = /[0-9]/.test(password);
+            const hasSpecial = /[!@@#$%^&*(),.?":{}|<>]/.test(password);
+            
+            // Update requirement indicators
+            updateRequirement('req-length', hasLength);
+            updateRequirement('req-upper', hasUpper);
+            updateRequirement('req-lower', hasLower);
+            updateRequirement('req-number', hasNumber);
+            updateRequirement('req-special', hasSpecial);
+            
+            // Calculate strength
+            if (hasLength) strength += 20;
+            if (hasUpper) strength += 20;
+            if (hasLower) strength += 20;
+            if (hasNumber) strength += 20;
+            if (hasSpecial) strength += 20;
+            
+            // Determine strength text and color
+            if (strength <= 20) {
+                strengthText = 'Very Weak';
+                strengthClass = 'bg-danger';
+            } else if (strength <= 40) {
+                strengthText = 'Weak';
+                strengthClass = 'bg-warning';
+            } else if (strength <= 60) {
+                strengthText = 'Fair';
+                strengthClass = 'bg-info';
+            } else if (strength <= 80) {
+                strengthText = 'Good';
+                strengthClass = 'bg-primary';
+            } else {
+                strengthText = 'Strong';
+                strengthClass = 'bg-success';
+            }
+            
+            // Update UI
+            const progressBar = document.getElementById('passwordStrength');
+            progressBar.style.width = strength + '%';
+            progressBar.className = 'progress-bar ' + strengthClass;
+            document.getElementById('passwordStrengthText').textContent = strengthText;
+        });
+
+        function updateRequirement(id, met) {
+            const element = document.getElementById(id);
+            const icon = element.querySelector('i');
+            
+            if (met) {
+                icon.classList.remove('text-muted', 'fa-circle');
+                icon.classList.add('text-success', 'fa-check-circle');
+                icon.style.fontSize = '12px';
+            } else {
+                icon.classList.remove('text-success', 'fa-check-circle');
+                icon.classList.add('text-muted', 'fa-circle');
+                icon.style.fontSize = '8px';
+            }
+        }
+    </script>
+}
